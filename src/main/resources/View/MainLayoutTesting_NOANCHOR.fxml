@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.RowConstraints?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+
+<GridPane prefHeight="650.0" prefWidth="1250.0" xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1" fx:controller="Controller.MainLayoutTesting_NOANCHORController">
+  <columnConstraints>
+    <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" percentWidth="17.0" prefWidth="100.0" />
+    <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" percentWidth="83.0" prefWidth="100.0" />
+  </columnConstraints>
+  <rowConstraints>
+    <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+  </rowConstraints>
+   <children>
+      <VBox>
+         <children>
+            <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" prefHeight="300.0" stylesheets="@../styles/style.css" text="Overview" />
+            <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" prefHeight="300.0" stylesheets="@../styles/style.css" text="Manage DB" />
+            <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" prefHeight="300.0" stylesheets="@../styles/style.css" text="Edit PO" />
+            <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#closeApplication" prefHeight="300.0" stylesheets="@../styles/style.css" text="Sign out" />
+            <Label alignment="CENTER" contentDisplay="RIGHT" maxWidth="1.7976931348623157E308" prefHeight="200.0" style="-fx-background-color: #000000; -fx-text-fill: #ffffff;" text="Current User: ">
+               <graphic>
+                  <Label style="-fx-text-fill: #ffffff;" text="Gil" />
+               </graphic>
+            </Label>
+         </children>
+      </VBox>
+      <AnchorPane AnchorPane.bottomAnchor="0.0" GridPane.columnIndex="1">
+         <children>
+            <StackPane fx:id="displaysStackPane" prefHeight="650.0" prefWidth="1037.0" stylesheets="@../styles/style.css" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
+         </children>
+      </AnchorPane>
+   </children>
+</GridPane>
