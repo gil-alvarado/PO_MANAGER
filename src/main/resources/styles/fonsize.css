@@ -1,0 +1,22 @@
+.button
+{
+-fx-background-color : #e8dce8;-fx-background-color : #bfc28c;-fx-background-color : #999c72;
+
+-fx-background-color : #525252;
+
+
+-fx-background-color : #474747;
+
+-fx-text-fill : #e0e86f;
+-fx-font-weight: bold;
+-fx-font-size: 15px;
+}
+.button:hover{  
+-fx-background-color : #8c8c8c;
+
+-fx-background-color : #757575;
+
+-fx-font-weight: bold;
+-fx-font-family: Georgia;
+-fx-font-size: 17px;
+}

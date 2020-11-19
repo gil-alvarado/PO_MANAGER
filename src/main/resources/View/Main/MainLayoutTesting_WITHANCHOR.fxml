@@ -11,7 +11,7 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-<GridPane prefHeight="650.0" prefWidth="1250.0" xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1" fx:controller="Controller.MainLayoutTesting_WITHANCHORController">
+<GridPane prefHeight="700.0" prefWidth="1350.0" xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1" fx:controller="Controller.MainLayoutTesting_WITHANCHORController">
   <columnConstraints>
     <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" percentWidth="17.0" prefWidth="100.0" />
     <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" percentWidth="83.0" prefWidth="100.0" />
@@ -22,11 +22,7 @@
    <children>
       <VBox>
          <children>
-            <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" prefHeight="300.0" text="Overview">
-               <stylesheets>
-                  <URL value="@../styles/style.css" />
-                  <URL value="@../../styles/style.css" />
-               </stylesheets></Button>
+            <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" prefHeight="300.0" stylesheets="@../../styles/style.css" text="Overview" />
             <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" prefHeight="300.0" text="Manage DB">
                <stylesheets>
                   <URL value="@../../styles/style.css" />
@@ -57,7 +53,7 @@
       </VBox>
       <AnchorPane AnchorPane.bottomAnchor="0.0" GridPane.columnIndex="1">
          <children>
-            <StackPane fx:id="displaysStackPane" prefHeight="650.0" prefWidth="1037.0" stylesheets="@../styles/style.css" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+            <StackPane fx:id="displaysStackPane" prefHeight="650.0" prefWidth="1037.0" stylesheets="@../../styles/style.css" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                <children>
                   <AnchorPane fx:id="overviewAnchor" prefHeight="200.0" prefWidth="200.0">
                      <stylesheets>

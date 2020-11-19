@@ -72,7 +72,7 @@ public class MainLayoutTesting_WITHANCHORController implements Initializable {
         
         Center
         */
-        Node editPOForm = FXMLLoader.load(getClass().getResource("/View/EditPO/EditPOViewTest.fxml"));
+        Node editPOForm = FXMLLoader.load(getClass().getResource("/View/EditPO/EditPOView_NOANCHOR.fxml"));
         EditPOAnchor.setStyle("-fx-background-color : magenta");
         AnchorPane.setTopAnchor(editPOForm, 0.0);
         AnchorPane.setBottomAnchor(editPOForm, 0.0);

@@ -70,8 +70,8 @@ root.setOnMousePressed(event -> {
         
         scene = new Scene(root);
         stage.setScene(scene);
-        stage.setMinHeight(650);
-        stage.setMinWidth(1250);
+        stage.setMinHeight(700);
+        stage.setMinWidth(1350);
 //        stage.initStyle(StageStyle.UNDECORATED);
         stage.setResizable(true);
         stage.show();
