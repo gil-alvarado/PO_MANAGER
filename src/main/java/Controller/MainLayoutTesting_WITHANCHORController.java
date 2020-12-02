@@ -5,7 +5,7 @@
  */
 package Controller;
 
-import Controller.MainLayoutTestingController;
+//import Controller.MainLayoutTestingController;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ResourceBundle;
@@ -39,7 +39,7 @@ public class MainLayoutTesting_WITHANCHORController implements Initializable {
     private AnchorPane EditPOAnchor;
     
     @FXML
-    private Button editPOButton;
+    private Button overviewButton, manageDBButton, editPOButton, signOutButton;
     
     
     /**
@@ -48,12 +48,15 @@ public class MainLayoutTesting_WITHANCHORController implements Initializable {
     @Override
     public void initialize(URL url, ResourceBundle rb) {
         // TODO
+        
+        overviewButton.setDisable(true);
         try{
         
         //ADD forms to their respective panes   
         
         //works. original load was View/Overview...NOANCHOR.fxml
         Node overviewForm = FXMLLoader.load(getClass().getResource("/View/Overview/OverviewViewTesting_NOANCHOR.fxml"));        
+//        Node overviewForm = FXMLLoader.load(getClass().getResource("/View/Overview/OverviewViewTesting_NOANCHOR.fxml"));        
         overviewAnchor.getChildren().add(overviewForm);
         AnchorPane.setTopAnchor(overviewForm, 0.0);
         AnchorPane.setBottomAnchor(overviewForm, 0.0);
@@ -61,8 +64,13 @@ public class MainLayoutTesting_WITHANCHORController implements Initializable {
         AnchorPane.setLeftAnchor(overviewForm, 0.0);
         overviewAnchor.toFront();
         
-//        Node manageDBForm = FXMLLoader.load(getClass().getResource("/View/"));
-//        manageDBAnchor
+        Node manageDBForm = FXMLLoader.load(getClass().getResource("/View/ManageDB/ManageDBView.fxml"));
+        manageDBAnchor.getChildren().add(manageDBForm);
+        AnchorPane.setTopAnchor(manageDBForm, 0.0);
+        AnchorPane.setBottomAnchor(manageDBForm, 0.0);
+        AnchorPane.setRightAnchor(manageDBForm,0.0);
+        AnchorPane.setLeftAnchor(manageDBForm, 0.0);
+
                 
 
         //works: 
@@ -72,6 +80,7 @@ public class MainLayoutTesting_WITHANCHORController implements Initializable {
         
         Center
         */
+//        Node editPOForm = FXMLLoader.load(getClass().getResource("/View/EditPO/EditPOView_NOANCHOR_COPY.fxml"));
         Node editPOForm = FXMLLoader.load(getClass().getResource("/View/EditPO/EditPOView_NOANCHOR.fxml"));
         EditPOAnchor.setStyle("-fx-background-color : magenta");
         AnchorPane.setTopAnchor(editPOForm, 0.0);
@@ -96,13 +105,37 @@ public class MainLayoutTesting_WITHANCHORController implements Initializable {
         ((Stage)(((Button)event.getSource()).getScene().getWindow())).close();
     }
     //##########################################################################
+    @FXML
+    private void openOverviewView(ActionEvent event){
+        
+        overviewButton.setDisable(true);
+        manageDBButton.setDisable(false);
+        editPOButton.setDisable(false);
+        
+        overviewAnchor.toFront();
+        System.out.println("overview button pressed!");
+        
+    }
+    //##########################################################################
+    @FXML
+    private void openMangeDBView(ActionEvent event){
+        
+        overviewButton.setDisable(false);
+        manageDBButton.setDisable(true);
+        editPOButton.setDisable(false);
+        manageDBAnchor.toFront();
+        
+    }
+    //##########################################################################
     @FXML 
     private void openEditPOView(ActionEvent event){
         
-        overviewAnchor.toBack();
-        EditPOAnchor.toFront();
+        overviewButton.setDisable(false);
+        manageDBButton.setDisable(false);
         editPOButton.setDisable(true);
         
+//        overviewAnchor.toBack();
+        EditPOAnchor.toFront();
+        System.out.println("edit button pressed!");
     }
-
 }

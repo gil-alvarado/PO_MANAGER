@@ -24,7 +24,10 @@
             <groupId>net.sf.ucanaccess</groupId>
             <artifactId>ucanaccess</artifactId>
             <version>5.0.0</version>
+            <type>jar</type>
         </dependency>
+        
+        
     </dependencies>
     <build>
         <plugins>

@@ -1,0 +1,21 @@
+Query Wizard -> Find Duplicates:
+
+Table: PARAMETER
+Duplicate-value fields: PARAMETER
+
+compare to PARAMETER textField
+
+
+try (Statement s = conn.createStatement()) {
+    try (ResultSet rs = s.executeQuery("SELECT Attachments FROM AttachTest WHERE ID=1")) {
+        rs.next();
+        Attachment[] atts = (Attachment[]) rs.getObject(1);  // net.ucanaccess.complex.Attachment
+        for (Attachment att : atts) {
+            System.out.println(att.getName());
+            org.apache.commons.io.FileUtils.writeByteArrayToFile(
+                    new File("C:/Users/Gord/Desktop/" + att.getName()), 
+                    att.getData());
+        }
+    }
+}
+

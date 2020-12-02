@@ -15,7 +15,7 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-<GridPane alignment="CENTER" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="583.0" prefWidth="995.0" style="-fx-background-color: #fffff0;" xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1" fx:controller="Controller.EditPOView_NOANCHORController">
+<GridPane alignment="CENTER" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="583.0" prefWidth="995.0" style="-fx-background-color: #fffff0;" xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1" fx:controller="Controller.EditPOView_NOANCHOR_COPYController">
   <columnConstraints>
     <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
   </columnConstraints>
@@ -39,7 +39,7 @@
                   <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" percentWidth="22.5" prefWidth="100.0" />
                   <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" percentWidth="25.0" prefWidth="100.0" />
                   <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" percentWidth="22.5" prefWidth="100.0" />
-                  <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" percentWidth="5.0" prefWidth="100.0" />
+                  <ColumnConstraints fillWidth="false" hgrow="NEVER" minWidth="5.0" percentWidth="5.0" prefWidth="5.0" />
                </columnConstraints>
                <rowConstraints>
                   <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
@@ -63,7 +63,7 @@
                         <Font size="24.0" />
                      </font>
                   </Label>
-                  <Label alignment="CENTER_RIGHT" text="Confirmed" GridPane.halignment="RIGHT" GridPane.rowIndex="2">
+                  <Label alignment="CENTER_RIGHT" text="CONFIRMED" GridPane.halignment="RIGHT" GridPane.rowIndex="2">
                      <font>
                         <Font size="24.0" />
                      </font>
@@ -102,8 +102,8 @@
                         <Font size="18.0" />
                      </font>
                   </TextField>
-                  <DatePicker fx:id="DatePickerORGSHIP" promptText="MM/DD/YYYY" style="-fx-font-size: 18px;" GridPane.columnIndex="1" GridPane.rowIndex="4" GridPane.vgrow="ALWAYS" />
-                  <DatePicker fx:id="DatePickerCURSHIP" editable="false" promptText="MM/DD/YYYY" style="-fx-font-size: 18px;" GridPane.columnIndex="1" GridPane.rowIndex="5" GridPane.vgrow="ALWAYS" />
+                  <DatePicker fx:id="DatePickerORGSHIP" editable="false" promptText="ORG SHIP" style="-fx-font-size: 18px;" GridPane.columnIndex="1" GridPane.rowIndex="4" GridPane.vgrow="ALWAYS" />
+                  <DatePicker fx:id="DatePickerCURSHIP" editable="false" promptText="CUR SHIP" style="-fx-font-size: 18px;" GridPane.columnIndex="1" GridPane.rowIndex="5" GridPane.vgrow="ALWAYS" />
                   <Label alignment="CENTER_RIGHT" text="BRG#" GridPane.columnIndex="2" GridPane.halignment="RIGHT">
                      <font>
                         <Font size="24.0" />
@@ -129,36 +129,33 @@
                         <Font size="24.0" />
                      </font>
                   </Label>
-                  <Label alignment="CENTER_RIGHT" text="F/U Date" GridPane.columnIndex="2" GridPane.halignment="RIGHT" GridPane.rowIndex="5">
+                  <Label alignment="CENTER_RIGHT" text="F/U DATE" GridPane.columnIndex="2" GridPane.halignment="RIGHT" GridPane.rowIndex="5" GridPane.vgrow="ALWAYS">
                      <font>
                         <Font size="24.0" />
                      </font>
                   </Label>
-                  <TextField fx:id="TextFieldBRG" promptText="BRG #" GridPane.columnIndex="3" GridPane.vgrow="ALWAYS">
-                     <font>
-                        <Font size="18.0" />
-                     </font>
-                     <GridPane.margin>
-                        <Insets />
-                     </GridPane.margin>
-                  </TextField>
-                  <TextField fx:id="TextFieldPARAMETER" promptText="PARAMETER" GridPane.columnIndex="3" GridPane.rowIndex="1" GridPane.vgrow="ALWAYS">
+                  <DatePicker fx:id="DatePickerORGSHIP1" editable="false" promptText="ORG SHIP" style="-fx-font-size: 18px;" GridPane.columnIndex="3" GridPane.rowIndex="4" GridPane.vgrow="ALWAYS" />
+                  <DatePicker fx:id="DatePickerORGSHIP2" editable="false" promptText="ORG SHIP" style="-fx-font-size: 18px;" GridPane.columnIndex="3" GridPane.rowIndex="5" GridPane.vgrow="ALWAYS" />
+                  <TextField fx:id="TextFieldPO1" promptText="PO #" GridPane.columnIndex="3" GridPane.vgrow="ALWAYS">
                      <font>
                         <Font size="18.0" />
                      </font>
                   </TextField>
-                  <TextField fx:id="TextFieldQTY" promptText="QTY" GridPane.columnIndex="3" GridPane.rowIndex="2" GridPane.vgrow="ALWAYS">
+                  <TextField fx:id="TextFieldPO2" promptText="PO #" GridPane.columnIndex="3" GridPane.rowIndex="1" GridPane.vgrow="ALWAYS">
                      <font>
                         <Font size="18.0" />
                      </font>
                   </TextField>
-                  <TextField fx:id="TextFieldLANDING" promptText="LC" GridPane.columnIndex="3" GridPane.rowIndex="3" GridPane.vgrow="ALWAYS">
+                  <TextField fx:id="TextFieldPO21" promptText="PO #" GridPane.columnIndex="3" GridPane.rowIndex="2" GridPane.vgrow="ALWAYS">
                      <font>
                         <Font size="18.0" />
                      </font>
                   </TextField>
-                  <DatePicker fx:id="DatePickerETABMS" editable="false" promptText="MM/DD/YYYY" style="-fx-font-size: 18px;" GridPane.columnIndex="3" GridPane.rowIndex="4" GridPane.vgrow="ALWAYS" />
-                  <DatePicker fx:id="DatePickerFUDATE" editable="false" promptText="MM/DD/YYYY" style="-fx-font-size: 18px;" GridPane.columnIndex="3" GridPane.rowIndex="5" GridPane.vgrow="ALWAYS" />
+                  <TextField fx:id="TextFieldPO22" promptText="PO #" GridPane.columnIndex="3" GridPane.rowIndex="3" GridPane.vgrow="ALWAYS">
+                     <font>
+                        <Font size="18.0" />
+                     </font>
+                  </TextField>
                </children>
             </GridPane>
             <GridPane alignment="CENTER" gridLinesVisible="true" GridPane.columnIndex="1">
@@ -172,7 +169,7 @@
                <children>
                   <HBox alignment="CENTER" prefHeight="100.0" prefWidth="200.0">
                      <children>
-                        <Label fx:id="dragLABEL" alignment="CENTER" disable="true" text="Drag Here,For DatePicker, add format like wells fargo enter dollar amount MM/DD/YYYY" wrapText="true">
+                        <Label alignment="CENTER" disable="true" text="Drag Here">
                            <font>
                               <Font size="30.0" />
                            </font>
@@ -200,7 +197,7 @@
       <GridPane GridPane.rowIndex="1">
         <columnConstraints>
           <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
-            <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+          <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
             <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
         </columnConstraints>
         <rowConstraints>
@@ -208,7 +205,7 @@
           <RowConstraints minHeight="10.0" percentHeight="80.0" prefHeight="30.0" vgrow="SOMETIMES" />
         </rowConstraints>
          <children>
-            <TextArea fx:id="TextAreaRWCOMMENTS" prefHeight="200.0" prefWidth="200.0" promptText="RW Comments" style="-fx-border-color: #000000;" GridPane.rowIndex="1">
+            <TextArea fx:id="TextAreaRWCOMMENTS" prefHeight="200.0" prefWidth="200.0" promptText="RW Comments" GridPane.rowIndex="1">
                <GridPane.margin>
                   <Insets bottom="25.0" left="25.0" right="25.0" />
                </GridPane.margin>
@@ -216,12 +213,12 @@
                   <Font size="24.0" />
                </font>
             </TextArea>
-            <ListView fx:id="ListViewATTACHMENTS" onDragDropped="#handleDrop" onDragOver="#handleDragOver" prefHeight="200.0" prefWidth="200.0" style="-fx-border-color: #000000;" GridPane.columnIndex="1" GridPane.rowIndex="1">
+            <ListView fx:id="ListViewATTACHMENTS" prefHeight="200.0" prefWidth="200.0" GridPane.columnIndex="1" GridPane.rowIndex="1">
                <GridPane.margin>
                   <Insets bottom="25.0" left="25.0" right="25.0" />
                </GridPane.margin>
             </ListView>
-            <TextArea fx:id="TextAreaFUNOTES" prefHeight="200.0" prefWidth="200.0" promptText="F/U Notes" style="-fx-border-color: #000000;" GridPane.columnIndex="2" GridPane.rowIndex="1">
+            <TextArea fx:id="TextAreaFUNOTES" prefHeight="200.0" prefWidth="200.0" promptText="F/U Notes" GridPane.columnIndex="2" GridPane.rowIndex="1">
                <GridPane.margin>
                   <Insets bottom="25.0" left="25.0" right="25.0" />
                </GridPane.margin>

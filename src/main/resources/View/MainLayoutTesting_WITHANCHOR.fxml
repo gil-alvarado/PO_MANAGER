@@ -21,11 +21,11 @@
    <children>
       <VBox>
          <children>
-            <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" prefHeight="300.0" stylesheets="@../styles/style.css" text="Overview" />
-            <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" prefHeight="300.0" stylesheets="@../styles/style.css" text="Manage DB" />
-            <Button fx:id="editPOButton" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#openEditPOView" prefHeight="300.0" stylesheets="@../styles/style.css" text="Edit PO" />
-            <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#closeApplication" prefHeight="300.0" stylesheets="@../styles/style.css" text="Sign out" />
-            <Label alignment="CENTER" contentDisplay="RIGHT" maxWidth="1.7976931348623157E308" prefHeight="200.0" style="-fx-background-color: #000000; -fx-text-fill: #ffffff;" text="Current User: ">
+            <Button focusTraversable="false" maxWidth="1.7976931348623157E308" mnemonicParsing="false" prefHeight="300.0" stylesheets="@../styles/style.css" text="Overview" />
+            <Button focusTraversable="false" maxWidth="1.7976931348623157E308" mnemonicParsing="false" prefHeight="300.0" stylesheets="@../styles/style.css" text="Manage DB" />
+            <Button fx:id="editPOButton" focusTraversable="false" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#openEditPOView" prefHeight="300.0" stylesheets="@../styles/style.css" text="Edit PO" />
+            <Button focusTraversable="false" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#closeApplication" prefHeight="300.0" stylesheets="@../styles/style.css" text="Sign out" />
+            <Label alignment="CENTER" contentDisplay="RIGHT" focusTraversable="false" maxWidth="1.7976931348623157E308" prefHeight="200.0" style="-fx-background-color: #000000; -fx-text-fill: #ffffff;" text="Current User: ">
                <graphic>
                   <Label style="-fx-text-fill: #ffffff;" text="Gil">
                      <font>

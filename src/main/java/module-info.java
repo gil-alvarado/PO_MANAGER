@@ -1,13 +1,18 @@
 module com.test {
+    
     requires javafx.controls;
     requires javafx.fxml;
     requires java.base;
     requires java.sql;
-
-    opens com.test to javafx.fxml;
+    requires ucanaccess;
     
+    opens com.test to javafx.fxml;
+//    opens Controller to java.base;
     //ADDED TO ALLOW ACCESS TO Controller Package
     opens Controller to javafx.fxml;
-    
+    opens Model to javafx.fxml;
+            
     exports com.test;
+    exports Controller;
+    exports Model;
 }

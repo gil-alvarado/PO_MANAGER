@@ -9,6 +9,7 @@ package Model;
  *
  * @author Gilbert Alvarado
  */
+import java.io.File;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
@@ -21,6 +22,8 @@ import java.util.LinkedHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import net.ucanaccess.complex.Attachment;
+
 /**
  *
  * @author oXCToo
@@ -28,17 +31,24 @@ import java.util.logging.Logger;
 public class ConnectionUtil {
 //    static Connection conn = null;
     
-//    private final static String databaseURL = "jdbc:ucanaccess://C://Users//gilbe//Documents//Vie//BMS//data.accdb";
-        private final static String databaseURL = "jdbc:ucanaccess://C://Users//gilbe//Documents//JavaFX//BMS_PO_Manager//BMS_DATABASE.accdb";
+//    private static final ClassLoader classLoader = getClass().getClassLoader();
+    private static final ClassLoader classLoader = ConnectionUtil.class.getClassLoader();
+    private static final File file = new File(classLoader.getResource("BMS_DATABASE.accdb").getFile());
+    
+//    private final static String databaseURL = "jdbc:ucanaccess://C://Users//gilbe//DocumeS_nts//Vie//BMS//data.accdb";
+    private final static String databaseURL = "jdbc:ucanaccess://C://Users//gilbe//Documents//JavaFX//BMS_PO_Manager//BMS_DATABASE.accdb";
+//    private static final String databaseURL = "jdbc:ucanaccess://" + file.getAbsolutePath().toString();    
+    
     private static ArrayList<String> columnNames = null;
     private static LinkedHashMap<Integer, ArrayList<String>> rows= null;
     
 //    private final static String query = "SELECT * FROM PO_2020;";
-    private final static String query = "SELECT * FROM purchaseorders;";
+    private final static String query = "SELECT * FROM purchase_orders;";
 //    private static final  String queryRef = "SELECT * FROM COVER_REF_FILE_2020;";
     
 //    private static ResultSet rs;
 //    private static Statement statement;
+
     
     public static Connection conDB(){
         
@@ -48,6 +58,7 @@ public class ConnectionUtil {
 //            Connection con = DriverManager.getConnection("jdbc:mysql://localhost/keeptoo_systems", "root", "R.E.4.R.E.51993!");
             Connection connection= DriverManager.getConnection(databaseURL,"app","app");
             //conn =  DriverManager.getConnection(databaseURL);
+            
             System.out.println("DB CONNECTED");
             System.out.println("RETURNING DB CONNECTION: " + connection);
             return connection;
@@ -86,7 +97,7 @@ public class ConnectionUtil {
             Statement statement = conDB().createStatement();
             ResultSet rs = statement.executeQuery(query);
             ResultSetMetaData rsmd = rs.getMetaData();
-            columnNames = new ArrayList<String>();
+            columnNames = new ArrayList<>();
             
             for(int i = 1; i <= rsmd.getColumnCount(); i++){
                 if(rsmd.getColumnName(i).equals("FileAttachments") == false){

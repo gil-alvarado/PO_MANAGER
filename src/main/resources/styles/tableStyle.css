@@ -1,0 +1,69 @@
+
+.table-view{
+    /*-fx-background-color: transparent;*/
+ }
+
+.table-view:focused{
+    /*-fx-background-color: transparent;*/
+}
+
+
+
+.table-view .column-header {
+     -fx-background-color: transparent;
+} 
+
+.table-view .column-header-background{
+    -fx-background-color: linear-gradient(#131313 0.0%, #424141 100.0%);
+}
+
+.table-view .column-header-background .label{
+     -fx-background-color: transparent; 
+    -fx-font-weight:bold;
+    -fx-text-fill: white;
+}
+
+.table-view .table-column{
+    -fx-alignment:center;
+     -fx-font-size:18px; 
+}
+
+.table-view .table-cell{
+    -fx-font-weight:bold;
+    -fx-font-size:17px;           
+    /* -fx-text-fill:orange; */
+
+}
+
+
+ .table-row-cell{
+    -fx-background-color: #fffff0;
+    -fx-background-insets: 0.0, 0.0 0.0 1.0 0.0;
+    -fx-padding: 0.0em; 
+}
+
+/* Selected row */
+.table-view:focused .table-row-cell:filled:focused:selected {
+    -fx-background-color: brown;
+    -fx-background-insets: 0, 1, 2;
+    -fx-background: -fx-accent;
+    -fx-text-fill: -fx-selection-bar-text;
+}
+
+/* Row hovered */
+.table-view:row-selection .table-row-cell:filled:hover {
+    -fx-background-color: #48D1CC;
+    -fx-background-insets: 0, 0 0 1 0;
+    -fx-text-fill: -fx-text-inner-color;
+    /*-fx-text-inner-color*/
+}
+
+
+/*
+//Style for each <odd> row of table view
+.table-row-cell:odd{
+    -fx-background-color: orange;
+    -fx-background-insets: 0.0, 0.0 0.0 1.0 0.0;
+    -fx-padding: 0.0em;  
+}
+*/

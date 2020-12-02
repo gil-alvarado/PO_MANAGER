@@ -23,7 +23,7 @@
 
 -fx-font-weight: bold;
 -fx-font-family: Georgia;
--fx-font-size: 33px;
+-fx-font-size: 30px;
 }
 .button:pressed
 {
@@ -55,13 +55,16 @@
 .scroll-bar:vertical .track{
 /*    -fx-background-color: transparent;
     -fx-border-color: transparent;*/
--fx-background-color: #e8dce8;
+/*-fx-background-color: #e8dce8;*/
+-fx-background-color: #474747;
+
     -fx-background-radius: 0em;
 }
 
 .scroll-bar:horizontal .thumb,
 .scroll-bar:vertical .thumb {
     -fx-background-color: #10165F;
+    -fx-background-color: #bdbdbd;
     -fx-background-radius: 5em;
 }
 

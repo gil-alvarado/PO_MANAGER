@@ -1,6 +1,7 @@
 package com.test;
 
 import Controller.TestController;
+import Model.ConnectionUtil;
 
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
@@ -9,7 +10,9 @@ import javafx.scene.Scene;
 import javafx.stage.Stage;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import static javafx.application.ConditionalFeature.FXML;
+import javafx.scene.image.Image;
 import javafx.stage.StageStyle;
 
 /**
@@ -74,6 +77,8 @@ root.setOnMousePressed(event -> {
         stage.setMinWidth(1350);
 //        stage.initStyle(StageStyle.UNDECORATED);
         stage.setResizable(true);
+        stage.setTitle("BMS DATA MANAGER");
+        stage.getIcons().add(new Image("https://example.com/javaicon.png"));
         stage.show();
     }
 
@@ -88,6 +93,12 @@ root.setOnMousePressed(event -> {
 
     public static void main(String[] args) {
         launch();
+        
+//        ArrayList<String> list = ConnectionUtil.columnNames();
+//        for(String item : list)
+//            System.out.print("|\t"+item+"\t|");
+//        System.out.println("\n----------------------------------");
+        
     }
 
 }

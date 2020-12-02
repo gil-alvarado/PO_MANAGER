@@ -1,0 +1,19 @@
+.combo-box{
+    -fx-font-size : 18px;
+}
+.combo-box-popup .list-view {
+    -fx-font-size : 18px;
+}
+
+/*added this in an edit*/
+.combo-box-popup .list-view .list-cell {
+    -fx-padding: -1 -1 -1 -1;
+}
+
+.date-picker-popup .calendar-grid {
+    -fx-pref-width: 220.0;
+    -fx-pref-height: 180.0;
+}
+.date-picker-popup .spinner-label {
+    -fx-font-size: 18.0px;
+}

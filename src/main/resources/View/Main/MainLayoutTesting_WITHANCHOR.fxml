@@ -22,19 +22,26 @@
    <children>
       <VBox>
          <children>
-            <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" prefHeight="300.0" stylesheets="@../../styles/style.css" text="Overview" />
-            <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" prefHeight="300.0" text="Manage DB">
+            
+             <Button fx:id="overviewButton" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#openOverviewView" prefHeight="300.0" stylesheets="@../../styles/style.css" text="Overview" />
+            
+            <Button fx:id="manageDBButton" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#openMangeDBView" prefHeight="300.0" text="Manage DB">
                <stylesheets>
                   <URL value="@../../styles/style.css" />
                </stylesheets></Button>
+            
             <Button fx:id="editPOButton" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#openEditPOView" prefHeight="300.0" text="Edit PO">
                <stylesheets>
                   <URL value="@../../styles/style.css" />
-               </stylesheets></Button>
-            <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#closeApplication" prefHeight="300.0" text="Sign out">
+               </stylesheets>
+            </Button>
+            
+            <Button fx:id="signOutButton" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#closeApplication" prefHeight="300.0" text="Sign out">
                <stylesheets>
                   <URL value="@../../styles/style.css" />
-               </stylesheets></Button>
+               </stylesheets>
+            </Button>
+            
             <Label alignment="CENTER" contentDisplay="RIGHT" maxWidth="1.7976931348623157E308" prefHeight="200.0" style="-fx-background-color: #000000; -fx-text-fill: #ffffff;" text="Current User: ">
                <graphic>
                   <Label style="-fx-text-fill: #ffffff;" text="Gil">
