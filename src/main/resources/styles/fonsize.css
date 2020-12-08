@@ -8,6 +8,9 @@
 -fx-background-color : #474747;
 
 -fx-text-fill : #e0e86f;
+
+-fx-text-fill : #a4ab1b;
+
 -fx-font-weight: bold;
 -fx-font-size: 15px;
 }
@@ -15,6 +18,8 @@
 -fx-background-color : #8c8c8c;
 
 -fx-background-color : #757575;
+
+-fx-background-color: #48D1CC;
 
 -fx-font-weight: bold;
 -fx-font-family: Georgia;

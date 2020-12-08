@@ -5,6 +5,16 @@
  */
 package Model;
 
+import java.io.File;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.sql.ResultSet;
+import net.ucanaccess.complex.Attachment;
+import net.ucanaccess.complex.SingleValue;
+
+
 /**
  *
  * @author Gilbert Alvarado
@@ -12,7 +22,10 @@ package Model;
 public class ModelManageDBTable {
     
     private String confirmed,po, brg, cur, attachment,packet;
-
+    private SingleValue[] svs;
+    private Attachment att[];
+    
+    
     public ModelManageDBTable(String confirmed, String po, String brg, String cur, String attachment, String packet) {
         this.confirmed = confirmed;
         this.po = po;
@@ -45,8 +58,38 @@ public class ModelManageDBTable {
         this.cur = cur;
     }
 
+    //import net.ucanaccess.complex.Attachment;
     public String getAttachment() {
+        
+        
         return attachment;
+    }
+    public void setAtt(Attachment []att){
+        this.att = att;
+    }
+    
+    public void displayAttachmentCHANGE(){
+        
+//        try (Statement s = ConnectionUtil.conDB().createStatement()) {
+//            try (ResultSet rs = s.executeQuery("SELECT Attachments FROM AttachTest WHERE ID=1")) {
+//                rs.next();
+//                Attachment[] atts = (Attachment[]) rs.getObject(1);  // net.ucanaccess.complex.Attachment
+                System.out.println("NUMBER OF ATTACHMENTS: " + att.length);
+                for (Attachment a : att) {
+                    System.out.println("File Name: " + a.getName());//FileNAME
+                    System.out.println("File Type: " + a.getType());//File Type
+//                    org.apache.commons.io.FileUtils.writeByteArrayToFile(
+//                            new File("C:/Users/Gord/Desktop/" + att.getName()), 
+//                            att.getData());
+                }
+//            }
+//        } catch (SQLException ex) {   
+//            Logger.getLogger(ModelManageDBTable.class.getName()).log(Level.SEVERE, null, ex);
+//        }
+        
+    }
+    public int getNumberAttachments(){
+        return this.att.length;
     }
 
     public void setAttachment(String attachment) {

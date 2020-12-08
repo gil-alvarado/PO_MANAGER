@@ -20,6 +20,8 @@
             <artifactId>javafx-fxml</artifactId>
             <version>13</version>
         </dependency>
+        
+        <!--UCANACCESS-->
         <dependency>
             <groupId>net.sf.ucanaccess</groupId>
             <artifactId>ucanaccess</artifactId>
@@ -27,7 +29,18 @@
             <type>jar</type>
         </dependency>
         
-        
+        <!-- https://mvnrepository.com/artifact/org.hibernate/hibernate-core -->
+<!--        <dependency>
+            <groupId>org.hibernate</groupId>
+            <artifactId>hibernate-core</artifactId>
+            <version>5.4.25.Final</version>
+        </dependency>-->
+        <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-base</artifactId>
+            <version>13</version>
+            <type>jar</type>
+        </dependency>
     </dependencies>
     <build>
         <plugins>

@@ -1,7 +1,7 @@
 package com.test;
 
-import Controller.TestController;
 import Model.ConnectionUtil;
+import Model.suppliers;
 
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
@@ -14,6 +14,15 @@ import java.util.ArrayList;
 import static javafx.application.ConditionalFeature.FXML;
 import javafx.scene.image.Image;
 import javafx.stage.StageStyle;
+
+//import org.hibernate.Session;
+//import org.hibernate.SessionFactory;
+//import org.hibernate.Transaction;
+//import org.hibernate.cfg.Configuration;
+//import org.hibernate.Session; 
+
+import net.ucanaccess.complex.Attachment;
+
 
 /**
  * JavaFX App
@@ -48,7 +57,6 @@ public class App extends Application {
 //        scene = new Scene(FXMLLoader.load(getClass().getResource("test.fxml")));
         
 //        Parent root = FXMLLoader.load(getClass().getResource("/View/test.fxml"));
-//        Parent root = FXMLLoader.load(getClass().getResource("/View/MainLayout.fxml"));   
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 //load overview_WITHANCHOR to stackpane
@@ -72,6 +80,7 @@ root.setOnMousePressed(event -> {
         });
         
         scene = new Scene(root);
+        //-------------------------
         stage.setScene(scene);
         stage.setMinHeight(700);
         stage.setMinWidth(1350);
@@ -93,12 +102,7 @@ root.setOnMousePressed(event -> {
 
     public static void main(String[] args) {
         launch();
-        
-//        ArrayList<String> list = ConnectionUtil.columnNames();
-//        for(String item : list)
-//            System.out.print("|\t"+item+"\t|");
-//        System.out.println("\n----------------------------------");
-        
+
     }
 
 }

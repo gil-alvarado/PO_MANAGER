@@ -40,6 +40,13 @@
     -fx-background-color: #fffff0;
     -fx-background-insets: 0.0, 0.0 0.0 1.0 0.0;
     -fx-padding: 0.0em; 
+    -fx-border-color: #474747;
+    -fx-cell-size: 50px;
+/*-fx-table-cell-border-color:red;*/
+
+}
+.table-row-cell:empty {
+    -fx-border-color: transparent;
 }
 
 /* Selected row */

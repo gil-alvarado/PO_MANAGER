@@ -22,7 +22,6 @@ import java.util.LinkedHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import net.ucanaccess.complex.Attachment;
 
 /**
  *
@@ -33,29 +32,23 @@ public class ConnectionUtil {
     
 //    private static final ClassLoader classLoader = getClass().getClassLoader();
     private static final ClassLoader classLoader = ConnectionUtil.class.getClassLoader();
-    private static final File file = new File(classLoader.getResource("BMS_DATABASE.accdb").getFile());
+//    private static final File file = new File(classLoader.getResource("BMS_DATABASE_TEST.accdb").getFile());
     
-//    private final static String databaseURL = "jdbc:ucanaccess://C://Users//gilbe//DocumeS_nts//Vie//BMS//data.accdb";
-    private final static String databaseURL = "jdbc:ucanaccess://C://Users//gilbe//Documents//JavaFX//BMS_PO_Manager//BMS_DATABASE.accdb";
-//    private static final String databaseURL = "jdbc:ucanaccess://" + file.getAbsolutePath().toString();    
+    private final static String databaseURL = "jdbc:ucanaccess://C://Users//gilbe//Documents//NetBeansProjects//test//src//main//resources//BMS_DATABASE_TEST.accdb";
+   // private static final String databaseURL = "jdbc:ucanaccess://" + file.getAbsolutePath();    
     
     private static ArrayList<String> columnNames = null;
     private static LinkedHashMap<Integer, ArrayList<String>> rows= null;
     
-//    private final static String query = "SELECT * FROM PO_2020;";
     private final static String query = "SELECT * FROM purchase_orders;";
-//    private static final  String queryRef = "SELECT * FROM COVER_REF_FILE_2020;";
-    
-//    private static ResultSet rs;
-//    private static Statement statement;
+
 
     
     public static Connection conDB(){
         
-        try{//connect to DB and return connection
-//            Class.forName("com.mysql.jdbc.Driver");
+        try{
+            
             Class.forName("net.ucanaccess.jdbc.UcanaccessDriver");
-//            Connection con = DriverManager.getConnection("jdbc:mysql://localhost/keeptoo_systems", "root", "R.E.4.R.E.51993!");
             Connection connection= DriverManager.getConnection(databaseURL,"app","app");
             //conn =  DriverManager.getConnection(databaseURL);
             
@@ -185,7 +178,6 @@ public class ConnectionUtil {
     
 //##############################################################################
     public static int rowCount(){
-        
         try{
             Statement statement = conDB().createStatement();
             ResultSet result = statement.executeQuery("SELECT COUNT(*) FROM purchaseorders;");
@@ -201,4 +193,5 @@ public class ConnectionUtil {
             return 0;
         }
     }
+//##############################################################################  
 }

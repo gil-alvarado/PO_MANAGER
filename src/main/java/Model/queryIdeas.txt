@@ -1,10 +1,60 @@
 Query Wizard -> Find Duplicates:
 
-Table: PARAMETER
+Table: PARAMETER,
 Duplicate-value fields: PARAMETER
 
-compare to PARAMETER textField
+compare to PARAMETER textField(trim)
+add to parameter/supplier if the data does no exist
 
+//##############################################################################
+
+TEST DATABASE
+
+OVERVIEW: display table contents
+
+SELECT * FROM purchaseorders po, poDetails pd, supplier s, PARAMETER p
+WHERE 
+po.OrderID = pd.OrderID AND
+pd.PARAMETER = p.PARAMETER AND
+p.supplierID = s.supplierID;
+
+//------------------------------------------------------------------------------
+
+FINAL DATABASE
+
+OVERVIEW : display table contents
+
+SELECT po.purchase_order, pd.confirmed, pd.invoice_price, pd.landing_cost, b.brg_id, s.supplier_name, po.current_ship_date, po.fu_date, po.fu_notes FROM purchase_orders po, order_details pd, bearings b, suppliers s WHERE po.purchase_order = pd.purchase_order AND pd.brg_id = b.brg_id AND b.supplier__id = s.supplier_id;
+
+//------------------------------------------------------------------------------
+
+MangeDBView: display table contents
+
+STATUS = CONFIRMED
+
+//works
+
+SELECT po.purchase_order, pd.confirmed, b.brg_id, po.current_ship_date, 
+pd.attatchments, pd.moved_to_packet
+FROM purchase_orders po, order_details pd, bearings b, suppliers s
+WHERE 
+po.purchase_order = pd.purchase_order AND
+pd.brg_id = b.brg_id;
+//------------------------------------------------------------------------------
+
+ADD TO TABLES: 
+
+1) PARAMETER (PARAMETER) and suppliers (supplier_id)
+	use WHERE NOT EXIST
+
+INSERT INTO PARAMETER 
+
+INSERT INTO suppliers 
+
+2) BEARINGS
+
+
+//##############################################################################
 
 try (Statement s = conn.createStatement()) {
     try (ResultSet rs = s.executeQuery("SELECT Attachments FROM AttachTest WHERE ID=1")) {
@@ -18,4 +68,45 @@ try (Statement s = conn.createStatement()) {
         }
     }
 }
+
+//##############################################################################
+
+ "UPDATE order_details SET "
+            + "brg_id = ?, "
+            + "quantity = ?, "
+            + "landed_cost = ?, "
+            + "invoice_price = ?, "
+            + "confirmed = ? "
+            + "WHERE "
+            + "purchase_order = ? AND "
+            + " brg_id = ? AND "
+            + " confirmed = ?;" ;
+
+PARAMETERS: 
+
+purchase_order  ( get TextFieldValue, was updated befor updating details,  PARAMMETER)= '1230-BR'
+
+brg_id (old PARAMETER, from ) = 11 (kl-09)
+            
+confirmed (old PARAMETER) = FALSE/NO
+//---------------------------------------------------
+            UPDATE order_details 
+
+            SET
+                brg_id = new brg_id (get new/existing brg_id from beargins table)
+                            
+                            SELECT brg_id FROM bearings 
+                                WHERE 
+                                    brg_id = new brg_id;
+                                    (brg_id should exist)
+
+
+                quantity = 
+//---------------------------------------------------
+
+ATTACHMENTS
+CANT USE 
+
+
+
 

@@ -11,14 +11,13 @@ import java.net.URL;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.text.Format;
-import java.text.SimpleDateFormat;
 import java.util.ResourceBundle;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.event.ActionEvent;
+import javafx.collections.transformation.FilteredList;
+import javafx.collections.transformation.SortedList;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Button;
@@ -64,6 +63,7 @@ public class OverviewViewTesting_NOANCHORController implements Initializable {
     
     
     ObservableList<ModelOverviewTable> obList = FXCollections.observableArrayList();
+//    ObservableList<ModelOverviewTable> dataList = FXCollections.observableArrayList();
     
     @FXML
     private TableView<ModelOverviewTable> OverviewTableView;
@@ -96,50 +96,84 @@ public class OverviewViewTesting_NOANCHORController implements Initializable {
         updateTableView();
         addButtonsToTable();//NOTEScolumn
         
-    }    
-    //##########################################################################
+        searchPO();
+    }
+//##############################################################################    
+
     public void updateTableView(){
         
-     try{
-            Connection con = ConnectionUtil.conDB();
-            System.out.println("attempting to upfate table");
-            //THIS IS ONLY WORKING WITH ONE TABLE(purchaseorders). MAKE IT WORK WOTH THE TABLES RELATIONSHIPS 
-//            ResultSet rs = con.createStatement().executeQuery("SELECT * FROM purchaseorders;");
+        OverviewTableView.getItems().clear();
         
-            ResultSet rs = con.createStatement().executeQuery("SELECT Confirmed,purchaseOrder,"
-                    + "Format(CURRENT_SHIP_DATE,'Short Date'),Format(FUdate,'Short Date') FROM purchaseorders;");
-//Format(FUdate,'Short Date')
-            
-        //(String confirmed,String po, String brg, String supplier, 
-        //             String cur, String fudate,String funotes) {
+            try{
+                   Connection con = ConnectionUtil.conDB();
 
-//            OverviewTableView.getItems().clear();
-            while(rs.next()){
-                
-                obList.add(new 
-        ModelOverviewTable(rs.getString("Confirmed"),
-                        rs.getString("purchaseOrder"),
-                        "add BRG",
-                        "add SUP",
-                        rs.getString(3),
-                        rs.getString(4),
-                        "add FU-NOTE",
-                        "ip: $100.505",
-                        "lc: $55.01"));
+//                   ResultSet rs = con.createStatement().executeQuery("SELECT Confirmed,purchaseOrder,"
+//                           + "Format(CURRENT_SHIP_DATE,'Short Date'),Format(FUdate,'Short Date') FROM purchaseorders;");
+                    
+    ResultSet rs = 
+            con.createStatement().executeQuery(
+                    "SELECT po.purchase_order, pd.confirmed, pd.invoice_price, pd.landed_cost, b.brg_name, "
+                            + "s.supplier_id, "
+                            + "FORMAT(po.current_ship_date,'Short Date'), "
+                            + "FORMAT(po.fu_date,'Short Date'), po.fu_notes "
+                            + ""
+                            + "FROM purchase_orders po, order_details pd, bearings b, suppliers s "
+                            + ""
+                            + "WHERE po.purchase_order = pd.purchase_order AND pd.brg_id = b.brg_id "
+                            + "AND b.supplier_id = s.supplier_id;");
+                   
+                    while(rs.next()){
 
-//            System.out.println(rs.getString(1));
-            }
+                       obList.add(new 
+                               ModelOverviewTable(rs.getString("confirmed"),
+                               rs.getString("purchase_order"),
+                               rs.getString("brg_name"),//CHANGE TO name
+                               rs.getString("supplier_id"),
+                               rs.getString(7),//current ship
+                               rs.getString(8),//FU date
+                               "add FU-NOTE",
+                               rs.getString("invoice_price"),
+                               rs.getString("landed_cost")));
+
+                   }
             
-            
-            
+            con.close();
         } catch (SQLException ex) {
             Logger.getLogger(OverviewViewTesting_NOANCHORController.class.getName()).log(Level.SEVERE, null, ex);
         }
         
-        OverviewTableView.setItems(obList);
+
     }
-        //##########################################################################
-    private void addButtonsToTable(){
+
+//##############################################################################
+    public void searchPO() {
+                //MAIN TABLE-begin filtering
+        FilteredList<ModelOverviewTable> filterData = new FilteredList<>(obList,b->true);
+        POTextField.textProperty().addListener((observable,oldValue,newValue)->{
+            filterData.setPredicate(po -> {
+                
+                if(newValue == null || newValue.isEmpty())
+                    return true;
+                
+                String lowercaseFilter = newValue.toLowerCase();
+                
+                if (po.getPo().toLowerCase().contains(lowercaseFilter) ) {
+                    return true; // Filter matches username
+                }
+                else
+                    return false;
+                
+            });
+            
+        });
+        
+        SortedList<ModelOverviewTable> sortedData = new SortedList<>(filterData);
+        sortedData.comparatorProperty().bind(OverviewTableView.comparatorProperty());
+                
+        OverviewTableView.setItems(sortedData);   
+    }    
+//##############################################################################
+    public void addButtonsToTable(){
         
         //BUTTONcolumn
         Callback<TableColumn<ModelOverviewTable, String>, TableCell<ModelOverviewTable, String>> cellFactory;
@@ -150,18 +184,20 @@ public class OverviewViewTesting_NOANCHORController implements Initializable {
                 //throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
                 final TableCell<ModelOverviewTable, String> cell = new TableCell<ModelOverviewTable, String>(){
                     
-                    private final Button btn = new Button("View");
+                    private final Button btn = new Button("View\nNotes");
                     {
                         btn.setMaxHeight(50);
                         btn.setMaxWidth(100);
                         btn.setStyle("-fx-font-size: 18px;-fx-font-weight: bold;\n" 
                                 + "-fx-font-family: Georgia;");
                     }
-                    Dialog<String> dialog = new Dialog<String>();{
+                    Dialog<String> dialog = new Dialog<String>();
+                    {
                             dialog.setTitle("Overview DIALOG");
                             ButtonType type = new ButtonType("Ok", ButtonBar.ButtonData.OK_DONE);
                             dialog.getDialogPane().getButtonTypes().add(type);
                     }
+                    
                     @Override
                     public void updateItem(String item, boolean empty){
                         super.updateItem(item, empty);
@@ -174,7 +210,7 @@ public class OverviewViewTesting_NOANCHORController implements Initializable {
                                         + "   " + data.getConfirmed());
                                 
                                 dialog.setContentText("PO: " + data.getPo() + ", brg#: " + data.getLc()
-                            +"\nCREAT MODEL FOR ENTIRE DB, SHARE THAT MODEL THROUGHT THE ENTIRE PROGRAM");
+                            +"\nCREATE MODEL FOR ENTIRE DB, SHARE THAT MODEL THROUGHT THE ENTIRE PROGRAM");
                             dialog.showAndWait();
                             });
                             setGraphic(btn);
@@ -184,10 +220,8 @@ public class OverviewViewTesting_NOANCHORController implements Initializable {
                 return cell;
             }
         };
-        
         NOTEScolumn.setCellFactory(cellFactory);
-//        ManageDBTable.getColumns().add(BUTTONcolumn);
-        
     }
+
 }
     

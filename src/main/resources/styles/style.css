@@ -12,8 +12,14 @@
 -fx-background-color : #474747;
 
 -fx-text-fill : #e0e86f;
+-fx-text-fill : #a4ab1b;
+
 -fx-font-weight: bold;
 -fx-font-size: 28px;
+
+-fx-background-radius: 0;
+
+
 }
 /*#05071F*/
 .button:hover{  
@@ -21,13 +27,17 @@
 
 -fx-background-color : #757575;
 
+-fx-background-color: #48D1CC;
+
 -fx-font-weight: bold;
 -fx-font-family: Georgia;
 -fx-font-size: 30px;
 }
 .button:pressed
 {
--fx-background-color : #ed91ed;-fx-background-color : #696b4e;
+-fx-background-color : #ed91ed;
+-fx-background-color : #696b4e;
+-fx-background-color : brown;
 }
 
 .label{
@@ -50,6 +60,13 @@
     -fx-background-color: transparent;
     -fx-border-color: transparent;
 }
+
+.button:disabled, .button:disabled > * {
+     -fx-background-color: brown;
+     -fx-opacity: 1;
+     -fx-text-fill:#000000;
+ }
+ 
 
 .scroll-bar:horizontal .track, 
 .scroll-bar:vertical .track{
