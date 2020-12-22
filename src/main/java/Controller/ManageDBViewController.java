@@ -129,20 +129,27 @@ public class ManageDBViewController implements Initializable {
                             + ""
                             + "WHERE po.purchase_order = pd.purchase_order AND pd.brg_id = b.brg_id");
             
-            ModelManageDBTable obj;
+            ModelManageDBTable dbItem;
             while(rs.next()){
-                obj = new 
-                ModelManageDBTable(rs.getString("confirmed"),
+                
+                String confirmation;
+                if(rs.getString("confirmed").equals("TRUE"))
+                    confirmation = "YES";
+                else
+                    confirmation = "NO";
+                        
+                dbItem = new 
+                ModelManageDBTable(confirmation,
                         rs.getString("purchase_order"),                       
                         rs.getString("brg_name"),
                         rs.getString(5),//CUR SHIP
                         "num att",
                         "add packet box");
-                Attachment att []= (Attachment[]    )rs.getObject(3);
-                obj.setAtt(att);
-                obj.displayAttachmentCHANGE();
-                obj.setAttachment(String.valueOf(obj.getNumberAttachments()));
-                obList.add(obj);
+                Attachment att []= (Attachment[])rs.getObject(3);
+                dbItem.setAtt(att);
+                dbItem.displayAttachmentCHANGE();
+                dbItem.setAttachment(String.valueOf(dbItem.getNumberAttachments()));
+                obList.add(dbItem);
 
             }
             con.close();
@@ -194,7 +201,7 @@ public class ManageDBViewController implements Initializable {
 
                                 ModelManageDBTable data = getTableView().getItems().get(getIndex());
 
-                                alert.setContentText("Edit " + data.getPo() + "?");
+                                alert.setContentText("Edit " + data.getPo() + "?\n");
 
     //                            alert.showAndWait();
                                 Optional<ButtonType> result = alert.showAndWait();

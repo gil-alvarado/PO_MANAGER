@@ -5,19 +5,25 @@
  */
 package Controller;
 
+import java.awt.Desktop;
+
 import Model.ConnectionUtil;
 import Model.ModelManageDBTable;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.net.URL;
+import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.text.DecimalFormat;
 import java.time.LocalDate;
 import java.time.Month;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.ResourceBundle;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -37,21 +43,17 @@ import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
-import javafx.scene.image.Image;
+import javafx.scene.control.TextFormatter;
+import javafx.scene.control.cell.TextFieldListCell;
 import javafx.scene.layout.GridPane;
 
 import javafx.scene.input.DragEvent;
 import javafx.scene.input.Dragboard;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.input.TransferMode;
+import javax.swing.text.NumberFormatter;
 
 import net.ucanaccess.complex.Attachment;
-
-//import net.ucanaccess.jdbc.UcanaccessPreparedStatement;
-//
-//import net.ucanaccess.jdbc.JackcessOpenerInterface;
-//import net.ucanaccess.complex.ComplexBase;
-
-
 
 /**
  * FXML Controller class
@@ -74,16 +76,14 @@ public class EditPOView_NOANCHORController implements Initializable {
     private DatePicker DatePickerORGSHIP, DatePickerCURSHIP, 
             DatePickerETABMS, DatePickerFUDATE;
     @FXML
-    private Button BUTTONaddToDatabase, BUTTONUpdateDatabase, BUTTONDeleteDatabase;
+    private Button BUTTONUpdateDatabase, BUTTONDeleteDatabase;
     
     //##########################################################################
     @FXML
-    private TextArea TextAreaRWCOMMENTS;
+    private TextArea TextAreaRWCOMMENTS, TextAreaFUNOTES;
     //similar to adding data from database. look at previous app version
     @FXML
     private ListView ListViewATTACHMENTS;
-    @FXML
-    private TextArea TextAreaFUNOTES;
     
     @FXML
     private Label dragLABEL;
@@ -97,18 +97,25 @@ public class EditPOView_NOANCHORController implements Initializable {
     private ManageDBViewController controller;
     private MainLayoutTesting_WITHANCHORController instance;
     
-    private Attachment att[];
+    private Attachment att[];//ucanaccess: read/create files and add to local dir
+    List <File> attfiles;// list of ALL FILES from Database and user-added files
+    List <String> removedFiles;// add for every removed file/item from listview
     
-    List <File> attfiles;
+    @FXML
+    private int listViewCount;
     
+    private static DecimalFormat LCformat = new DecimalFormat("#######00.00");
+    private static DecimalFormat IPformat = new DecimalFormat("#######00.000");
     /**
      * Initializes the controller class.
      */
     @Override
     public void initialize(URL url, ResourceBundle rb) {
-        // TODO
-        System.out.println("hello from the edit po controller!");
+        attfiles = new ArrayList<>();
+        removedFiles = new ArrayList<>();
         
+        ListViewATTACHMENTS.setCellFactory(TextFieldListCell.forListView());
+                
 //        BUTTONaddToDatabase.setDisable(true);
         BUTTONUpdateDatabase.setDisable(true);
         BUTTONDeleteDatabase.setDisable(true);
@@ -118,6 +125,7 @@ public class EditPOView_NOANCHORController implements Initializable {
         ComboBoxCONFIRMED.getSelectionModel().select("YES");
         
         //----------------------------------------------------------------------
+        
         TextFieldPO.focusedProperty().addListener((observable, oldValue, newValue) -> {
             if (!newValue) { 
                     if(TextFieldPO.getText().isEmpty()){
@@ -125,42 +133,109 @@ public class EditPOView_NOANCHORController implements Initializable {
                     }
                 }
         });
+        
         //----------------------------------------------------------------------
-        TextFieldINVOICE.focusedProperty().addListener((observable, oldValue, newValue) -> {
-                if (!newValue) { 
-                    if(!TextFieldINVOICE.getText().matches("\\d+(\\.\\d+)?")){
-                        //when it not matches the pattern (1.0 - 6.0)
-                        //set the textField empty
-                        TextFieldINVOICE.setText("");
-                    }
-                }
-        });
+//        final TextFormatter<Object> INVOICE_PRICEFormatter = new TextFormatter<>(change -> {
+//            if (change.getControlNewText().isEmpty()) {
+//                return change;
+//            }
+//            ParsePosition parsePosition = new ParsePosition(0);
+//            Object object = IPformat.parse(change.getControlNewText(), parsePosition);
+//
+//            if (object == null || parsePosition.getIndex() < change.getControlNewText().length()) {
+//                return null;
+//            } else {
+//                return change;
+//            }
+//        });
+//        TextFieldINVOICE.setTextFormatter(INVOICE_PRICEFormatter);
+        
+        TextFieldINVOICE.setTextFormatter(new TextFormatter<>((change) -> {
+            NumberFormatter format;
+            String text = change.getControlNewText();
+            if (text.matches("\\d*\\.?\\d{0,3}")) {
+                return change;
+            } else {
+                return null;
+            }
+        }));
+
+//------------------------------------------------------------------------------
+
+//        TextFieldINVOICE.focusedProperty().addListener((observable, oldValue, newValue) -> {
+//                if (!newValue) { 
+//                    if(!TextFieldINVOICE.getText().matches("\\d*(\\.\\d{0,2})?")){
+//                        //when it not matches the pattern (1.0 - 6.0)
+//                        //set the textField empty
+//                        TextFieldINVOICE.setText("");
+//                    }
+//                }
+//        });
         //----------------------------------------------------------------------
-        TextFieldLANDING.focusedProperty().addListener((observable, oldValue, newValue) -> {
-//            setAddButtonSettings();
-                    if (!newValue) { 
-                        if(!TextFieldLANDING.getText().matches("\\d+(\\.\\d+)?")){
-                            //when it not matches the pattern (1.0 - 6.0)
-                            //set the textField empty
-                            TextFieldLANDING.setText("");
-                        }
-                    }
-        });
+
+//    final TextFormatter<Object> LANDING_COSTFormatter = new TextFormatter<>(change -> {
+//            if (change.getControlNewText().isEmpty()) {
+//                return change;
+//            }
+//            ParsePosition parsePosition = new ParsePosition(0);
+//            Object object = LCformat.parse(change.getControlNewText(), parsePosition);
+//
+//            if (object == null || parsePosition.getIndex() < change.getControlNewText().length()) {
+//                return null;
+    //            } else {
+//                return change;
+//            }
+//        });
+//    
+//    TextFieldLANDING.setTextFormatter(LANDING_COSTFormatter);
+
+
+    
+TextFieldLANDING.setTextFormatter(new TextFormatter<>((change) -> {
+            NumberFormatter format;
+            String text = change.getControlNewText();
+            if (text.matches("\\d*\\.?\\d{0,2}")) {
+                return change;
+            } else {
+                return null;
+            }
+        }));    
+        //----------------------------------------------------------------------
+        
+        TextFieldQTY.setTextFormatter(new TextFormatter<>((change) -> {
+            NumberFormatter format;
+            String text = change.getControlNewText();
+            if (text.matches("\\d*\\.?\\d{0,2}")) {
+                return change;
+            } else {
+                return null;
+            }
+        }));
+//        TextFieldLANDING.focusedProperty().addListener((observable, oldValue, newValue) -> {
+////            setAddButtonSettings();
+//                    if (!newValue) { 
+//                        if(!TextFieldLANDING.getText().matches("\\d+(\\.\\d+)?")){
+//                            //when it not matches the pattern (1.0 - 6.0)
+//                            //set the textField empty
+//                            TextFieldLANDING.setText("");
+//                        }
+//                    }
+//        });
         //----------------------------------------------------------------------
         // BUTTONUpdateDatabase, BUTTONDeleteDatabase;
             GridPane p = (GridPane)DataEntryPanes.getChildren().get(0);
 
                 for(Node node: p.getChildren()){
-                    if(node instanceof TextField || node instanceof DatePicker){ 
+                    if(node instanceof TextField ){ 
                         if(node instanceof TextField){
                             ((TextField)node).textProperty().addListener((obs, old, newV)->{ 
                                 
                               if(!newV.trim().isEmpty()&& isTextFieldAllFilled(paneTextFieldsONE)){ 
-                                  if(isDatePickerFilled(paneTextFieldsONE)){
-//                                    BUTTONaddToDatabase.setDisable(false);
+//                                  if(isDatePickerFilled(paneTextFieldsONE)){
+////                                    BUTTONaddToDatabase.setDisable(false);
                                     BUTTONUpdateDatabase.setDisable(false);
                                     BUTTONDeleteDatabase.setDisable(false);
-                                  }
+//                                  }
                               }
                               else{
 //                                  BUTTONaddToDatabase.setDisable(true); 
@@ -169,28 +244,28 @@ public class EditPOView_NOANCHORController implements Initializable {
                               }
                           });  
                         }
-                        else{
-                            ((DatePicker)node).valueProperty().addListener((obs, old, newV)->{
-
-                              if(newV != null && isDatePickerFilled(paneTextFieldsONE)){ 
-                                  if(isTextFieldAllFilled(paneTextFieldsONE)){
-//                                    BUTTONaddToDatabase.setDisable(false);
-                                    BUTTONUpdateDatabase.setDisable(false);
-                                    BUTTONDeleteDatabase.setDisable(false);
-                                  }
-                                  else{
-//                                      BUTTONaddToDatabase.setDisable(true);
-                                      BUTTONUpdateDatabase.setDisable(true);
-                                      BUTTONDeleteDatabase.setDisable(true);
-                                  }
-                              }
-                              else{
-//                                  BUTTONaddToDatabase.setDisable(true); 
-                                  BUTTONUpdateDatabase.setDisable(true);
-                                  BUTTONDeleteDatabase.setDisable(true);
-                              }
-                          });  
-                        }               
+//                        else{
+//                            ((DatePicker)node).valueProperty().addListener((obs, old, newV)->{
+//
+//                              if(newV != null && isDatePickerFilled(paneTextFieldsONE)){ 
+//                                  if(isTextFieldAllFilled(paneTextFieldsONE)){
+////                                    BUTTONaddToDatabase.setDisable(false);
+//                                    BUTTONUpdateDatabase.setDisable(false);
+//                                    BUTTONDeleteDatabase.setDisable(false);
+//                                  }
+//                                  else{
+////                                      BUTTONaddToDatabase.setDisable(true);
+//                                      BUTTONUpdateDatabase.setDisable(true);
+//                                      BUTTONDeleteDatabase.setDisable(true);
+//                                  }
+//                              }
+//                              else{
+////                                  BUTTONaddToDatabase.setDisable(true); 
+//                                  BUTTONUpdateDatabase.setDisable(true);
+//                                  BUTTONDeleteDatabase.setDisable(true);
+//                              }
+//                          });  
+//                        }               
                     }//end instanceof TextField/DatePicker   
         }
     }    
@@ -216,16 +291,14 @@ public class EditPOView_NOANCHORController implements Initializable {
     }
     
     //##########################################################################
-    //execute STATEMENT to get data from DB
-    //use po 
     public void setItems(ModelManageDBTable data){
         //----------------------------------------------------------------------
         
         clearAllFields();
         System.out.println("ATTEMPTING TO EXECUTE STATEMENT");
-        POparameter = data.getPo(); 
+        POparameter = data.getPo();//original PO
         System.out.println("SET ITEMS, PO = " +data.getPo());
-        BRGparameter = data.getBrg();//
+        BRGparameter = data.getBrg();//original bearing number
         System.out.println("BRG = " + data.getBrg());
         CONFIRMEDparameter = data.getConfirmed();
         try{
@@ -240,6 +313,7 @@ public class EditPOView_NOANCHORController implements Initializable {
             rs.next();
             BRGIDparameter = rs.getInt("brg_id");
             System.out.println("BRG_ID ===== " + BRGIDparameter);
+            
             pst = 
                     con.prepareStatement("SELECT "
                         + "purchase_orders.purchase_order, order_details.quantity, order_details.landed_cost, "
@@ -252,44 +326,66 @@ public class EditPOView_NOANCHORController implements Initializable {
                         + "FROM purchase_orders , order_details , bearings  " 
                         + "WHERE purchase_order = ? AND bearings.brg_id = order_details.brg_id  AND order_details.brg_id = ?;" );
 
-
             pst.setString(1, POparameter);
             pst.setInt(2, BRGIDparameter);
 
             System.out.println("AFTER RESULT SET");
 
             rs = pst.executeQuery();
-        
-            rs.next();
-            
-            
-            
-            //NOW POPULTAE LIST
-            att = (Attachment[]    )rs.getObject(13);
+            rs.next();     
+//               
+//ADDING EXISTING/DRAGGED FILE TO ATTACHMENT COLUMN
+//( String url, String name, String type, byte[] data, Date timeStamp, Integer flags) 
+// new Attachment(null (URL), "sample.pdf"(NAME), "pdf"(TYPE), attachmentData(DATA), new java.util.Date()(DATE), null (FLAGS))
+//new Attachment (filePath, )
+
+//CREATE NEW FILE FROM ATTACHMENT COLUMN
+
+            att = (Attachment[]    )rs.getObject(13);//get attachments from Database
             for(Attachment f : att){
                 System.out.println("FILE NAME: " + f.getName());
                 System.out.println("FILE TYPE: " + f.getType());
+                
+                //display existing fileNAMES on DB to listview
                 ListViewATTACHMENTS.getItems().add(f.getName());
-            }
-            
-            //Attachment -> File -> add to attfiles!
-            
+                
+                //add existing files to attfiles, array of actual files
+                File tempDir = new File(ConnectionUtil.desktopLocation + "/BMStemp");
+                boolean fileExec = tempDir.mkdir();
+                if(fileExec){
+                    System.out.println("dir exists!!");
+                }
+                else{//create files at tempDirectory, write data to file from Database, add to list of ALL FILES
+                    File tempFile = new File(ConnectionUtil.desktopLocation + "/BMStemp/" + f.getName());
+                    org.apache.commons.io.FileUtils.writeByteArrayToFile(
+                            tempFile, f.getData());
+                    attfiles.add(tempFile);
+                    
+                }
+                listViewCount++;
+            }            
             
             System.out.println("EDIT: NUMBER ATTACHMENTS for : " + POparameter + " = "  + att.length);
             
             currentPOLabel.setText(data.getPo());
             currentPOLabel.setVisible(true);
             
-            System.out.println("ATTEMPTING TO PRINT DATE");
-//            System.out.println(rs.getString("original_ship_date"));
-            
             TextFieldPO.setText(rs.getString("purchase_order"));
             TextFieldSUPPLIER.setText(rs.getString("supplier_id"));
-            TextFieldINVOICE.setText(rs.getString("invoice_price"));
+            
+//            TextFieldINVOICE.setText(IPformat.format(Double.parseDouble(rs.getString("invoice_price"))));
+//            TextFieldINVOICE.setText(LCformat.format(Double.parseDouble(rs.getString(""))));
+
+//            System.out.println("LANDED COST: " + LCformat.format(Double.parseDouble(rs.getString("landed_cost"))));
+//            System.out.println("IP: " + IPformat.format(Double.parseDouble(rs.getString("invoice_price"))));
+            
             TextFieldBRG.setText(rs.getString("brg_name"));
             TextFieldPARAMETER.setText(rs.getString("PARAMETER"));
             TextFieldQTY.setText(rs.getString("quantity"));
-            TextFieldLANDING.setText(rs.getString("landed_cost"));
+            
+            TextFieldLANDING.setText(LCformat.format(Double.parseDouble(rs.getString("landed_cost"))));
+            TextFieldINVOICE.setText(IPformat.format(Double.parseDouble(rs.getString("invoice_price"))));
+            
             //----------------------------------------------------------------------
             if(rs.getString("confirmed").equals("TRUE"))
                 ComboBoxCONFIRMED.getSelectionModel().select("YES");
@@ -298,28 +394,32 @@ public class EditPOView_NOANCHORController implements Initializable {
             //----------------------------------------------------------------------
             //DATES
             //-----------------------------------------------------------------------
-            
+            //ORIGINAL SHIP DATE
             String []tok = rs.getString(6).split("/");
-    //        System.out.println("org format date: " + data.getCur());
             DatePickerORGSHIP.setValue(LocalDate.of(Integer.parseInt(tok[2]),
                     Month.of(Integer.parseInt(tok[0])), Integer.parseInt(tok[1])));
             //----------------------------------------------------------------------
+            //CURRENT SHIP DATE
             tok=rs.getString(6).split("/");
             DatePickerCURSHIP.setValue(LocalDate.of(Integer.parseInt(tok[2]),
                      Month.of(Integer.parseInt(tok[0])), Integer.parseInt(tok[1])));
             //----------------------------------------------------------------------
+            //ETA DATE
             tok=rs.getString(8).split("/");
             DatePickerETABMS.setValue(LocalDate.of(Integer.parseInt(tok[2]),
                      Month.of(Integer.parseInt(tok[0])), Integer.parseInt(tok[1])));
             //----------------------------------------------------------------------
+            //FOLLOW UP
             tok=rs.getString(9).split("/");
             DatePickerFUDATE.setValue(LocalDate.of(Integer.parseInt(tok[2]),
                      Month.of(Integer.parseInt(tok[0])), Integer.parseInt(tok[1])));
-
+//                }
             con.close();
             
         } catch (SQLException ex) {
             Logger.getLogger(ManageDBViewController.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (IOException ex) { 
+            Logger.getLogger(EditPOView_NOANCHORController.class.getName()).log(Level.SEVERE, null, ex);
         }
         
         //add actions for each button
@@ -327,7 +427,7 @@ public class EditPOView_NOANCHORController implements Initializable {
         BUTTONDeleteDatabase.setDisable(false);
         BUTTONUpdateDatabase.setDisable(false);        
     }
-    //#########################################################################
+//##############################################################################
     private final String UPDATEpurchase_orders = "UPDATE purchase_orders SET "
             + "purchase_order = ?, "
             + "original_ship_date = ?, "
@@ -350,18 +450,16 @@ public class EditPOView_NOANCHORController implements Initializable {
             + "order_details.purchase_order = ? AND "
             + " order_details.brg_id = ? AND "
             + " order_details.confirmed = ?;" ;
- 
     @FXML
     private void updateDatabase(ActionEvent event){
-   
          try{            
              try (Connection con = ConnectionUtil.conDB()) {
                  
                  //try select before execute
-                 System.out.println("ATTEMPTING TO UPDATE PURCHASE ORDERS BEFOR EXECUTION");
+                 System.out.println("ATTEMPTING TO UPDATE PURCHASE_ORDERS TABLE BEFORE UPDATING DETAILS");
                  PreparedStatement update = con.prepareStatement(UPDATEpurchase_orders);
                  
-                 //purchase_orders
+                 //UPDATING purchase_orders FIRST
                  update.setString(1, TextFieldPO.getText());//SET
                  update.setDate(2, java.sql.Date.valueOf(DatePickerORGSHIP.getValue()));
                  update.setDate(3, java.sql.Date.valueOf(DatePickerCURSHIP.getValue()));
@@ -369,7 +467,8 @@ public class EditPOView_NOANCHORController implements Initializable {
                  update.setDate(5, java.sql.Date.valueOf(DatePickerFUDATE.getValue()));
                  update.setString(6, POparameter);
                  
-                 update.executeUpdate();
+                 if(update.executeUpdate() == 1)
+                     System.out.println("SUCCESFULLY UPDATED PURCHASE_ORDER TABLE");
                  System.out.println("ATTEMPTING TO UPDATE PURCHASE ORDERS  AFTER");
 //##############################################################################
 //3)check if new brg_id is in table, if not, add to parent table
@@ -382,22 +481,23 @@ public class EditPOView_NOANCHORController implements Initializable {
 update = con.prepareStatement("SELECT PARAMETER\n" +
 " FROM PARAMETER \n" +
 " WHERE PARAMETER = ?;");
+
                 update.setString(1,TextFieldPARAMETER.getText());
       
                 ResultSet rs = update.executeQuery();
                 
-                System.out.println("CHECKING PARAMETer IF EXISTS: " + TextFieldPARAMETER.getText());
+                System.out.println("PARAMETER CHECK: CHECKING IF " + TextFieldPARAMETER.getText() + " EXISTS");
                 if(rs.next())
                     System.out.println(TextFieldPARAMETER.getText() + ": DOES EXIST");
                 else{
-                    System.out.println(TextFieldPARAMETER.getText() + " DOES NOT EXIST, ADDING TO PARAMETER" );
+                    System.out.println(TextFieldPARAMETER.getText() + " DOES NOT EXIST, ADDING TO PARAMETER TABLE" );
                     update = 
                     con.prepareStatement("INSERT INTO PARAMETER "
                             + "( PARAMETER )"
                             + "values(?);");
                     update.setString(1, TextFieldPARAMETER.getText());
                     update.executeUpdate();
-                    System.out.println("added new PARAMETER : " + TextFieldPARAMETER.getText());
+                    System.out.println("NEW PARAMETER ADDED: " + TextFieldPARAMETER.getText());
                 }
 
 //SUPPLIERS                
@@ -405,7 +505,7 @@ update = con.prepareStatement("SELECT supplier_id FROM suppliers WHERE supplier_
                 update.setString(1, TextFieldSUPPLIER.getText());
                 
                 rs = update.executeQuery();
-                System.out.println("CHECKING IF EXISTS: " + TextFieldSUPPLIER.getText());
+                System.out.println("SUPPLIER CHECK: CHECKING IF " + TextFieldSUPPLIER.getText() + " EXISTS");
                 if(rs.next())
                     System.out.println(TextFieldSUPPLIER.getText() + " DOES EXIST" );
                 else{
@@ -416,10 +516,10 @@ update = con.prepareStatement("SELECT supplier_id FROM suppliers WHERE supplier_
                             + "values(?);");
                     update.setString(1, TextFieldSUPPLIER.getText());
                     update.executeUpdate();
-                    System.out.println("added new SUPPLIER : " + TextFieldSUPPLIER.getText());                    
+                    System.out.println("NEW SUPPLIER ADDED: " + TextFieldSUPPLIER.getText());                    
                 }
 
-//BEARINGS, checking if new brg form textfield exists
+//BEARINGS
 update = con.prepareStatement("SELECT brg_name FROM bearings WHERE brg_name = ? "
         + "AND PARAMETER = ? AND supplier_id = ?;");
                 update.setString(1, TextFieldBRG.getText());
@@ -428,7 +528,7 @@ update = con.prepareStatement("SELECT brg_name FROM bearings WHERE brg_name = ? 
                 
                 rs = update.executeQuery();
                 
-                System.out.println("CHECKING IF EXISTS: " + TextFieldBRG.getText());
+                System.out.println("BEARINGS CHECK: CHECKING IF " + TextFieldBRG.getText() + " EXISTS");
                 if(rs.next())
                     System.out.println(TextFieldBRG.getText()+" DOES EXIST" );
                 else{
@@ -443,21 +543,9 @@ update = con.prepareStatement("SELECT brg_name FROM bearings WHERE brg_name = ? 
                     update.executeUpdate();                    
                 }
 
-/*
-    "UPDATE order_details 
-                SET "
-                    + "order_details.brg_id = ?, "
-                    + "order_details.quantity = ?, "
-                    + "order_details.landed_cost = ?, "
-                    + "order_details.invoice_price = ?, "
-                    + "order_details.confirmed = ? "
-            + "WHERE "
-                    + " order_details.purchase_order = ? AND "
-                    + " order_details.brg_id = ? AND "
-                    + " order_details.confirmed = ?;"             
-                */
                 
-                //get brg_id, then update details now that new/existing brg_id is obtainable
+                System.out.println("SLECTING brg_id FROM BEARINGS");
+                //get brg_id, then update order details now that new/existing brg_id is obtainable
                 update = con.prepareStatement("SELECT brg_id FROM bearings "
                         + "WHERE brg_name = ?  AND "
                         + "PARAMETER = ? AND "
@@ -471,61 +559,94 @@ update = con.prepareStatement("SELECT brg_name FROM bearings WHERE brg_name = ? 
                 rs = update.executeQuery();
                 
                 if(rs.next()){
-                    System.out.println("LINE 456: " +TextFieldBRG.getText()+" DOES EXIST" + " ,ID = "  +rs.getString("brg_id"));
-                    
+//                    System.out.println("LINE 456: " +TextFieldBRG.getText()+" DOES EXIST" + " ,ID = "  +rs.getString("brg_id"));
+
                     update = con.prepareStatement(UPDATEorder_details);
 
-                    //get new brg_id from bearings, shoudl be added
-                    update.setInt(1, Integer.parseInt(rs.getString("brg_id")));
+                    //get new brg_id from bearings, should be added
+//                    update.setInt(1, Integer.parseInt(rs.getString("brg_id")));
+                    
+                    update.setInt(1, (rs.getInt("brg_id")));
                     update.setString(2, TextFieldQTY.getText());
                     update.setString(3, TextFieldLANDING.getText());
                     update.setString(4, TextFieldINVOICE.getText());
 
+                    System.out.println("SETTING CONFIRMED VALUE");
                     if(ComboBoxCONFIRMED.getValue().equals("YES"))
                        update.setString(5, "TRUE");
                     else
                        update.setString(5, "FALSE");
+                    System.out.println("CONFIRMEDD VALUE SET");
 
-                    update.setString(6, TextFieldPO.getText());//should automaticall update
+                    update.setString(6, TextFieldPO.getText());//should automatically update
 //                    update.setString(7, BRGparameter);//original value//ERROR, CHANGE TO BRG NAME OR ID FOR WHERE CLAUSE
 
                     update.setInt(7, BRGIDparameter);//id of original brg_id, not newly added
-                    
-                    update.setString(8, CONFIRMEDparameter);//original value
-                    
+                    System.out.println("CONFIRMED VALUE PARAMETER: " + CONFIRMEDparameter);
+                    if(CONFIRMEDparameter.equals("YES"))
+                        update.setString(8, "TRUE");
+                    else
+                        update.setString(8, "FALSE");
+//###########################################
+//ATTACHMENTS
+//###########################################
                         if(update.executeUpdate() == 1){
-                        //succesful execution, now update attachments
-                        //use UCANACCESS update feature, wont work with standard SQL
-//                        update = super.ucanaccess.prepareStatement("");
-
-//PreparedStatement ps = super.ucanaccess.prepareStatement( "SELECT * FROM T1", ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_UPDATABLE, ResultSet.CLOSE_CURSORS_AT_COMMIT);
-                                
-//                            update = con.prepareStatement( "SELECT * FROM T1",
-//                                        ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_UPDATABLE,
-//                                        ResultSet.CLOSE_CURSORS_AT_COMMIT);
-                                
-//UcanaccessPreparedStatement ups= con.prepareStatement( "SELECT * FROM T1",
-//                                        ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_UPDATABLE,
-//                                        ResultSet.CLOSE_CURSORS_AT_COMMIT);
-
-
+                            System.out.println("UPDATED DETAILS, NOW UPDATING ATTACHMENTS");
 //select attachment field from db add/update attachment field
-                            for (File file:attfiles) {
-                                String filePath = file.getAbsolutePath();
-                                System.out.println(filePath);
-                                //add file to ListView
-//                                ListViewATTACHMENTS.getItems().add(filePath);
-                        
-                    }
-                            ButtonType OK = new ButtonType("OK", ButtonBar.ButtonData.OK_DONE);
-                            Alert alert = new Alert(Alert.AlertType.NONE);
-                            {
-                                alert.setTitle("update");
-                                alert.getButtonTypes().clear();
-                                alert.getDialogPane().getButtonTypes().addAll( OK );
-                                alert.setContentText("SUCCESSFULLY UPDATED");
-                                alert.showAndWait();
+//public Attachment
+//               ( String url, String name, String type, byte[] data, Date timeStamp, Integer flags) 
+// new Attachment(null (URL), "sample.pdf"(NAME), "pdf"(TYPE), attachmentData(DATA), new java.util.Date()(DATE), null (FLAGS))
+//new Attachment (filePath, )
+                            
+//    private Attachment att[];//ucanaccess: read/create files and add to local dir
+//    List <File> attfiles;// list of ALL FILES from Database and user-added files
+//    List <String> removedFiles;// add for every removed file/item from listview
+
+                            //get removed files from listview
+                            List<File> tempFileList = new ArrayList<>(attfiles);
+                            
+                            for(String rf : removedFiles){
+                                for(int i =0 ; i < attfiles.size(); i++){
+                                    if(attfiles.get(i).getName().equals(rf)){
+                                        System.out.println("USER REMOVED :" + attfiles.get(i).getName() + ", REMOVING FROM FIELD");
+                                        
+                                        tempFileList.remove(i);//ERROR HERE, SIZE OF LIST CHANGES ONCED REMOVAL, TRY REMOVE BY NAME
+                                    }
+                                }
                             }
+                            attfiles = new ArrayList<>(tempFileList);
+                            att = new Attachment[attfiles.size()];
+                            
+                            for(int i = 0; i < attfiles.size(); i++){
+                                //DIDNT REMOVE items that were removed from listviews
+                                String path = attfiles.get(i).getAbsolutePath();
+                                byte[] attachmentData = java.nio.file.Files.readAllBytes(Paths.get(path));
+                                att[i] = new Attachment(path,attfiles.get(i).getName(),null,attachmentData,null,null);
+                            }       
+                            update = con.prepareStatement("UPDATE order_details SET attachments = ? WHERE purchase_order = ?;");
+//update = con.prepareStatement("INSERT INTO order_details(attachments) VALUES(?) WHERE purchase_order = ?;");
+
+                            update.setObject(1, att);
+                            update.setString(2, TextFieldPO.getText());//new/same PO parameter
+                            if(update.executeUpdate() == 1){
+                                System.out.println("EXECUTED UPDATE ATTACHMENTS");
+                                ButtonType OK = new ButtonType("OK", ButtonBar.ButtonData.OK_DONE);
+                                Alert alert = new Alert(Alert.AlertType.NONE);
+                                {
+                                    alert.setTitle("update");
+                                    alert.getButtonTypes().clear();
+                                    alert.getDialogPane().getButtonTypes().addAll( OK );
+                                    alert.setContentText("SUCCESSFULLY UPDATED");
+                                    alert.showAndWait();
+                                }
+                            }
+                            else{
+                                System.out.println("error ):");
+                            }
+                            
+   
+                                
+                                
                         }
                         else{
                             Dialog<String> dialog = new Dialog<>();{
@@ -540,66 +661,99 @@ update = con.prepareStatement("SELECT brg_name FROM bearings WHERE brg_name = ? 
                 
                  con.close();
 
+             } catch (IOException ex) { 
+                 Logger.getLogger(EditPOView_NOANCHORController.class.getName()).log(Level.SEVERE, null, ex);
              }
                 BUTTONUpdateDatabase.setDisable(true);
                 BUTTONDeleteDatabase.setDisable(true);
-                clearAllFields();
+                
                 
             } catch (SQLException ex) { 
             Logger.getLogger(EditPOView_NOANCHORController.class.getName()).log(Level.SEVERE, null, ex);
         }
-        
+//        clearAllFields();
     }
-    //#########################################################################
+//##############################################################################
     @FXML
     private void deleteFromDatabase(ActionEvent event){
-//        ((Stage)(((Button)event.getSource()).getScene().getWindow())).close();
+        
          try {
             Connection con = ConnectionUtil.conDB();
-//            Statement stmt;
-//            stmt = con.createStatement();
-//
-//            int result = 
-//                    stmt.executeUpdate("DELETE FROM purchaseorders WHERE purchaseOrder = "
-//                            + "'"+POparameter+"'" );
-//            stmt.close();
             
-            PreparedStatement pst  = con.prepareStatement("DELETE FROM purchase_orders WHERE purchase_order = ?;");
+            //prompt user before deletion
+            //verify user credentials: 
+            ResultSet rs = ConnectionUtil.userVerification(LoginViewController.current_user);
+            
+            
+            ButtonType YES = new ButtonType("YES", ButtonBar.ButtonData.YES);
+            ButtonType NO = new ButtonType("NO", ButtonBar.ButtonData.CANCEL_CLOSE);
+            ButtonType OK = new ButtonType("OK", ButtonBar.ButtonData.CANCEL_CLOSE);
+            Optional<ButtonType> result;
 
-            pst.setString(1, TextFieldPO.getText());
+//##############################################################################
+            //check if user exists and has permission
+            if(rs != null){
+//##############################################################################                
+                if(rs.getInt(2) == 1){//user has permission
+                    Alert confirmation = new Alert(Alert.AlertType.CONFIRMATION);
+                    {
+                        confirmation.setTitle("DELETE DIALOG");
+                        confirmation.getButtonTypes().clear();
+                        confirmation.getDialogPane().getButtonTypes().addAll( YES, NO );
+                        confirmation.setContentText("ARE YOU SURE YOU WANT TO DELETE " + POparameter + "?");
+                    }
+                    
+                    result = confirmation.showAndWait();
+//------------------------------------------------------------------------------                    
+                    if(result.orElse(NO) == YES){//user confirms that they wish to delete
+                        PreparedStatement pst  = con.prepareStatement("DELETE FROM purchase_orders WHERE purchase_order = ?;");
+                        pst.setString(1, TextFieldPO.getText());
 
-            if(pst.executeUpdate() == 1){
-                
-                ButtonType OK = new ButtonType("OK", ButtonBar.ButtonData.OK_DONE);
-                                 Alert alert = new Alert(Alert.AlertType.NONE);
-                                {
-                                    alert.setTitle("update");
-                                    alert.getButtonTypes().clear();
-                                    alert.getDialogPane().getButtonTypes().addAll( OK );
-                                    alert.setContentText("SUCCESSFULLY DELETED BUT SHOULD PROMPT");
-                                    alert.showAndWait();
-                                }
-                
-                }else{
-                
-                System.err.println("ERROR: key vilation for : " + TextFieldPO.getText() );
-                                
-                ButtonType OK = new ButtonType("OK", ButtonBar.ButtonData.OK_DONE);
+                        if(pst.executeUpdate() == 1){//user has permission
+        //                        currentPOLabel.setVisible(false);
                                 Alert alert = new Alert(Alert.AlertType.NONE);
-                                {
-                                    alert.setTitle("deletion");
-                                    alert.getButtonTypes().clear();
-                                    alert.getDialogPane().getButtonTypes().addAll( OK );
-                                    alert.setContentText("NO RECORD FOUND FOR: " + TextFieldPO.getText());
-                                    alert.showAndWait();
-                                }
+                               {
+                                   alert.setTitle("update");
+                                   alert.getButtonTypes().clear();
+                                   alert.getDialogPane().getButtonTypes().addAll( OK );
+                                   alert.setContentText("SUCCESSFULLY DELETED");
+                                   clearAllFields();
+                                   alert.showAndWait();
+                               }
+
+                                }else{
+
+                                    System.err.println("ERROR: key vilation for : " + TextFieldPO.getText() );
+
+                                    Alert alert = new Alert(Alert.AlertType.NONE);
+                                    {
+                                        alert.setTitle("deletion");
+                                        alert.getButtonTypes().clear();
+                                        alert.getDialogPane().getButtonTypes().addAll( OK );
+                                        alert.setContentText("NO RECORD FOUND FOR: " + TextFieldPO.getText());
+                                        alert.showAndWait();
+                                    }
+                            }
+                    }
+                }
+//##############################################################################                
+                else if (rs.getInt(2) == 2){
+                    Alert alert = new Alert(Alert.AlertType.INFORMATION);
+                    {
+                        alert.setTitle("NOTICE DIALOG");
+                        alert.getButtonTypes().clear();
+                        alert.getDialogPane().getButtonTypes().addAll( OK );
+                        alert.setContentText("YOU DO NOT HAVE PERMISSION TO DELETE");
+                        alert.showAndWait();
+                    }
+                }
+                
             }
-            
-            
-            
-            
+            else{
+                System.out.println("no record found for user");
+            }
             con.close();
-            clearAllFields();
+//            clearAllFields();
             BUTTONUpdateDatabase.setDisable(true);
             BUTTONDeleteDatabase.setDisable(true);
         }
@@ -613,33 +767,62 @@ update = con.prepareStatement("SELECT brg_name FROM bearings WHERE brg_name = ? 
         if(event.getDragboard().hasFiles())
             event.acceptTransferModes(TransferMode.COPY);
     }
+    
     @FXML
     private void handleDrop(DragEvent event) throws FileNotFoundException{
-//        List <File> files = event.getDragboard().getFiles();
-//        Image img = new Image(new FileInputStream(files.get(0)));
-//        imageView.setImage(img); 
-
-
-
-                //att = Attachment
+        
                 Dragboard db = event.getDragboard();
                 boolean success = false;
                 if (db.hasFiles()) {
+                    
                     success = true;
                     String filePath;
                     
-                    attfiles = event.getDragboard().getFiles();
-                    
-                    for (File file:db.getFiles()) {
-                        filePath = file.getAbsolutePath();
-                        System.out.println(filePath);
-                        //add file to ListView
-                        ListViewATTACHMENTS.getItems().add(filePath);
-                        
+                    if(attfiles.isEmpty() || ListViewATTACHMENTS.getItems().isEmpty()){
+                        for (File file : db.getFiles()) {
+                            ListViewATTACHMENTS.getItems().add(file.getName());
+                            attfiles.add(file);
+                        }
                     }
-                }
+                    
+                    else{//attfiles is NOT empty
+                        for (File draggedFile : db.getFiles()) {
+
+                            filePath = draggedFile.getAbsolutePath();
+
+//                                for(int i = 0; i < attfiles.size() ;i++){
+                                for(File attFile : attfiles){
+                                    if( attFile.getName().equals(draggedFile.getName())  
+//                                            || attfiles.contains(file) 
+                                            || attFile.equals(draggedFile)
+                                            || attFile.getAbsolutePath().equals(filePath)
+                                            || ListViewATTACHMENTS.getItems().contains(draggedFile.getName())){
+                                        System.out.println("FILE ALREADY ADDED: " + draggedFile.getAbsolutePath());
+                                        return;
+                                    }                            
+                                    else{
+
+//                                        System.out.println("-----------------------------");
+//                                        System.out.println("ADDING " + draggedFile.getName() + " to attfiles");
+//                                        System.out.println("-----------------------------");
+                                        ListViewATTACHMENTS.getItems().add(draggedFile.getName());
+                                        attfiles.add(draggedFile);
+                                        listViewCount++;
+                                    }
+                                }
+
+                            }
+                        }
+                    }
+                
                 event.setDropCompleted(success);
                 event.consume();
+                System.out.println("-----------------------------------------");
+                System.out.println("PRINTING ATTFILES");
+                System.out.println("-----------------------------------------");                
+                for(File f : attfiles){
+                    System.out.println("File Name: " + f.getName() + ", FILE PATH; " + f.getAbsolutePath());
+                }
             
     }
     //##########################################################################
@@ -690,6 +873,56 @@ update = con.prepareStatement("SELECT brg_name FROM bearings WHERE brg_name = ? 
         }
         
         ListViewATTACHMENTS.getItems().clear();
+        attfiles.clear();
+        att = null;
+        removedFiles.clear();
+        listViewCount = 0;
     }
     //--------------------------------------------------------------------------
+    //open selected file
+    @FXML
+    private void handleMouseClick(MouseEvent event) {
+        
+        if(listViewCount>0 && !ListViewATTACHMENTS.getItems().isEmpty() 
+                && ListViewATTACHMENTS.getSelectionModel().getSelectedIndex() >=0){
+            System.out.println("clicked on " + ListViewATTACHMENTS.getSelectionModel().getSelectedItem());
+            System.out.println("FULLPATH: " + attfiles.get(ListViewATTACHMENTS.getSelectionModel().getSelectedIndex()));
+    //        ListViewATTACHMENTS.getItems().remove(
+    //                ListViewATTACHMENTS.getSelectionModel().getSelectedIndex());
+            if(!Desktop.isDesktopSupported())//check if Desktop is supported by Platform or not  
+            {  
+                System.out.println("not supported");  
+                return;  
+            } 
+            Desktop desktop = Desktop.getDesktop();  
+            if(event.getClickCount() ==2){        //checks file exists or not  
+                try {
+                    desktop.open(attfiles.get(ListViewATTACHMENTS.getSelectionModel().getSelectedIndex()));              //opens the specified file  
+                } catch (IOException ex) {
+                    Logger.getLogger(EditPOView_NOANCHORController.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+        }
+    }
+
+    @FXML
+    private void removeListItem(ActionEvent event) {
+        if(listViewCount>0 && !ListViewATTACHMENTS.getItems().isEmpty() 
+                && ListViewATTACHMENTS.getSelectionModel().getSelectedIndex() >=0){
+            removedFiles.add((String) ListViewATTACHMENTS.getSelectionModel().getSelectedItem());
+            System.out.println("ADDED " + removedFiles + " TO REMOVED FILES LIST!" );
+            ListViewATTACHMENTS.getItems().remove(ListViewATTACHMENTS.getSelectionModel().getSelectedIndex());
+            listViewCount--;
+        }
+    }
+
+    @FXML
+    private void reloadListView(ActionEvent event) {
+        ListViewATTACHMENTS.getItems().clear();
+        removedFiles.clear();
+        for(File d: attfiles){
+            ListViewATTACHMENTS.getItems().add(d.getName());
+            listViewCount++;
+        }
+    }
 }

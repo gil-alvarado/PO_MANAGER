@@ -102,7 +102,7 @@
                         <Font size="18.0" />
                      </font>
                   </TextField>
-                  <DatePicker fx:id="DatePickerORGSHIP" promptText="MM/DD/YYYY" style="-fx-font-size: 18px;" GridPane.columnIndex="1" GridPane.rowIndex="5" GridPane.vgrow="ALWAYS" />
+                  <DatePicker fx:id="DatePickerORGSHIP" editable="false" promptText="MM/DD/YYYY" style="-fx-font-size: 18px;" GridPane.columnIndex="1" GridPane.rowIndex="5" GridPane.vgrow="ALWAYS" />
                   <DatePicker fx:id="DatePickerCURSHIP" editable="false" promptText="MM/DD/YYYY" style="-fx-font-size: 18px;" GridPane.columnIndex="1" GridPane.rowIndex="6" GridPane.vgrow="ALWAYS" />
                   <Label alignment="CENTER_RIGHT" text="BRG#" GridPane.columnIndex="2" GridPane.halignment="RIGHT" GridPane.rowIndex="1">
                      <font>
@@ -214,25 +214,25 @@
           <RowConstraints minHeight="10.0" percentHeight="80.0" prefHeight="30.0" vgrow="SOMETIMES" />
         </rowConstraints>
          <children>
-            <TextArea fx:id="TextAreaRWCOMMENTS" prefHeight="200.0" prefWidth="200.0" promptText="RW Comments" style="-fx-border-color: #000000;" GridPane.rowIndex="1">
+            <TextArea fx:id="TextAreaRWCOMMENTS" prefHeight="200.0" prefWidth="200.0" promptText="RW Comments" style="-fx-border-color: #000000;" wrapText="true" GridPane.rowIndex="1">
                <GridPane.margin>
                   <Insets bottom="25.0" left="25.0" right="25.0" />
                </GridPane.margin>
                <font>
-                  <Font size="24.0" />
+                  <Font size="18.0" />
                </font>
             </TextArea>
-            <ListView fx:id="ListViewATTACHMENTS" onDragDropped="#handleDrop" onDragOver="#handleDragOver" prefHeight="200.0" prefWidth="200.0" style="-fx-border-color: #000000;" GridPane.columnIndex="1" GridPane.rowIndex="1">
+            <ListView fx:id="ListViewATTACHMENTS" editable="true" onDragDropped="#handleDrop" onDragOver="#handleDragOver" onMouseClicked="#handleMouseClick" prefHeight="200.0" prefWidth="200.0" style="-fx-border-color: #000000;" GridPane.columnIndex="1" GridPane.rowIndex="1">
                <GridPane.margin>
                   <Insets bottom="25.0" left="25.0" right="25.0" />
                </GridPane.margin>
             </ListView>
-            <TextArea fx:id="TextAreaFUNOTES" prefHeight="200.0" prefWidth="200.0" promptText="F/U Notes" style="-fx-border-color: #000000;" GridPane.columnIndex="2" GridPane.rowIndex="1">
+            <TextArea fx:id="TextAreaFUNOTES" prefHeight="200.0" prefWidth="200.0" promptText="F/U Notes" style="-fx-border-color: #000000;" wrapText="true" GridPane.columnIndex="2" GridPane.rowIndex="1">
                <GridPane.margin>
                   <Insets bottom="25.0" left="25.0" right="25.0" />
                </GridPane.margin>
                <font>
-                  <Font size="24.0" />
+                  <Font size="18.0" />
                </font>
             </TextArea>
             <Label text="RW Comments">
@@ -243,14 +243,28 @@
                   <Font size="24.0" />
                </font>
             </Label>
-            <Label text="Attachments" GridPane.columnIndex="1">
+            <GridPane GridPane.columnIndex="1">
                <GridPane.margin>
                   <Insets left="25.0" />
                </GridPane.margin>
-               <font>
-                  <Font size="24.0" />
-               </font>
-            </Label>
+               <columnConstraints>
+                  <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" percentWidth="50.0" />
+                  <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" percentWidth="25.0" prefWidth="100.0" />
+                  <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" percentWidth="25.0" prefWidth="100.0" />
+               </columnConstraints>
+               <rowConstraints>
+                  <RowConstraints minHeight="10.0" vgrow="SOMETIMES" />
+               </rowConstraints>
+               <children>
+                  <Label text="Attachments">
+                     <font>
+                        <Font size="24.0" />
+                     </font>
+                  </Label>
+                  <Button mnemonicParsing="false" onAction="#removeListItem" text="remove" GridPane.columnIndex="1" GridPane.halignment="LEFT" />
+                  <Button mnemonicParsing="false" onAction="#reloadListView" text="reload" GridPane.columnIndex="2" />
+               </children>
+            </GridPane>
             <Label text="F/U Notes" GridPane.columnIndex="2">
                <GridPane.margin>
                   <Insets left="25.0" />

@@ -5,7 +5,11 @@ module com.test {
     requires java.base;
     requires java.sql;
     requires ucanaccess;
+    requires commons.io;
+    requires java.desktop;
+//    requires jfxrt;
 
+//    requires rt;
 
     opens com.test to javafx.fxml;
 //    opens Controller to java.base;

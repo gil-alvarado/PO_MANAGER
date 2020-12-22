@@ -11,6 +11,7 @@ import java.net.URL;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.text.DecimalFormat;
 import java.util.ResourceBundle;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -32,6 +33,7 @@ import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.paint.Color;
 import javafx.util.Callback;
 /**
  * FXML Controller class
@@ -54,6 +56,8 @@ public class OverviewViewTesting_NOANCHORController implements Initializable {
     @FXML
     private TextField BRGTextField;
     
+    private static DecimalFormat LCformat = new DecimalFormat("$###,###,###.00");
+    private static DecimalFormat IPformat = new DecimalFormat("$###,###,###.000");
     //--------------------------------------------------------------------------
     @FXML
     private TableColumn<ModelOverviewTable, String> CONFIRMEDcolumn, POcolumn,BRGcolumn,
@@ -93,8 +97,11 @@ public class OverviewViewTesting_NOANCHORController implements Initializable {
         IPcolumn.setCellValueFactory(new PropertyValueFactory<>("ip"));
         LCcolumn.setCellValueFactory(new PropertyValueFactory<>("lc"));
         
+
+        
         updateTableView();
         addButtonsToTable();//NOTEScolumn
+//        setGreenText();
         
         searchPO();
     }
@@ -115,7 +122,8 @@ public class OverviewViewTesting_NOANCHORController implements Initializable {
                     "SELECT po.purchase_order, pd.confirmed, pd.invoice_price, pd.landed_cost, b.brg_name, "
                             + "s.supplier_id, "
                             + "FORMAT(po.current_ship_date,'Short Date'), "
-                            + "FORMAT(po.fu_date,'Short Date'), po.fu_notes "
+                            + "FORMAT(po.fu_date,'Short Date'), po.fu_notes,"
+                            + "FORMAT(pd.landed_cost, 'standard') "
                             + ""
                             + "FROM purchase_orders po, order_details pd, bearings b, suppliers s "
                             + ""
@@ -124,19 +132,26 @@ public class OverviewViewTesting_NOANCHORController implements Initializable {
                    
                     while(rs.next()){
 
+                        String confirmation;
+                        if(rs.getString("confirmed").equals("TRUE"))
+                            confirmation = "YES";
+                        else
+                            confirmation = "NO";
+                        
                        obList.add(new 
-                               ModelOverviewTable(rs.getString("confirmed"),
+                               ModelOverviewTable(confirmation,
                                rs.getString("purchase_order"),
                                rs.getString("brg_name"),//CHANGE TO name
                                rs.getString("supplier_id"),
                                rs.getString(7),//current ship
                                rs.getString(8),//FU date
                                "add FU-NOTE",
-                               rs.getString("invoice_price"),
-                               rs.getString("landed_cost")));
-
+                               IPformat.format(Double.parseDouble(rs.getString("invoice_price"))),
+                               LCformat.format(Double.parseDouble(rs.getString("landed_cost")))));   
+                       
+//                       System.out.println("LC FORMAT: " + LCformat.format(Double.parseDouble(rs.getString("landed_cost"))));
                    }
-            
+                        
             con.close();
         } catch (SQLException ex) {
             Logger.getLogger(OverviewViewTesting_NOANCHORController.class.getName()).log(Level.SEVERE, null, ex);
@@ -210,7 +225,7 @@ public class OverviewViewTesting_NOANCHORController implements Initializable {
                                         + "   " + data.getConfirmed());
                                 
                                 dialog.setContentText("PO: " + data.getPo() + ", brg#: " + data.getLc()
-                            +"\nCREATE MODEL FOR ENTIRE DB, SHARE THAT MODEL THROUGHT THE ENTIRE PROGRAM");
+                            +"\nFeature for MULTIPLE USERS in progress");
                             dialog.showAndWait();
                             });
                             setGraphic(btn);
@@ -221,6 +236,33 @@ public class OverviewViewTesting_NOANCHORController implements Initializable {
             }
         };
         NOTEScolumn.setCellFactory(cellFactory);
+    }
+    
+    private void setGreenText(){
+        
+        Callback<TableColumn<ModelOverviewTable, String>, TableCell<ModelOverviewTable, String>> cellFactory;
+        
+        cellFactory = new Callback<TableColumn<ModelOverviewTable, String>,TableCell<ModelOverviewTable, String>>(){
+            @Override
+            public TableCell<ModelOverviewTable, String> call(TableColumn<ModelOverviewTable, String> param) {
+                //throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+                final TableCell<ModelOverviewTable, String> cell = new TableCell<ModelOverviewTable, String>(){
+                    
+                    
+                    @Override
+                    public void updateItem(String item, boolean empty){
+                        super.updateItem(item, empty);
+                        if(empty){
+                            setGraphic(null);
+                        }else{
+                            
+                        }
+                    }
+                    
+                };
+                return cell;
+            }
+        };
     }
 
 }

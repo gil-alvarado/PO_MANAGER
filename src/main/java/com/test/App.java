@@ -1,7 +1,6 @@
 package com.test;
 
 import Model.ConnectionUtil;
-import Model.suppliers;
 
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
@@ -10,10 +9,6 @@ import javafx.scene.Scene;
 import javafx.stage.Stage;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import static javafx.application.ConditionalFeature.FXML;
-import javafx.scene.image.Image;
-import javafx.stage.StageStyle;
 
 //import org.hibernate.Session;
 //import org.hibernate.SessionFactory;
@@ -21,7 +16,7 @@ import javafx.stage.StageStyle;
 //import org.hibernate.cfg.Configuration;
 //import org.hibernate.Session; 
 
-import net.ucanaccess.complex.Attachment;
+//import net.ucanaccess.complex.Attachment;
 
 
 /**
@@ -65,33 +60,48 @@ public class App extends Application {
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 Parent root = FXMLLoader.load(getClass().getResource("/View/Main/MainLayoutTesting_WITHANCHOR.fxml"));  
+Parent root_ = FXMLLoader.load(getClass().getResource("/View/Login/LoginView.fxml"));
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-root.setOnMousePressed(event -> {
+//root.setOnMousePressed(event -> {
+//            x = event.getSceneX();
+//            y = event.getSceneY();
+//        });
+//        root.setOnMouseDragged(event -> {
+//
+//            stage.setX(event.getScreenX() - x);
+//            stage.setY(event.getScreenY() - y);
+//
+//        });
+//        
+//        scene = new Scene(root);
+        //-------------------------
+        scene = new Scene(loadFXML("/View/Login/LoginView"));
+        scene.setOnMousePressed(event -> {
             x = event.getSceneX();
             y = event.getSceneY();
         });
-        root.setOnMouseDragged(event -> {
+        scene.setOnMouseDragged(event -> {
 
             stage.setX(event.getScreenX() - x);
             stage.setY(event.getScreenY() - y);
 
         });
-        
-        scene = new Scene(root);
-        //-------------------------
         stage.setScene(scene);
+        
+        stage.setResizable(true);
         stage.setMinHeight(700);
         stage.setMinWidth(1350);
 //        stage.initStyle(StageStyle.UNDECORATED);
-        stage.setResizable(true);
         stage.setTitle("BMS DATA MANAGER");
-        stage.getIcons().add(new Image("https://example.com/javaicon.png"));
+        
+        
         stage.show();
     }
 
-    static void setRoot(String fxml) throws IOException {
+    public static void setRoot(String fxml) throws IOException {
+        
         scene.setRoot(loadFXML(fxml));
     }
 
@@ -102,7 +112,6 @@ root.setOnMousePressed(event -> {
 
     public static void main(String[] args) {
         launch();
-
     }
 
 }

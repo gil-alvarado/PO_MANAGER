@@ -5,6 +5,7 @@
  */
 package Controller;
 
+import com.test.App;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ResourceBundle;
@@ -16,8 +17,10 @@ import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
+import javafx.scene.control.Label;
 
 import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
 /**
  * FXML Controller class
@@ -47,6 +50,8 @@ public class MainLayoutTesting_WITHANCHORController implements Initializable {
     private Button addPOBUTTON;
     @FXML
     private AnchorPane AddPOAnchor;
+    @FXML
+    private Label currentUserLabel;
     /**
      * Initializes the controller class.
      */
@@ -55,6 +60,7 @@ public class MainLayoutTesting_WITHANCHORController implements Initializable {
         // TODO
         
         overviewButton.setDisable(true);
+        currentUserLabel.setText(LoginViewController.current_user);
         
 //        editPOButton.setDisable(true);
         
@@ -100,8 +106,10 @@ public class MainLayoutTesting_WITHANCHORController implements Initializable {
     }    
     
     @FXML
-    private void closeApplication(ActionEvent event) {
-        ((Stage)(((Button)event.getSource()).getScene().getWindow())).close();
+    private void closeApplication(ActionEvent event) throws IOException {
+//        ((Stage)(((Button)event.getSource()).getScene().getWindow())).close();
+//        System.exit(0);
+        App.setRoot("/View/Login/LoginView");
     }
     //##########################################################################
     @FXML
@@ -151,9 +159,9 @@ public class MainLayoutTesting_WITHANCHORController implements Initializable {
             AnchorPane.setLeftAnchor(manageDBForm, 0.0);
             
             ManageDBViewController controller = manage_loader.getController();
-        controller.setEditPOController(edit_loader.getController());
-        controller.setEditPOLoader(edit_loader);
-        controller.setMainLayoutInstance(this);
+            controller.setEditPOController(edit_loader.getController());
+            controller.setEditPOLoader(edit_loader);
+            controller.setMainLayoutInstance(this);
         
         manageDBAnchor.toFront();
         } catch (IOException ex) {

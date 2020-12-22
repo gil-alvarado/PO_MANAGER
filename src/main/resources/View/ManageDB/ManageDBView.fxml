@@ -117,7 +117,7 @@
          <center>
             <TableView fx:id="ManageDBTable" prefHeight="200.0" prefWidth="200.0" stylesheets="@../../styles/tableStyle.css" BorderPane.alignment="CENTER">
               <columns>
-                  <TableColumn fx:id="STATUScolumn" minWidth="25.0" prefWidth="25.0" text="STATUS" />
+                  <TableColumn fx:id="STATUScolumn" minWidth="25.0" prefWidth="25.0" text="CONFIRMED" />
                   <TableColumn fx:id="POcolumn" minWidth="25.0" prefWidth="25.0" text="PO" />
                   <TableColumn fx:id="BRGcolumn" editable="false" minWidth="50.0" prefWidth="50.0" text="BRG#" />
                 <TableColumn fx:id="CURSHIP_column" editable="false" minWidth="50.0" prefWidth="50.0" text="CUR SHIP" />
