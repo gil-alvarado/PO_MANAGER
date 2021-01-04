@@ -20,8 +20,6 @@ import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import net.ucanaccess.complex.Attachment;
-import org.apache.commons.io.FileUtils;//writeByteArrayToFile(tempFile, f.getData());
 
 
 /**
@@ -32,24 +30,22 @@ public class FileHelper {
     
     private static final String LineBreak = "-----------------------------------";
     
-    public static void createDirectory(String name){
-        File tempDir = new File(ConnectionUtil.desktopLocation + "/BMStemp/" + name);
+    
+    public static void createDirectory(String purchase_order){
+        
+        File tempDir = new File(ConnectionUtil.desktopLocation + "/BMStemp/" + purchase_order);
+//        File tempDir = new File(ConnectionUtil.networkLocation + "/" + purchase_order);
         boolean dirExec = tempDir.mkdir();
         if(dirExec){
             System.out.println("created PO directory");
         }
     }
     
-//    public static void createPoDirectory(String purchase_order){
-//        File tempDir = new File(ConnectionUtil.desktopLocation + "/BMStemp/" + purchase_order);
-//        boolean dirExec = tempDir.mkdir();
-//        if(dirExec){
-//            System.out.println("crated PO directory");
-//        }
-//    }
     
     public static boolean createPoAttachmentsDirectory(String purchase_order){
+//        File tempDir = new File(ConnectionUtil.networkLocation + "/" + purchase_order +"/Attachments");
         File tempDir = new File(ConnectionUtil.desktopLocation + "/BMStemp/" + purchase_order +"/Attachments");
+        
         boolean dirExec = tempDir.mkdir();
         if(dirExec){
             System.out.println("created ATTACHMENTS directory");
@@ -73,8 +69,14 @@ public class FileHelper {
             //created headers
             
             System.out.println("creating files");
+            
+//            fos_RW = new FileOutputStream(ConnectionUtil.networkLocation + "/" +purchase_order+ "/" + purchase_order + "-RWC.csv", false);
+//            fos_FU = new FileOutputStream(ConnectionUtil.networkLocation + "/" +purchase_order+ "/" + purchase_order + "-FUN.csv", false);
+//            
+            
             fos_RW = new FileOutputStream(ConnectionUtil.desktopLocation + "/BMStemp/" +purchase_order+ "/" + purchase_order + "-RWC.csv", false);
             fos_FU = new FileOutputStream(ConnectionUtil.desktopLocation + "/BMStemp/" +purchase_order+ "/" + purchase_order + "-FUN.csv", false);
+            
             System.out.println("CREATED FILES");
             
             System.out.println("adding headers to buffer");
@@ -120,7 +122,10 @@ public class FileHelper {
                 sb.append(user).append(",");
                 sb.append(new Date().toString()).append(",");
                 sb.append(rwData).append("\n");
+                
+//                outFile = new FileOutputStream(ConnectionUtil.networkLocation + "/" +purchase_order+ "/" + purchase_order + "-RWC.csv",true);
                 outFile = new FileOutputStream(ConnectionUtil.desktopLocation + "/BMStemp/" +purchase_order+ "/" + purchase_order + "-RWC.csv",true);
+                
                 outFile.write(sb.toString().getBytes());
                 outFile.flush();
                 sb.setLength(0);
@@ -135,7 +140,9 @@ public class FileHelper {
                 sb.append(new Date().toString()).append(",");
                 sb.append(fuData).append("\n");
 
+//                outFile = new FileOutputStream(ConnectionUtil.networkLocation + "/" +purchase_order+ "/" + purchase_order + "-FUN.csv",true);
                 outFile = new FileOutputStream(ConnectionUtil.desktopLocation + "/BMStemp/" +purchase_order+ "/" + purchase_order + "-FUN.csv",true);
+                
                 outFile.write(sb.toString().getBytes());
                 outFile.flush();
 //                outFile.close();
@@ -161,7 +168,6 @@ public class FileHelper {
     //##########################################################################
     public static boolean updateFUCsvFile(File file, String purchase_order, String new_content){
         
-        FileOutputStream outFile = null;
         
         FileWriter src = null;
         try {
@@ -192,13 +198,14 @@ public class FileHelper {
     public static File getRWFile(String purchase_order){
 //            return new File(ConnectionUtil.desktopLocation + "/BMStemp/" +purchase_order+ "/" + purchase_order + "-RWC.txt");
       return new File(ConnectionUtil.desktopLocation + "/BMStemp/" +purchase_order+ "/" + purchase_order + "-RWC.csv");
-      
+//      return new File(ConnectionUtil.networkLocation + "/" +purchase_order+ "/" + purchase_order + "-RWC.csv");
     }
 
     //##########################################################################
     
     public static File getFUFile(String purchase_order ){
             return new File(ConnectionUtil.desktopLocation+ "/BMStemp/" +purchase_order+ "/" + purchase_order + "-FUN.csv");
+//            return new File(ConnectionUtil.networkLocation+ "/" +purchase_order+ "/" + purchase_order + "-FUN.csv");
     }
     
     //##########################################################################

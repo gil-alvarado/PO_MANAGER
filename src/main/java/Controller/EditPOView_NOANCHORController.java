@@ -125,8 +125,10 @@ public class EditPOView_NOANCHORController implements Initializable {
      */
     @Override
     public void initialize(URL url, ResourceBundle rb) {
+        
         removedFiles = new ArrayList<>();
         map_files = new LinkedHashMap<>();
+        
         ListViewATTACHMENTS.setEditable(true);
         ListViewATTACHMENTS.setCellFactory(TextFieldListCell.forListView());
         BUTTONrwComment.setDisable(true); BUTTONFUnote.setDisable(true);
@@ -257,6 +259,9 @@ else{
                 ListViewATTACHMENTS.getItems().add(file_cursor.getName());
                 
                 //add existing files to attfiles, array of actual files
+                
+//                    File tempFile = 
+//                            new File(ConnectionUtil.networkLocation + "/" +POparameter + "/Attachments/"+ file_cursor.getName());
                     File tempFile = 
                             new File(ConnectionUtil.desktopLocation + "/BMStemp/" +POparameter + "/Attachments/"+ file_cursor.getName());
                     org.apache.commons.io.FileUtils.writeByteArrayToFile(
@@ -351,7 +356,7 @@ else{
             + "purchase_order = ?, "
             + "original_ship_date = ?, "
             + "current_ship_date = ?, "
-            + "eta_bms = ?, "
+            + "eta_bms = ? "
             + "\n"
             + "WHERE "
             + "purchase_order = ?;";    
@@ -577,7 +582,6 @@ update = con.prepareStatement("SELECT brg_name FROM bearings WHERE brg_name = ? 
             } catch (SQLException ex) { 
             Logger.getLogger(EditPOView_NOANCHORController.class.getName()).log(Level.SEVERE, null, ex);
         }
-//        clearAllFields();
     }
 //##############################################################################
     @FXML
@@ -822,9 +826,6 @@ update = con.prepareStatement("SELECT brg_name FROM bearings WHERE brg_name = ? 
 //  OPEN FORM/DIALOG
     //update TextAreas whenever dialog is closed
 //##################################################
-    private void openNoteViewDialog(ActionEvent event) {
-
-    }
 
     @FXML
     private void openRwCommentDialog(ActionEvent event) {

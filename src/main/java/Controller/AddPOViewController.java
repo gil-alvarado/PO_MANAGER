@@ -19,7 +19,10 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -76,7 +79,13 @@ public class AddPOViewController implements Initializable {
     @FXML
     private ListView<String> ListViewATTACHMENTS;
     
-    private List<File> attfiles;
+    //##########################################################################
+    //      ATTACHMENTS
+    //##########################################################################
+    
+    private LinkedHashMap<String,File> map_files;
+    
+    
     private List<String> removedFiles;
     private int listViewCount;
     private Attachment att[];
@@ -90,8 +99,9 @@ public class AddPOViewController implements Initializable {
     @Override
     public void initialize(URL url, ResourceBundle rb) {
         
+        map_files = new LinkedHashMap<>();
+        
         removedFiles = new ArrayList<>();
-        attfiles = new ArrayList<>();
         
         BUTTONaddToDatabase.setDisable(true);
         
@@ -311,10 +321,6 @@ pst = con.prepareStatement("SELECT brg_name FROM bearings WHERE brg_name = ? "
                 }
                 
 //ORDER DETAILS: ADD BRG NUMBER ID TO DETAILS
-//                pst = 
-//                    con.prepareStatement("INSERT INTO order_details "
-//                            + "( purchase_order, brg_id, quantity, landed_cost, invoice_price, confirmed )"
-//                            + "values(?,?,?,?,?,?);");
                 pst = con.prepareStatement("SELECT brg_id FROM bearings "
                         + "WHERE brg_name = ?  AND "
                         + "PARAMETER = ? AND "
@@ -349,31 +355,24 @@ pst = con.prepareStatement("SELECT brg_name FROM bearings WHERE brg_name = ? "
 //###########################################
 //ATTACHMENTS
 //###########################################
-                    if(pst.executeUpdate() == 1){//now insert attachments
-                        //attfiles contains all files that was added to listview
-                        //user can only remove "file" from listview
-                        //read attfiles and compare to files listed on listview
-                        //files listed on listview will get added to db
-                        List<File> tempFileList = new ArrayList<>(attfiles);
+                    if(pst.executeUpdate() == 1){
                             
                             for(String rf : removedFiles){
-                                for(int i =0 ; i < attfiles.size(); i++){
-                                    if(attfiles.get(i).getName().equals(rf)){
-                                        System.out.println("USER REMOVED :" + attfiles.get(i).getName() + " REMOVING FROM FIELD");
-                                        tempFileList.remove(i);
-                                    }
-                                }
+                                    map_files.remove(rf);
                             }
                             
-                            attfiles = new ArrayList<>(tempFileList);
-                            att = new Attachment[attfiles.size()];
+                            att = new Attachment[map_files.size()];
                             
-                            for(int i = 0; i < attfiles.size(); i++){
-                                //DIDNT REMOVE items that were removed from listviews
-                                String path = attfiles.get(i).getAbsolutePath();
-                                byte[] attachmentData = java.nio.file.Files.readAllBytes(Paths.get(path));
-                                att[i] = new Attachment(path,attfiles.get(i).getName(),null,attachmentData,null,null);
-                            } 
+                            Iterator<Map.Entry<String, File>> iterator = map_files.entrySet().iterator();
+                            int i = 0;
+                            while(iterator.hasNext() && i < map_files.size()){
+                                Map.Entry<String, File> entry = iterator.next();
+                                String path = entry.getValue().getAbsolutePath();
+                                byte []attachmentData = java.nio.file.Files.readAllBytes(Paths.get(path));
+                                att[i] = new Attachment(path,entry.getKey(),null, attachmentData,null,null);
+                                i++;
+                            }
+                            
                             
                             pst = con.prepareStatement("UPDATE order_details SET attachments = ? WHERE purchase_order = ?;");
 
@@ -387,14 +386,6 @@ pst = con.prepareStatement("SELECT brg_name FROM bearings WHERE brg_name = ? "
                                 System.out.println("EXECUTED UPDATE ATTACHMENTS");
                                 
                                 FileHelper.createDirectory(TextFieldPO.getText());
-                                //##############################################
-                                //ERROR HERE: 
-                                //in create file, I Inserted note file into po_notes
-                                //I commented it out
-                                // 1) create file
-                                // 2) read TextArea and write to file
-                                // 3) ConnectionUtil.updateNotesTable(purchase_order);//insert into
-                                //##############################################
                                 FileHelper.creatFile(TextFieldPO.getText());//
                                 
                                 //##############################################
@@ -455,7 +446,7 @@ pst = con.prepareStatement("SELECT brg_name FROM bearings WHERE brg_name = ? "
         } catch (IOException ex) {
             Logger.getLogger(AddPOViewController.class.getName()).log(Level.SEVERE, null, ex);
         }
-//        clearAllFields();
+        
     }
     //##########################################################################
     //LABEL AND ITEMLIST
@@ -476,10 +467,10 @@ pst = con.prepareStatement("SELECT brg_name FROM bearings WHERE brg_name = ? "
                     success = true;
                     String filePath;
                     
-                    if(attfiles.isEmpty() || ListViewATTACHMENTS.getItems().isEmpty()){
-                        for (File file : db.getFiles()) {
-                            ListViewATTACHMENTS.getItems().add(file.getName());
-                            attfiles.add(file);
+                    if(map_files.isEmpty() || ListViewATTACHMENTS.getItems().isEmpty()){
+                        for (File file_cursor : db.getFiles()) {
+                            ListViewATTACHMENTS.getItems().add(file_cursor.getName());
+                            map_files.put(file_cursor.getName(), file_cursor);
                         }
                     }
                     else{
@@ -487,9 +478,8 @@ pst = con.prepareStatement("SELECT brg_name FROM bearings WHERE brg_name = ? "
 
                             filePath = draggedFile.getAbsolutePath();
 
-                                for(File attFile : attfiles){
+                                for(File attFile : map_files.values()){
                                     if( attFile.getName().equals(draggedFile.getName())  
-//                                            || attfiles.contains(file) 
                                             || attFile.equals(draggedFile)
                                             || attFile.getAbsolutePath().equals(filePath)
                                             || ListViewATTACHMENTS.getItems().contains(draggedFile.getName())){
@@ -502,7 +492,7 @@ pst = con.prepareStatement("SELECT brg_name FROM bearings WHERE brg_name = ? "
 //                                        System.out.println("ADDING " + draggedFile.getName() + " to attfiles");
 //                                        System.out.println("-----------------------------");
                                         ListViewATTACHMENTS.getItems().add(draggedFile.getName());
-                                        attfiles.add(draggedFile);
+                                        map_files.put(draggedFile.getName(), draggedFile);
                                         listViewCount++;
                                     }
                                 }
@@ -512,35 +502,12 @@ pst = con.prepareStatement("SELECT brg_name FROM bearings WHERE brg_name = ? "
                 }
                 event.setDropCompleted(success);
                 event.consume();
-                
-                System.out.println("-----------------------------------------");
-                System.out.println("PRINTING ATTFILES");
-                System.out.println("-----------------------------------------");
-                for(File f : attfiles){
-                    System.out.println("File Name: " + f.getName() + ", FILE PATH; " + f.getAbsolutePath());
-                }
             
     }
     //##########################################################################
     
-    /*
-    @FXML
-    private TextField TextFieldPO, TextFieldSUPPLIER, TextFieldINVOICE, TextFieldBRG,
-            TextFieldPARAMETER, TextFieldQTY, TextFieldLANDING;
-    //--------------------------------------------------------------------------
-    @FXML
-    private DatePicker DatePickerORGSHIP, DatePickerETABMS, DatePickerFUDATE, DatePickerCURSHIP;
-    */
-    
         private boolean isTextFieldAllFilled(){
-//        for(Node node : table.getChildren()){ // cycle through every component in the table (GridPane)
-//            if(node instanceof TextField){ // if it's a TextField
-//            // after removing the leading spaces, check if it's empty
-//                if(((TextField)node).getText().trim().isEmpty()){
-//                        return false; // if so, return false
-//                }
-//            }       
-//        }
+
         return !( TextFieldPO.getText().isEmpty() || TextFieldSUPPLIER.getText().isEmpty() 
                 || TextFieldINVOICE.getText().isEmpty() || TextFieldBRG.getText().isEmpty()
                 || TextFieldPARAMETER.getText().isEmpty() || TextFieldQTY.getText().isEmpty()
@@ -550,14 +517,6 @@ pst = con.prepareStatement("SELECT brg_name FROM bearings WHERE brg_name = ? "
 //    @FXML
 //    private DatePicker DatePickerORGSHIP, DatePickerETABMS, DatePickerFUDATE, DatePickerCURSHIP;
     private boolean isDatePickerFilled(){
-//        for(Node node : table.getChildren()){
-//            if( node instanceof DatePicker ){
-//                //LocalDate date = ((DatePicker) node).getValue();
-//                if(((DatePicker) node).getValue() == null ||
-//                        ((DatePicker) node).getValue().toString().trim().isEmpty())
-//                    return false;
-//            }
-//        }
         
         return  !( DatePickerORGSHIP.getEditor().getText().isEmpty()
                 || DatePickerETABMS.getEditor().getText().isEmpty()
@@ -576,7 +535,7 @@ pst = con.prepareStatement("SELECT brg_name FROM bearings WHERE brg_name = ? "
         TextAreaRWCOMMENTS.clear();
         TextAreaFUNOTES.clear();
         ListViewATTACHMENTS.getItems().clear();
-        attfiles.clear();
+        map_files.clear();
         att = null; 
         removedFiles.clear();
         listViewCount = 0;
@@ -590,10 +549,7 @@ pst = con.prepareStatement("SELECT brg_name FROM bearings WHERE brg_name = ? "
         
         if(listViewCount>0 && !ListViewATTACHMENTS.getItems().isEmpty() 
                 && ListViewATTACHMENTS.getSelectionModel().getSelectedIndex() >=0){
-            System.out.println("clicked on " + ListViewATTACHMENTS.getSelectionModel().getSelectedItem());
-            System.out.println("FULLPATH: " + attfiles.get(ListViewATTACHMENTS.getSelectionModel().getSelectedIndex()));
-    //        ListViewATTACHMENTS.getItems().remove(
-    //                ListViewATTACHMENTS.getSelectionModel().getSelectedIndex());
+           
             if(!Desktop.isDesktopSupported())//check if Desktop is supported by Platform or not  
             {  
                 System.out.println("not supported");  
@@ -602,7 +558,9 @@ pst = con.prepareStatement("SELECT brg_name FROM bearings WHERE brg_name = ? "
             Desktop desktop = Desktop.getDesktop();  
             if(event.getClickCount() ==2){        //checks file exists or not  
                 try {
-                    desktop.open(attfiles.get(ListViewATTACHMENTS.getSelectionModel().getSelectedIndex()));              //opens the specified file  
+                    System.out.println("ATTEMPTING TO OPEN FILE");
+                    File tempFile = map_files.get(ListViewATTACHMENTS.getItems().get(ListViewATTACHMENTS.getSelectionModel().getSelectedIndex()));
+                    desktop.open(tempFile);
                 } catch (IOException ex) {
                     Logger.getLogger(EditPOView_NOANCHORController.class.getName()).log(Level.SEVERE, null, ex);
                 }
@@ -624,9 +582,11 @@ pst = con.prepareStatement("SELECT brg_name FROM bearings WHERE brg_name = ? "
     @FXML
     private void reloadListView(ActionEvent event) {
         ListViewATTACHMENTS.getItems().clear();
-        
-        for(File d: attfiles){
-            ListViewATTACHMENTS.getItems().add(d.getName());
+        removedFiles.clear();
+
+        for (Iterator<Map.Entry<String, File>> it = map_files.entrySet().iterator(); it.hasNext();) {
+            Map.Entry<String, File> cursor = it.next();
+            ListViewATTACHMENTS.getItems().add(cursor.getKey());
             listViewCount++;
         }
     }

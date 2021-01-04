@@ -43,7 +43,10 @@ public class ConnectionUtil {
     public final static String desktopLocation = userprofile +"\\Desktop" ;
     private final static String databaseURL = "jdbc:ucanaccess://"+userprofile+"\\Desktop\\BMS_DATABASE_TEST.accdb";
     
-    private final static String databaseNetworkLocation = "";
+    
+    //OFFICE TEST
+    //private final static String databaseNetworkLocation = "jdbc:ucanaccess://\\\\exch16\\Shared\\BMS_TEST\\BMS_DATABASE_TEST.accdb";
+//    public final static String networkLocation = "\\\\exch16\\Shared\\BMS_TEST";
     
     private static ArrayList<String> columnNames = null;
     
@@ -64,7 +67,7 @@ public class ConnectionUtil {
             Class.forName("net.ucanaccess.jdbc.UcanaccessDriver");
             
             Connection connection= DriverManager.getConnection(databaseURL,"app","app");
-            //conn =  DriverManager.getConnection(databaseURL);
+//            Connection connection= DriverManager.getConnection(databaseNetworkLocation,"app","app");
             
             System.out.println("DB CONNECTED");
             System.out.println("RETURNING DB CONNECTION: " + connection);
