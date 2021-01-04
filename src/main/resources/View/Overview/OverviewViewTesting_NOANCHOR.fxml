@@ -39,11 +39,22 @@
                 <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
               </rowConstraints>
                <children>
-                  <Label alignment="CENTER" contentDisplay="BOTTOM" text="Search Fields" GridPane.halignment="CENTER">
-                     <font>
-                        <Font name="System Bold" size="15.0" />
-                     </font>
-                  </Label>
+                  <GridPane GridPane.halignment="CENTER">
+                     <columnConstraints>
+                        <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" />
+                     </columnConstraints>
+                     <rowConstraints>
+                        <RowConstraints minHeight="10.0" vgrow="SOMETIMES" />
+                        <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                     </rowConstraints>
+                     <children>
+                        <Label alignment="CENTER" contentDisplay="BOTTOM" text="Search Fields" GridPane.halignment="CENTER">
+                           <font>
+                              <Font name="System Bold" size="15.0" />
+                           </font>
+                        </Label>
+                     </children>
+                  </GridPane>
                </children>
             </GridPane>
             <GridPane alignment="CENTER" focusTraversable="true" hgap="10.0" vgap="10.0" GridPane.columnIndex="1">
@@ -134,9 +145,6 @@
          <padding>
             <Insets bottom="25.0" left="25.0" right="25.0" top="25.0" />
          </padding>
-         <bottom>
-            <Label text="add listener to field entries to display data based on entry" BorderPane.alignment="CENTER" />
-         </bottom>
       </BorderPane>
    </children>
 </GridPane>

@@ -38,7 +38,7 @@
                 <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
               </rowConstraints>
                <children>
-                  <ComboBox fx:id="userComboBox" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefWidth="150.0" promptText="select user name" style="-fx-font-size: 28; -fx-alignment: center;" GridPane.halignment="CENTER" GridPane.valignment="CENTER">
+                  <ComboBox fx:id="userComboBox" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefWidth="150.0" promptText="select user" style="-fx-font-size: 28; -fx-alignment: center;" GridPane.halignment="CENTER" GridPane.valignment="CENTER">
                      <opaqueInsets>
                         <Insets />
                      </opaqueInsets>
@@ -52,12 +52,12 @@
                       <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
                     </rowConstraints>
                      <children>
-                        <Button fx:id="exit_button" onAction="#exitApplication" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" mnemonicParsing="false" text="exit" GridPane.halignment="CENTER">
+                        <Button fx:id="exit_button" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#exitApplication" text="exit" GridPane.halignment="CENTER">
                            <font>
                               <Font name="Segoe UI Bold" size="28.0" />
                            </font>
                         </Button>
-                        <Button fx:id="login_button" onAction="#loginBMS" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" mnemonicParsing="false" text="login" GridPane.columnIndex="1" GridPane.halignment="CENTER">
+                        <Button fx:id="login_button" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#loginBMS" text="login" GridPane.columnIndex="1" GridPane.halignment="CENTER">
                            <font>
                               <Font name="Segoe UI Bold" size="28.0" />
                            </font>

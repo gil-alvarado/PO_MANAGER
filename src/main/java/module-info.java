@@ -7,6 +7,8 @@ module com.test {
     requires ucanaccess;
     requires commons.io;
     requires java.desktop;
+    
+    
 //    requires jfxrt;
 
 //    requires rt;

@@ -9,9 +9,12 @@ import Model.ConnectionUtil;
 import com.test.App;
 import java.io.IOException;
 import java.net.URL;
+import java.sql.SQLException;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.ResourceBundle;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -30,6 +33,7 @@ public class LoginViewController implements Initializable {
     private ComboBox<String> userComboBox;
     
     public static String current_user;
+    public static int role_ID;
     
     private LinkedHashMap<Integer, String> users;
     
@@ -67,7 +71,18 @@ public class LoginViewController implements Initializable {
     @FXML
     private void loginBMS(ActionEvent event) throws IOException  {
         //LOAD MAIN LAYOUT
+        
         current_user = (String)userComboBox.getSelectionModel().getSelectedItem();
+        try {
+            role_ID = ConnectionUtil.userVerification(current_user).getInt("role_id");
+//        for(Map.Entry<Integer, String> cursor : users.entrySet()){
+//            if(curs)
+//        }
+        } catch (SQLException ex) {
+            role_ID = -1;
+            Logger.getLogger(LoginViewController.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
         App.setRoot("/View/Main/MainLayoutTesting_WITHANCHOR");
         
     }

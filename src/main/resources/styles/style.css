@@ -60,13 +60,13 @@
     -fx-background-color: transparent;
     -fx-border-color: transparent;
 }
-
+/*
 .button:disabled, .button:disabled > * {
      -fx-background-color: brown;
      -fx-opacity: 1;
      -fx-text-fill:#000000;
  }
- 
+*/ 
 
 .scroll-bar:horizontal .track, 
 .scroll-bar:vertical .track{

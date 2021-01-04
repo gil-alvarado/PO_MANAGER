@@ -1,7 +1,5 @@
 package com.test;
 
-import Model.ConnectionUtil;
-
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -9,12 +7,6 @@ import javafx.scene.Scene;
 import javafx.stage.Stage;
 
 import java.io.IOException;
-
-//import org.hibernate.Session;
-//import org.hibernate.SessionFactory;
-//import org.hibernate.Transaction;
-//import org.hibernate.cfg.Configuration;
-//import org.hibernate.Session; 
 
 //import net.ucanaccess.complex.Attachment;
 
@@ -91,7 +83,7 @@ Parent root_ = FXMLLoader.load(getClass().getResource("/View/Login/LoginView.fxm
         stage.setScene(scene);
         
         stage.setResizable(true);
-        stage.setMinHeight(700);
+        stage.setMinHeight(800);
         stage.setMinWidth(1350);
 //        stage.initStyle(StageStyle.UNDECORATED);
         stage.setTitle("BMS DATA MANAGER");

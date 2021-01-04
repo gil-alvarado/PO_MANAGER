@@ -5,9 +5,12 @@
  */
 package Controller;
 
+import Model.ConnectionUtil;
 import com.test.App;
 import java.io.IOException;
 import java.net.URL;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ResourceBundle;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -16,11 +19,18 @@ import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.scene.Node;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.control.ButtonBar;
+import javafx.scene.control.ButtonType;
+import javafx.scene.control.Dialog;
 import javafx.scene.control.Label;
 
 import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.GridPane;
 import javafx.scene.layout.StackPane;
+import javafx.stage.Modality;
 import javafx.stage.Stage;
 /**
  * FXML Controller class
@@ -52,6 +62,14 @@ public class MainLayoutTesting_WITHANCHORController implements Initializable {
     private AnchorPane AddPOAnchor;
     @FXML
     private Label currentUserLabel;
+    @FXML
+    private Button manageUsersBUTTON;
+    @FXML
+    private StackPane displaysStackPane;
+    
+    private int role_ID;
+    @FXML
+    private GridPane userManagementLayout;
     /**
      * Initializes the controller class.
      */
@@ -61,9 +79,15 @@ public class MainLayoutTesting_WITHANCHORController implements Initializable {
         
         overviewButton.setDisable(true);
         currentUserLabel.setText(LoginViewController.current_user);
-        
-//        editPOButton.setDisable(true);
-        
+        role_ID = LoginViewController.role_ID;
+
+            if(role_ID == 1){
+                manageUsersBUTTON.setDisable(false);
+            }else{
+                manageUsersBUTTON.setVisible(false);
+                manageUsersBUTTON.setDisable(true);                
+            }
+
         try{
             
             overview_loader = new FXMLLoader(getClass().getResource("/View/Overview/OverviewViewTesting_NOANCHOR.fxml"));
@@ -78,7 +102,7 @@ public class MainLayoutTesting_WITHANCHORController implements Initializable {
             overviewAnchor.toFront();
 
             
-            edit_loader = new FXMLLoader(getClass().getResource("/View/EditPO/EditPOView_NOANCHOR.fxml"));
+            edit_loader = new FXMLLoader(getClass().getResource("/View/EditPO/EditPOView_NOANCHOR_1.fxml"));
     //        Node editPOForm = FXMLLoader.load(getClass().getResource("/View/EditPO/EditPOView_NOANCHOR.fxml"));
             Node editPOForm = edit_loader.load();
             EditPOAnchor.setStyle("-fx-background-color : magenta");
@@ -120,6 +144,8 @@ public class MainLayoutTesting_WITHANCHORController implements Initializable {
         editPOButton.setDisable(false);
         addPOBUTTON.setDisable(false);
         
+        manageUsersBUTTON.setDisable(false);
+        
         try{
             overviewAnchor.getChildren().removeAll(overviewForm);
             overview_loader = new FXMLLoader(getClass().getResource("/View/Overview/OverviewViewTesting_NOANCHOR.fxml"));
@@ -145,6 +171,9 @@ public class MainLayoutTesting_WITHANCHORController implements Initializable {
         manageDBButton.setDisable(true);
         editPOButton.setDisable(false);
         addPOBUTTON.setDisable(false);
+        
+        manageUsersBUTTON.setDisable(false);
+        
         try{
 //            manageDBAnchor.getChildren().removeAll(manageDBForm);
             manage_loader = new FXMLLoader(getClass().getResource("/View/ManageDB/ManageDBView.fxml"));
@@ -174,6 +203,8 @@ public class MainLayoutTesting_WITHANCHORController implements Initializable {
         manageDBButton.setDisable(false);
         editPOButton.setDisable(true);
         addPOBUTTON.setDisable(false);
+        
+        manageUsersBUTTON.setDisable(false);
     }
     //##########################################################################
     @FXML 
@@ -182,6 +213,9 @@ public class MainLayoutTesting_WITHANCHORController implements Initializable {
         manageDBButton.setDisable(false);
         editPOButton.setDisable(true);
         addPOBUTTON.setDisable(false);
+        
+        manageUsersBUTTON.setDisable(false);
+        
 //        overviewAnchor.toBack();
         EditPOView_NOANCHORController controller = edit_loader.getController();
         controller.setMainLayoutInstance(this);
@@ -203,6 +237,38 @@ public class MainLayoutTesting_WITHANCHORController implements Initializable {
         editPOButton.setDisable(false);
         addPOBUTTON.setDisable(true);
         
+        manageUsersBUTTON.setDisable(false);
+        
         AddPOAnchor.toFront();
+    }
+
+    @FXML
+    private void openManageUsersView(ActionEvent event) {
+        overviewButton.setDisable(false);
+        manageDBButton.setDisable(false);
+        editPOButton.setDisable(false);
+        addPOBUTTON.setDisable(false);
+
+        manageUsersBUTTON.setDisable(true);
+        try {
+            
+            
+            FXMLLoader loader = new FXMLLoader (getClass().getResource("/View/ManageDB/ManageUsersView.fxml"));
+            Parent parent  = loader.load();
+            Scene scene = new Scene(parent, 800, 500);
+            Stage stage = new Stage();
+            stage.setMinWidth(800);
+            stage.setMinHeight(500);
+            stage.setResizable(false);
+            stage.initModality(Modality.APPLICATION_MODAL);
+            stage.setScene(scene);
+        
+            stage.showAndWait();
+            manageUsersBUTTON.setDisable(false);
+
+        } catch (IOException ex) {
+            Logger.getLogger(MainLayoutTesting_WITHANCHORController.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
     }
 }

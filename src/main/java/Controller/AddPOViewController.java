@@ -69,9 +69,6 @@ public class AddPOViewController implements Initializable {
     private DatePicker DatePickerORGSHIP, DatePickerETABMS, DatePickerFUDATE, DatePickerCURSHIP;
     //--------------------------------------------------------------------------
     @FXML
-    private Label dragLABEL;
-    //--------------------------------------------------------------------------
-    @FXML
     private Button BUTTONaddToDatabase;
     //--------------------------------------------------------------------------
     @FXML
@@ -84,6 +81,8 @@ public class AddPOViewController implements Initializable {
     private int listViewCount;
     private Attachment att[];
     
+    private boolean textFieldsAreFilled = false;
+    private boolean datePickersAreFilled = false;
     
     /**
      * Initializes the controller class.
@@ -151,46 +150,20 @@ public class AddPOViewController implements Initializable {
                 return null;
             }
         }));
-        //------------------------------------------------------------------------------        
-//        for(int i = 0; i < DataEntryPanes.getColumnCount(); i++){
-
-            GridPane p = (GridPane)DataEntryPanes.getChildren().get(0);
-
-                for(Node node: p.getChildren()){
-                    if(node instanceof TextField){ // if it's a TextField
-                        if(node instanceof TextField){
-                            ((TextField)node).textProperty().addListener((obs, old, newV)->{ // add a change listener to every TextField
-
-                              if(!newV.trim().isEmpty()&& isTextFieldAllFilled(paneTextFieldsONE)) 
-//                                  if(isDatePickerFilled(paneTextFieldsONE))
-                                    BUTTONaddToDatabase.setDisable(false); // then make the button active again
-                              else{
-                                  BUTTONaddToDatabase.setDisable(true); // or else, make it disable until it achieves the required condition 
-                              }
-                          });  
-                        }
-//                        else{
-//                            ((DatePicker)node).valueProperty().addListener((obs, old, newV)->{ // add a change listener to every TextField
-//
-//                              if(newV != null && isDatePickerFilled(paneTextFieldsONE)){ 
-//                                  if(isTextFieldAllFilled(paneTextFieldsONE))
-//                                    BUTTONaddToDatabase.setDisable(false); // then make the button active again
-//                                  else{
-//                                      System.out.println("fill out fields");
-//                                      BUTTONaddToDatabase.setDisable(true);
-//                                  }
-//                              }
-//                              else{
-//                                  BUTTONaddToDatabase.setDisable(true); // or else, make it disable until it achieves the required condition 
-//                              }
-//                          });  
-//                        }
-                        
-                    }//end instanceof TextField/DatePicker
-                }//end forloop
-//        }
-
+        //----------------------------------------------------------------------
         
+        BUTTONaddToDatabase.disableProperty().bind( 
+                TextFieldPO.textProperty().isEmpty()
+                .or(TextFieldSUPPLIER.textProperty().isEmpty()
+                .or(TextFieldINVOICE.textProperty().isEmpty())
+                .or(TextFieldBRG.textProperty().isEmpty())
+                .or(TextFieldPARAMETER.textProperty().isEmpty()
+                .or(TextFieldQTY.textProperty().isEmpty()
+                .or(TextFieldLANDING.textProperty().isEmpty())
+                .or(DatePickerORGSHIP.valueProperty().isNull())
+                .or(DatePickerETABMS.valueProperty().isNull())
+                .or(DatePickerCURSHIP.valueProperty().isNull())))));
+     
     }    
     //##########################################################################
     // 1) check if PO exist before continuing. Cancel event/process if PO already exists
@@ -198,6 +171,18 @@ public class AddPOViewController implements Initializable {
     // 3) check if supplier_id is in table, if not, add to table 
     // 4) check if new brg_id is in table, if not, add to parent table
     //##########################################################################
+    
+    //including FU date
+    private final String 
+            insert_purchase_orders_dates 
+            = "INSERT INTO "
+            + "purchase_orders(purchase_order, original_ship_date, current_ship_date, eta_bms, fu_date) " 
+            + "values(?,?,?,?,?);";
+    private final String insert_purchase_orders_nofu
+            = "INSERT INTO "
+            + "purchase_orders(purchase_order, original_ship_date, current_ship_date, eta_bms) " 
+            + "values(?,?,?,?);";
+    
     @FXML
     private void addToDatabase(ActionEvent event) {
         
@@ -228,22 +213,28 @@ PreparedStatement pst = null;
                     }  
                     return;
                 }
-                
-                pst = 
-                    con.prepareStatement("INSERT INTO "
-                            + "purchase_orders(purchase_order, original_ship_date, current_ship_date,eta_bms,"
-                            + "fu_date)  "
-                            + "values(?,?,?,?,?);");
+                //##############################################################
+                //      Date Validation
+                //##############################################################
+                if(DatePickerFUDATE.getValue() != null){
+                    pst = 
+                        con.prepareStatement(insert_purchase_orders_dates);
            
-            if(isTextFieldAllFilled(paneTextFieldsONE) 
-                    && isDatePickerFilled(paneTextFieldsONE)){
-               //Format(FUdate,'Short Date')
-                System.out.println("ADDING NEW PO TO DATABASE");
-                pst.setString(1, TextFieldPO.getText());
-                pst.setDate(2, java.sql.Date.valueOf(DatePickerORGSHIP.getValue()));
-                pst.setDate(3, java.sql.Date.valueOf(DatePickerCURSHIP.getValue()));
-                pst.setDate(4, java.sql.Date.valueOf(DatePickerETABMS.getValue()));
-                pst.setDate(5, java.sql.Date.valueOf(DatePickerFUDATE.getValue()));
+                        System.out.println("ADDING NEW PO TO DATABASE WITH FUDATE");
+                        pst.setString(1, TextFieldPO.getText());
+                        pst.setDate(2, java.sql.Date.valueOf(DatePickerORGSHIP.getValue()));
+                        pst.setDate(3, java.sql.Date.valueOf(DatePickerCURSHIP.getValue()));
+                        pst.setDate(4, java.sql.Date.valueOf(DatePickerETABMS.getValue()));
+                        pst.setDate(5, java.sql.Date.valueOf(DatePickerFUDATE.getValue()));
+                }else if(DatePickerFUDATE.getValue() == null){
+                    pst = 
+                        con.prepareStatement(insert_purchase_orders_nofu);
+                    System.out.println("ADDING NEW PO TO DATABASE WITHOUT FUDATE");
+                        pst.setString(1, TextFieldPO.getText());
+                        pst.setDate(2, java.sql.Date.valueOf(DatePickerORGSHIP.getValue()));
+                        pst.setDate(3, java.sql.Date.valueOf(DatePickerCURSHIP.getValue()));
+                        pst.setDate(4, java.sql.Date.valueOf(DatePickerETABMS.getValue()));
+                }
                 
                 
                 if(pst.executeUpdate() == 1)
@@ -390,41 +381,58 @@ pst = con.prepareStatement("SELECT brg_name FROM bearings WHERE brg_name = ? "
                             pst.setString(2, TextFieldPO.getText());//new/same PO parameter
                             
                             if(pst.executeUpdate() == 1){
+//###############################################
+//          NOTES/COMMENTS INSERT
+//###############################################
                                 System.out.println("EXECUTED UPDATE ATTACHMENTS");
-                                ButtonType OK = new ButtonType("OK", ButtonBar.ButtonData.OK_DONE);
-                                Alert alert = new Alert(Alert.AlertType.NONE);
-                                {
-                                    alert.setTitle("update");
-                                    alert.getButtonTypes().clear();
-                                    alert.getDialogPane().getButtonTypes().addAll( OK );
-                                    alert.setContentText("SUCCESSFULLY ADDED ATTACHMENTS");//now insert into po_notes
-                                    alert.showAndWait();
-                                }
                                 
                                 FileHelper.createDirectory(TextFieldPO.getText());
-                                FileHelper.creatFile(TextFieldPO.getText());
+                                //##############################################
+                                //ERROR HERE: 
+                                //in create file, I Inserted note file into po_notes
+                                //I commented it out
+                                // 1) create file
+                                // 2) read TextArea and write to file
+                                // 3) ConnectionUtil.updateNotesTable(purchase_order);//insert into
+                                //##############################################
+                                FileHelper.creatFile(TextFieldPO.getText());//
                                 
+                                //##############################################
+                                //          VALIDATE EMPTY ENTRY
+                                //##############################################
                                 if(FileHelper.wirteToFile
-                                    (TextFieldPO.getText(), TextAreaRWCOMMENTS.getText(), TextAreaFUNOTES.getText()) )
+                                    (TextFieldPO.getText(), LoginViewController.current_user, TextAreaRWCOMMENTS.getText().replaceAll("[\\t\\n\\r]+"," "), 
+                                            TextAreaFUNOTES.getText().replaceAll("[\\t\\n\\r]+"," ")) )
                                 {
                                     System.out.println("Successfuly created and wrote to file for RWCOMMENTS");
                                     System.out.println("NOW add file to attachments");
                                 }else{
                                     System.out.println("failed to write to file");
+                                }                                
+
+                                System.out.println("ATTEMPTING TO INSERT DATA");
+//                                pst.execute();
+                                if(ConnectionUtil.updateNotesTable(TextFieldPO.getText()) == 1){
+//                                
+                                    Dialog<String> dialog = new Dialog<String>();{
+                                    dialog.setTitle("Overview DIALOG");
+                                    ButtonType type = new ButtonType("Ok", ButtonBar.ButtonData.OK_DONE);
+                                    dialog.getDialogPane().getButtonTypes().add(type);
+                                    dialog.setContentText("SUCCESSFULY ADDED: " + TextFieldPO.getText());
+                                    dialog.showAndWait();
+                    }
                                 }
-                                
-                                pst = con.prepareStatement("INSERT INTO "
-                                        + "po_notes( purchase_order, rw_comment, fu_note ) "
-                                        + "VALUES (?,?,?)"    );
-                                pst.setString(1, TextFieldPO.getText());
-                                
-                                File file = FileHelper.getRWFile(TextFieldPO.getText());
-                                byte[] attachmentData = java.nio.file.Files.readAllBytes(Paths.get(file.getAbsolutePath()));
-                                Attachment attachment = 
-                                        new Attachment(file.getAbsolutePath(), file.getName(),null,attachmentData,null,null);
-                                pst.setObject(2, attachment);
-                                
-                                
+                                else{
+                                    ButtonType OK = new ButtonType("OK", ButtonBar.ButtonData.OK_DONE);
+                                    Alert alert = new Alert(Alert.AlertType.NONE);
+                                    {
+                                        alert.setTitle("update");
+                                        alert.getButtonTypes().clear();
+                                        alert.getDialogPane().getButtonTypes().addAll( OK );
+                                        alert.setContentText("UNSUCCESSFULLY ADDED ATTACHMENTS");//now insert into po_notes
+                                        alert.showAndWait();
+                                    }
+                                }
                                 
                             }
                             else{
@@ -436,18 +444,10 @@ pst = con.prepareStatement("SELECT brg_name FROM bearings WHERE brg_name = ? "
                 else{
                     System.out.println(TextFieldBRG.getText()+ " DOES NOT EXIST" );
                 }
-
-                Dialog<String> dialog = new Dialog<String>();{
-                        dialog.setTitle("Overview DIALOG");
-                        ButtonType type = new ButtonType("Ok", ButtonBar.ButtonData.OK_DONE);
-                        dialog.getDialogPane().getButtonTypes().add(type);
-                        dialog.setContentText("SUCCESSFULY ADDED: " + TextFieldPO.getText());
-                        dialog.showAndWait();
-                    }
                 System.out.println("successfuly added!");
 
                 clearAllFields();
-            }
+            
 
 
             } catch (SQLException ex) { 
@@ -487,7 +487,6 @@ pst = con.prepareStatement("SELECT brg_name FROM bearings WHERE brg_name = ? "
 
                             filePath = draggedFile.getAbsolutePath();
 
-//                                for(int i = 0; i < attfiles.size() ;i++){
                                 for(File attFile : attfiles){
                                     if( attFile.getName().equals(draggedFile.getName())  
 //                                            || attfiles.contains(file) 
@@ -523,28 +522,46 @@ pst = con.prepareStatement("SELECT brg_name FROM bearings WHERE brg_name = ? "
             
     }
     //##########################################################################
-        private static boolean isTextFieldAllFilled(GridPane table){
-        for(Node node : table.getChildren()){ // cycle through every component in the table (GridPane)
-            if(node instanceof TextField){ // if it's a TextField
-            // after removing the leading spaces, check if it's empty
-                if(((TextField)node).getText().trim().isEmpty()){
-                        return false; // if so, return false
-                }
-            }       
-        }
-        return true;
+    
+    /*
+    @FXML
+    private TextField TextFieldPO, TextFieldSUPPLIER, TextFieldINVOICE, TextFieldBRG,
+            TextFieldPARAMETER, TextFieldQTY, TextFieldLANDING;
+    //--------------------------------------------------------------------------
+    @FXML
+    private DatePicker DatePickerORGSHIP, DatePickerETABMS, DatePickerFUDATE, DatePickerCURSHIP;
+    */
+    
+        private boolean isTextFieldAllFilled(){
+//        for(Node node : table.getChildren()){ // cycle through every component in the table (GridPane)
+//            if(node instanceof TextField){ // if it's a TextField
+//            // after removing the leading spaces, check if it's empty
+//                if(((TextField)node).getText().trim().isEmpty()){
+//                        return false; // if so, return false
+//                }
+//            }       
+//        }
+        return !( TextFieldPO.getText().isEmpty() || TextFieldSUPPLIER.getText().isEmpty() 
+                || TextFieldINVOICE.getText().isEmpty() || TextFieldBRG.getText().isEmpty()
+                || TextFieldPARAMETER.getText().isEmpty() || TextFieldQTY.getText().isEmpty()
+                || TextFieldLANDING.getText().isEmpty() );
     }
     //--------------------------------------------------------------------------
-    private static boolean isDatePickerFilled(GridPane table){
-        for(Node node : table.getChildren()){
-            if(node instanceof DatePicker){
-                LocalDate date = ((DatePicker) node).getValue();
-                if(((DatePicker) node).getValue() == null ||
-                        ((DatePicker) node).getValue().toString().trim().isEmpty())
-                    return false;
-            }
-        }
-        return true;
+//    @FXML
+//    private DatePicker DatePickerORGSHIP, DatePickerETABMS, DatePickerFUDATE, DatePickerCURSHIP;
+    private boolean isDatePickerFilled(){
+//        for(Node node : table.getChildren()){
+//            if( node instanceof DatePicker ){
+//                //LocalDate date = ((DatePicker) node).getValue();
+//                if(((DatePicker) node).getValue() == null ||
+//                        ((DatePicker) node).getValue().toString().trim().isEmpty())
+//                    return false;
+//            }
+//        }
+        
+        return  !( DatePickerORGSHIP.getEditor().getText().isEmpty()
+                || DatePickerETABMS.getEditor().getText().isEmpty()
+                || DatePickerCURSHIP.getEditor().getText().isEmpty() );
     }
     //--------------------------------------------------------------------------
     private void clearAllFields(){
@@ -556,7 +573,8 @@ pst = con.prepareStatement("SELECT brg_name FROM bearings WHERE brg_name = ? "
                 ((DatePicker)node).getEditor().clear();
             }
         }
-        
+        TextAreaRWCOMMENTS.clear();
+        TextAreaFUNOTES.clear();
         ListViewATTACHMENTS.getItems().clear();
         attfiles.clear();
         att = null; 
