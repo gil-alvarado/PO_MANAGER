@@ -9,6 +9,7 @@ import java.awt.Desktop;
 
 import Model.ConnectionUtil;
 import Model.FileHelper;
+import Model.ModelEditPOitem;
 import Model.ModelManageDBTable;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -36,6 +37,7 @@ import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
+import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
@@ -49,6 +51,7 @@ import javafx.scene.control.DatePicker;
 import javafx.scene.control.Dialog;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
+import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.control.TextFormatter;
@@ -60,6 +63,8 @@ import javafx.scene.input.Dragboard;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.input.TransferMode;
 import javafx.scene.layout.HBox;
+import javafx.scene.paint.Color;
+import javafx.scene.shape.Circle;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javax.swing.text.NumberFormatter;
@@ -130,20 +135,20 @@ public class EditPOView_NOANCHORController implements Initializable {
         map_files = new LinkedHashMap<>();
         
         ListViewATTACHMENTS.setEditable(true);
-        ListViewATTACHMENTS.setCellFactory(TextFieldListCell.forListView());
+//        ListViewATTACHMENTS.setCellFactory(TextFieldListCell.forListView());
         BUTTONrwComment.setDisable(true); BUTTONFUnote.setDisable(true);
-        ListViewATTACHMENTS.setOnEditCommit(new EventHandler<ListView.EditEvent<String>>() {
-            @Override
-            public void handle(ListView.EditEvent<String> event) {
-                System.out.println("OLD VALUE: "+ event.getSource().getItems().get(event.getIndex()));//print old value
-                //set new value
-                ListViewATTACHMENTS.getItems().set(event.getIndex(), event.getNewValue());
-                System.out.println("NEW VALUE: " + event.getSource().getItems().get(event.getIndex()));
-                        //attfiles.get(ListViewATTACHMENTS.getSelectionModel().getSelectedIndex()).getName());
-            }
+//        ListViewATTACHMENTS.setOnEditCommit(new EventHandler<ListView.EditEvent<String>>() {
+//            @Override
+//            public void handle(ListView.EditEvent<String> event) {
+//                System.out.println("OLD VALUE: "+ event.getSource().getItems().get(event.getIndex()));//print old value
+//                //set new value
+//                ListViewATTACHMENTS.getItems().set(event.getIndex(), event.getNewValue());
+//                System.out.println("NEW VALUE: " + event.getSource().getItems().get(event.getIndex()));
+//                        //attfiles.get(ListViewATTACHMENTS.getSelectionModel().getSelectedIndex()).getName());
+//            }
             
 
-        });                
+//        });                
         
         ComboBoxCONFIRMED.getItems().addAll("YES", "NO");
         ComboBoxCONFIRMED.setEditable(false);
@@ -193,7 +198,7 @@ TextFieldLANDING.setTextFormatter(new TextFormatter<>((change) -> {
                 return null;
             }
         }));
-
+TextFieldPO.setDisable(true);
 BUTTONUpdateDatabase.disableProperty().bind( 
                 TextFieldPO.textProperty().isEmpty()
                 .or(TextFieldSUPPLIER.textProperty().isEmpty()
@@ -225,19 +230,38 @@ else{
     //##########################################################################
     public void setItems(ModelManageDBTable data){
         //----------------------------------------------------------------------
+        
+        
+        
+        
+        //######################################################################
+        //in ConnectionUtil: return linked hash map
+        //Key = column name, value = value
+        //######################################################################
         ResultSet rs_meta_data = ConnectionUtil.getAllData(data.getPo());//already executeds
         
+        ArrayList <String> list = ConnectionUtil.columnNames(data.getPo());
+        System.out.println(list);
+        
+        
+        
+        for(Object name :list){
+            System.out.println((String)name);
+        }
         clearAllFields();
         System.out.println("ATTEMPTING TO EXECUTE STATEMENT");
         POparameter = data.getPo();//original PO
         System.out.println("SET ITEMS, PO = " +data.getPo());
         BRGparameter = data.getBrg();//original bearing number
         System.out.println("BRG = " + data.getBrg());
-        CONFIRMEDparameter = data.getConfirmed();
+        
         try{
+            
+            ModelEditPOitem edit_po = new ModelEditPOitem(data.getPo());
             
             Connection con = ConnectionUtil.conDB();
 
+            CONFIRMEDparameter = rs_meta_data.getString("confirmed");
             BRGIDparameter = rs_meta_data.getInt("brg_id");//rs.getInt("brg_id");
 
 //CREATE NEW FILE FROM ATTACHMENT COLUMN
@@ -247,12 +271,13 @@ else{
             att = (Attachment[]    )rs_meta_data.getObject("attachments");
             
             if(FileHelper.createPoAttachmentsDirectory(POparameter)){
-                    System.out.println("DIRECTORY CREATED");
+                    System.out.println("ATTACHMENTS DIRECTORY CREATED IN EDIT");
                     System.out.println("ADDING ATTACHMENTS TO DIRECTORY");
             }else{
                 System.out.println("DIRECTORY ALREADY CREATED");
                 System.out.println("ADDING ATTACHMENTS TO DIRECTORY");
             }
+            
             for(Attachment file_cursor : att){
                 
                 //display existing fileNAMES on DB to listview
@@ -262,8 +287,9 @@ else{
                 
 //                    File tempFile = 
 //                            new File(ConnectionUtil.networkLocation + "/" +POparameter + "/Attachments/"+ file_cursor.getName());
-                    File tempFile = 
-                            new File(ConnectionUtil.desktopLocation + "/BMStemp/" +POparameter + "/Attachments/"+ file_cursor.getName());
+//                    File tempFile = 
+//                            new File(ConnectionUtil.desktopLocation + "/BMStemp/" +POparameter + "/Attachments/"+ file_cursor.getName());
+                  File tempFile = new File(FileHelper.getPoAttachmentDirectory() +"/"+file_cursor.getName());  
                     org.apache.commons.io.FileUtils.writeByteArrayToFile(
                             tempFile, file_cursor.getData());                    
                     //##########################################################
@@ -383,6 +409,13 @@ else{
                  System.out.println("ATTEMPTING TO UPDATE PURCHASE_ORDERS TABLE BEFORE UPDATING DETAILS");
                  PreparedStatement update;
                  
+                 
+                 //#############################################################
+                 //IMPORTANT: CHECK IF PO HAS CHANGED
+                 //IF YES: UPDATE CURRENT DIRECTORY NAME
+                 //#############################################################
+                 
+                 
                  if( DatePickerFUDATE.getValue() != null ){
                     update= con.prepareStatement(UPDATEpurchase_orders);
 
@@ -418,7 +451,7 @@ update = con.prepareStatement("SELECT PARAMETER\n" +
 " WHERE PARAMETER = ?;");
 
                 update.setString(1,TextFieldPARAMETER.getText());
-      
+
                 ResultSet rs = update.executeQuery();
                 
                 System.out.println("PARAMETER CHECK: CHECKING IF " + TextFieldPARAMETER.getText() + " EXISTS");
@@ -494,8 +527,6 @@ update = con.prepareStatement("SELECT brg_name FROM bearings WHERE brg_name = ? 
                 rs = update.executeQuery();
                 
                 if(rs.next()){
-//                    System.out.println("LINE 456: " +TextFieldBRG.getText()+" DOES EXIST" + " ,ID = "  +rs.getString("brg_id"));
-
                     update = con.prepareStatement(UPDATEorder_details);
                     
                     update.setInt(1, (rs.getInt("brg_id")));
@@ -515,13 +546,13 @@ update = con.prepareStatement("SELECT brg_name FROM bearings WHERE brg_name = ? 
 
                     update.setInt(7, BRGIDparameter);//id of original brg_id, not newly added
                     System.out.println("CONFIRMED VALUE PARAMETER: " + CONFIRMEDparameter);
-                    if(CONFIRMEDparameter.equals("YES"))
-                        update.setString(8, "TRUE");
-                    else
-                        update.setString(8, "FALSE");
+                    
+                    update.setString(8, CONFIRMEDparameter);
+                    
 //###########################################
 //ATTACHMENTS
 //###########################################
+//RECALL: PO directories MUST BE CHANGED
                             
                         if(update.executeUpdate() == 1){
                             System.out.println("UPDATED DETAILS, NOW UPDATING ATTACHMENTS");
@@ -798,18 +829,58 @@ update = con.prepareStatement("SELECT brg_name FROM bearings WHERE brg_name = ? 
         }
     }
 
+    
+    //add prompt here
     @FXML
     private void removeListItem(ActionEvent event) {
-        if(listViewCount>0 && !ListViewATTACHMENTS.getItems().isEmpty() 
-                && ListViewATTACHMENTS.getSelectionModel().getSelectedIndex() >=0){
-            
-            removedFiles.add((String) ListViewATTACHMENTS.getSelectionModel().getSelectedItem());//adding file name
-            System.out.println("ADDED " + removedFiles + " TO REMOVED FILES LIST!" );
-            ListViewATTACHMENTS.getItems().remove(ListViewATTACHMENTS.getSelectionModel().getSelectedIndex());
-            listViewCount--;
-        }
-    }
+        
+        
+        Dialog<String> dialog = new Dialog<>();
+        dialog.setTitle("Confirm");
+        dialog.setHeaderText("ATTACHMENT REMOVAL");
+        dialog.setGraphic(new Circle(15, Color.RED)); // Custom graphic
+        dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
 
+        PasswordField pwd = new PasswordField();
+        HBox content = new HBox();
+        content.setAlignment(Pos.CENTER_LEFT);
+        content.setSpacing(10);
+        content.getChildren().addAll(new Label("Enter password to confirm removal: "), pwd);
+        dialog.getDialogPane().setContent(content);
+        dialog.setResultConverter(dialogButton -> {
+            if (dialogButton == ButtonType.OK) {
+                return pwd.getText();
+            }
+            return null;
+        });
+
+        Optional<String> result = dialog.showAndWait();
+        
+        if ( result.isPresent() ) {
+            if(result.get().equals("Balls22")){
+                if(listViewCount>0 && !ListViewATTACHMENTS.getItems().isEmpty() 
+                    && ListViewATTACHMENTS.getSelectionModel().getSelectedIndex() >=0){
+
+                removedFiles.add((String) ListViewATTACHMENTS.getSelectionModel().getSelectedItem());//adding file name
+                System.out.println("ADDED " + removedFiles + " TO REMOVED FILES LIST!" );
+                ListViewATTACHMENTS.getItems().remove(ListViewATTACHMENTS.getSelectionModel().getSelectedIndex());
+                listViewCount--;
+                }
+            }else{
+                ButtonType OK = new ButtonType("OK", ButtonBar.ButtonData.OK_DONE);
+                Alert alert = new Alert(Alert.AlertType.NONE);
+                {
+                    alert.setTitle("WRONG INPUT");
+                    alert.getButtonTypes().clear();
+                    alert.getDialogPane().getButtonTypes().addAll( OK );
+                    alert.setContentText("WRONG PASSWORD ENTERED");
+                    alert.showAndWait();
+                }
+            }
+        }    
+        
+    }
+    //--------------------------------------------------------------------------
     @FXML
     private void reloadListView(ActionEvent event) {
         ListViewATTACHMENTS.getItems().clear();
@@ -832,6 +903,9 @@ update = con.prepareStatement("SELECT brg_name FROM bearings WHERE brg_name = ? 
         
         File tempNoteFile = FileHelper.getRWFile(POparameter);
         
+        
+        System.out.println("RwCommentDialog: "+tempNoteFile.getAbsolutePath());
+        
         FXMLLoader loader = new FXMLLoader (getClass().getResource("/View/Overview/NotesView.fxml"));
         try {
             Parent parent  = loader.load();
@@ -842,19 +916,20 @@ update = con.prepareStatement("SELECT brg_name FROM bearings WHERE brg_name = ? 
             stage.setResizable(false);
             stage.initModality(Modality.APPLICATION_MODAL);
             stage.setScene(scene);
+            
+            System.out.println("RwCommentDialog: "+tempNoteFile.getAbsolutePath());
+            
                 NotesViewController note_controller = loader.getController();
 
-            if(tempNoteFile!=null){
 
                 String notes_content = FileHelper.fileContent(tempNoteFile).toString();
-                if(!notes_content.isEmpty()){ 
+                if(!notes_content.isEmpty()){
                     note_controller.setPoLabel(POparameter);
 //                    note_controller.setFuDateLabel(DatePickerFUDATE.getValue().toString());
 if(DatePickerFUDATE.getValue() !=null)
 note_controller.setFuDateLabel(DatePickerFUDATE.getValue().toString());
 else
     note_controller.setFuDateLabel(null);
-//                                        controller.setContext(notes_content, data);
                     note_controller.setContext(tempNoteFile);
                 }
                 else{
@@ -863,12 +938,9 @@ else
 note_controller.setFuDateLabel("no date");
                     note_controller.setContext(null);
                 }
-            }
-            else{
-//                                    dialog.setContentText("did you happen to delete the file?!");
-            }
+           
             stage.showAndWait();
-            String notes_content = FileHelper.csvFileContent(tempNoteFile);//fileContent(tempNoteFile).toString();
+            notes_content = FileHelper.csvFileContent(tempNoteFile);//fileContent(tempNoteFile).toString();
             TextAreaRWCOMMENTS.clear();
             if(!notes_content.isEmpty()){
                 TextAreaRWCOMMENTS.setText(notes_content);
@@ -885,6 +957,7 @@ note_controller.setFuDateLabel("no date");
         
         File tempNoteFile = FileHelper.getFUFile(POparameter);
         FXMLLoader loader = new FXMLLoader (getClass().getResource("/View/Overview/NotesView.fxml"));
+        
         try {
             Parent parent  = loader.load();
             Scene scene = new Scene(parent, 600, 800);
@@ -906,7 +979,6 @@ if(DatePickerFUDATE.getValue() !=null)
 note_controller.setFuDateLabel(DatePickerFUDATE.getValue().toString());
 else
     note_controller.setFuDateLabel(null);
-//                                        controller.setContext(notes_content, data);
                     note_controller.setContext(tempNoteFile);
                 }
                 else{

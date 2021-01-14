@@ -23,12 +23,14 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.ResourceBundle;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.Alert;
 
@@ -40,6 +42,7 @@ import javafx.scene.control.DatePicker;
 import javafx.scene.control.Dialog;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
+import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.control.TextFormatter;
@@ -48,6 +51,9 @@ import javafx.scene.input.Dragboard;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.input.TransferMode;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.paint.Color;
+import javafx.scene.shape.Circle;
 import javax.swing.text.NumberFormatter;
 import net.ucanaccess.complex.Attachment;
 /**
@@ -386,6 +392,11 @@ pst = con.prepareStatement("SELECT brg_name FROM bearings WHERE brg_name = ? "
                                 System.out.println("EXECUTED UPDATE ATTACHMENTS");
                                 
                                 FileHelper.createDirectory(TextFieldPO.getText());
+                                if(FileHelper.createPoAttachmentsDirectory(TextFieldPO.getText())){
+                                System.out.println("ATTACHMENTS DIRECTORY CREATED IN ADD PO");
+                                }else{
+                                    System.out.println("DIRECTORY ALREADY CREATED");
+                                }
                                 FileHelper.creatFile(TextFieldPO.getText());//
                                 
                                 //##############################################
@@ -571,11 +582,49 @@ pst = con.prepareStatement("SELECT brg_name FROM bearings WHERE brg_name = ? "
 //##############################################################################
     @FXML
     private void removeListItem(ActionEvent event) {
-        if(listViewCount>0 && !ListViewATTACHMENTS.getItems().isEmpty() 
-                && ListViewATTACHMENTS.getSelectionModel().getSelectedIndex() >=0){
-            removedFiles.add((String) ListViewATTACHMENTS.getSelectionModel().getSelectedItem());
-            ListViewATTACHMENTS.getItems().remove(ListViewATTACHMENTS.getSelectionModel().getSelectedIndex());
-            listViewCount--;
+        
+        Dialog<String> dialog = new Dialog<>();
+        dialog.setTitle("Confirm");
+        dialog.setHeaderText("ATTACHMENT REMOVAL");
+        dialog.setGraphic(new Circle(15, Color.RED)); // Custom graphic
+        dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
+
+        PasswordField pwd = new PasswordField();
+        HBox content = new HBox();
+        content.setAlignment(Pos.CENTER_LEFT);
+        content.setSpacing(10);
+        content.getChildren().addAll(new Label("Enter password to confirm removal: "), pwd);
+        dialog.getDialogPane().setContent(content);
+        dialog.setResultConverter(dialogButton -> {
+            if (dialogButton == ButtonType.OK) {
+                return pwd.getText();
+            }
+            return null;
+        });
+
+        Optional<String> result = dialog.showAndWait();
+        
+        if ( result.isPresent() ) {
+            if(result.get().equals("Balls22")){
+                if(listViewCount>0 && !ListViewATTACHMENTS.getItems().isEmpty() 
+                    && ListViewATTACHMENTS.getSelectionModel().getSelectedIndex() >=0){
+
+                removedFiles.add((String) ListViewATTACHMENTS.getSelectionModel().getSelectedItem());//adding file name
+                System.out.println("ADDED " + removedFiles + " TO REMOVED FILES LIST!" );
+                ListViewATTACHMENTS.getItems().remove(ListViewATTACHMENTS.getSelectionModel().getSelectedIndex());
+                listViewCount--;
+                }
+            }else{
+                ButtonType OK = new ButtonType("OK", ButtonBar.ButtonData.OK_DONE);
+                Alert alert = new Alert(Alert.AlertType.NONE);
+                {
+                    alert.setTitle("WRONG INPUT");
+                    alert.getButtonTypes().clear();
+                    alert.getDialogPane().getButtonTypes().addAll( OK );
+                    alert.setContentText("WRONG PASSWORD ENTERED");
+                    alert.showAndWait();
+                }
+            }
         }
     }
 

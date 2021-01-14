@@ -82,27 +82,42 @@
                         <Font size="24.0" />
                      </font>
                   </Label>
-                  <TextField fx:id="TextFieldPO" promptText="PO #" GridPane.columnIndex="1" GridPane.rowIndex="1" GridPane.vgrow="ALWAYS">
+                  <TextField fx:id="TextFieldPO" maxHeight="1.7976931348623157E308" promptText="PO #" GridPane.columnIndex="1" GridPane.rowIndex="1" GridPane.vgrow="ALWAYS">
                      <font>
                         <Font size="18.0" />
                      </font>
                      <GridPane.margin>
-                        <Insets />
+                        <Insets bottom="2.0" top="2.0" />
                      </GridPane.margin>
                   </TextField>
-                  <TextField fx:id="TextFieldSUPPLIER" promptText="SUPPLIER" GridPane.columnIndex="1" GridPane.rowIndex="2" GridPane.vgrow="ALWAYS">
+                  <TextField fx:id="TextFieldSUPPLIER" maxHeight="1.7976931348623157E308" promptText="SUPPLIER" GridPane.columnIndex="1" GridPane.rowIndex="2" GridPane.vgrow="ALWAYS">
                      <font>
                         <Font size="18.0" />
                      </font>
+                     <GridPane.margin>
+                        <Insets bottom="2.0" top="2.0" />
+                     </GridPane.margin>
                   </TextField>
-                  <ComboBox fx:id="ComboBoxCONFIRMED" editable="true" promptText="YES/NO" style="-fx-font-size: 18px;" GridPane.columnIndex="1" GridPane.rowIndex="3" GridPane.vgrow="ALWAYS" />
-                  <TextField fx:id="TextFieldINVOICE" promptText="I/P" GridPane.columnIndex="1" GridPane.rowIndex="4" GridPane.vgrow="ALWAYS">
+                  <ComboBox fx:id="ComboBoxCONFIRMED" editable="true" maxHeight="1.7976931348623157E308" promptText="YES/NO" style="-fx-font-size: 18px;" GridPane.columnIndex="1" GridPane.rowIndex="3" GridPane.vgrow="ALWAYS">
+                     <GridPane.margin>
+                        <Insets bottom="2.0" top="2.0" />
+                     </GridPane.margin></ComboBox>
+                  <TextField fx:id="TextFieldINVOICE" maxHeight="1.7976931348623157E308" promptText="I/P" GridPane.columnIndex="1" GridPane.rowIndex="4" GridPane.vgrow="ALWAYS">
                      <font>
                         <Font size="18.0" />
                      </font>
+                     <GridPane.margin>
+                        <Insets bottom="2.0" top="2.0" />
+                     </GridPane.margin>
                   </TextField>
-                  <DatePicker fx:id="DatePickerORGSHIP" editable="false" promptText="MM/DD/YYYY" style="-fx-font-size: 18px;" GridPane.columnIndex="1" GridPane.rowIndex="5" GridPane.vgrow="ALWAYS" />
-                  <DatePicker fx:id="DatePickerCURSHIP" editable="false" promptText="MM/DD/YYYY" style="-fx-font-size: 18px;" GridPane.columnIndex="1" GridPane.rowIndex="6" GridPane.vgrow="ALWAYS" />
+                  <DatePicker fx:id="DatePickerORGSHIP" editable="false" maxHeight="1.7976931348623157E308" promptText="MM/DD/YYYY" style="-fx-font-size: 18px;" GridPane.columnIndex="1" GridPane.rowIndex="5" GridPane.vgrow="ALWAYS">
+                     <GridPane.margin>
+                        <Insets bottom="2.0" top="2.0" />
+                     </GridPane.margin></DatePicker>
+                  <DatePicker fx:id="DatePickerCURSHIP" editable="false" maxHeight="1.7976931348623157E308" promptText="MM/DD/YYYY" style="-fx-font-size: 18px;" GridPane.columnIndex="1" GridPane.rowIndex="6" GridPane.vgrow="ALWAYS">
+                     <GridPane.margin>
+                        <Insets bottom="2.0" top="2.0" />
+                     </GridPane.margin></DatePicker>
                   <Label alignment="CENTER_RIGHT" text="BRG#" GridPane.columnIndex="2" GridPane.halignment="RIGHT" GridPane.rowIndex="1">
                      <font>
                         <Font size="24.0" />
@@ -133,31 +148,46 @@
                         <Font size="24.0" />
                      </font>
                   </Label>
-                  <TextField fx:id="TextFieldBRG" promptText="BRG #" GridPane.columnIndex="3" GridPane.rowIndex="1" GridPane.vgrow="ALWAYS">
+                  <TextField fx:id="TextFieldBRG" maxHeight="1.7976931348623157E308" promptText="BRG #" GridPane.columnIndex="3" GridPane.rowIndex="1" GridPane.vgrow="ALWAYS">
                      <font>
                         <Font size="18.0" />
                      </font>
                      <GridPane.margin>
-                        <Insets />
+                        <Insets bottom="2.0" top="2.0" />
                      </GridPane.margin>
                   </TextField>
-                  <TextField fx:id="TextFieldPARAMETER" promptText="PARAMETER" GridPane.columnIndex="3" GridPane.rowIndex="2" GridPane.vgrow="ALWAYS">
+                  <TextField fx:id="TextFieldPARAMETER" maxHeight="1.7976931348623157E308" promptText="PARAMETER" GridPane.columnIndex="3" GridPane.rowIndex="2" GridPane.vgrow="ALWAYS">
                      <font>
                         <Font size="18.0" />
                      </font>
+                     <GridPane.margin>
+                        <Insets bottom="2.0" top="2.0" />
+                     </GridPane.margin>
                   </TextField>
-                  <TextField fx:id="TextFieldQTY" promptText="QTY" GridPane.columnIndex="3" GridPane.rowIndex="3" GridPane.vgrow="ALWAYS">
+                  <TextField fx:id="TextFieldQTY" maxHeight="1.7976931348623157E308" promptText="QTY" GridPane.columnIndex="3" GridPane.rowIndex="3" GridPane.vgrow="ALWAYS">
                      <font>
                         <Font size="18.0" />
                      </font>
+                     <GridPane.margin>
+                        <Insets bottom="2.0" top="2.0" />
+                     </GridPane.margin>
                   </TextField>
-                  <TextField fx:id="TextFieldLANDING" promptText="LC" GridPane.columnIndex="3" GridPane.rowIndex="4" GridPane.vgrow="ALWAYS">
+                  <TextField fx:id="TextFieldLANDING" maxHeight="1.7976931348623157E308" promptText="LC" GridPane.columnIndex="3" GridPane.rowIndex="4" GridPane.vgrow="ALWAYS">
                      <font>
                         <Font size="18.0" />
                      </font>
+                     <GridPane.margin>
+                        <Insets bottom="2.0" top="2.0" />
+                     </GridPane.margin>
                   </TextField>
-                  <DatePicker fx:id="DatePickerETABMS" editable="false" promptText="MM/DD/YYYY" style="-fx-font-size: 18px;" GridPane.columnIndex="3" GridPane.rowIndex="5" GridPane.vgrow="ALWAYS" />
-                  <DatePicker fx:id="DatePickerFUDATE" editable="false" promptText="MM/DD/YYYY" style="-fx-font-size: 18px;" GridPane.columnIndex="3" GridPane.rowIndex="6" GridPane.vgrow="ALWAYS" />
+                  <DatePicker fx:id="DatePickerETABMS" editable="false" maxHeight="1.7976931348623157E308" promptText="MM/DD/YYYY" style="-fx-font-size: 18px;" GridPane.columnIndex="3" GridPane.rowIndex="5" GridPane.vgrow="ALWAYS">
+                     <GridPane.margin>
+                        <Insets bottom="2.0" top="2.0" />
+                     </GridPane.margin></DatePicker>
+                  <DatePicker fx:id="DatePickerFUDATE" editable="false" maxHeight="1.7976931348623157E308" promptText="MM/DD/YYYY" style="-fx-font-size: 18px;" GridPane.columnIndex="3" GridPane.rowIndex="6" GridPane.vgrow="ALWAYS">
+                     <GridPane.margin>
+                        <Insets bottom="2.0" top="2.0" />
+                     </GridPane.margin></DatePicker>
                   <Label alignment="CENTER_RIGHT" contentDisplay="CENTER" text="CURRENT PO:" textAlignment="CENTER" GridPane.halignment="RIGHT">
                      <font>
                         <Font name="System Bold" size="16.0" />

@@ -9,7 +9,6 @@ package Model;
 import Controller.LoginViewController;
 import Controller.NotesViewController;
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -28,24 +27,42 @@ import java.util.logging.Logger;
  */
 public class FileHelper {
     
-    private static final String LineBreak = "-----------------------------------";
-    
-    
+    //create directory for specific PO
     public static void createDirectory(String purchase_order){
         
-        File tempDir = new File(ConnectionUtil.desktopLocation + "/BMStemp/" + purchase_order);
+//        File tempDir = new File(ConnectionUtil.desktopLocation + "/BMStemp/" + purchase_order);
 //        File tempDir = new File(ConnectionUtil.networkLocation + "/" + purchase_order);
-        boolean dirExec = tempDir.mkdir();
+
+        File tempDir = new File(ConnectionUtil.dbDirectoryLocation()+ "\\purchase_orders\\" + purchase_order);
+        System.out.println("FileHelper: CREATE PO DIRECTORY FOR " + purchase_order);
+        System.out.println(ConnectionUtil.dbDirectoryLocation());
+        boolean dirExec = tempDir.mkdirs();
         if(dirExec){
             System.out.println("created PO directory");
+//            System.out.println("FileHelper, createDirectory: poDirectory = " + poDirectory);
+        }else{
+            System.err.println("FAIL:  " +ConnectionUtil.dbDirectoryLocation());
         }
     }
     
+    public static boolean updateDirectory(String originalPO, String newPO){
+        
+        return true;
+    }
+    
+    //create attachments directory for specific PO
+    
+    private static String poAttachmentDirectory;
+
+    public static String getPoAttachmentDirectory() {
+        return poAttachmentDirectory;
+    }
     
     public static boolean createPoAttachmentsDirectory(String purchase_order){
 //        File tempDir = new File(ConnectionUtil.networkLocation + "/" + purchase_order +"/Attachments");
-        File tempDir = new File(ConnectionUtil.desktopLocation + "/BMStemp/" + purchase_order +"/Attachments");
-        
+//        File tempDir = new File(ConnectionUtil.desktopLocation + "/BMStemp/" + purchase_order +"/Attachments");
+        File tempDir = new File(ConnectionUtil.dbDirectoryLocation()+"\\purchase_orders\\"+purchase_order +"/Attachments");
+        poAttachmentDirectory = tempDir.getAbsolutePath();
         boolean dirExec = tempDir.mkdir();
         if(dirExec){
             System.out.println("created ATTACHMENTS directory");
@@ -54,8 +71,9 @@ public class FileHelper {
         return false;
     }
     
-    //##########################################################################
     
+    //##########################################################################
+    //relates to RW comment and notes
     public static void creatFile(String purchase_order){//prep_file
         
         FileOutputStream fos_RW;
@@ -63,8 +81,6 @@ public class FileHelper {
         StringBuilder data;
         
         try {
-//            RW_file = new File(ConnectionUtil.desktopLocation + "/BMStemp/" +purchase_order+ "/" + purchase_order + "-RWC.txt");
-//            FU_file = new File(ConnectionUtil.desktopLocation + "/BMStemp/" +purchase_order+ "/" + purchase_order + "-FUN.txt");
             data = new StringBuilder();
             //created headers
             
@@ -73,9 +89,14 @@ public class FileHelper {
 //            fos_RW = new FileOutputStream(ConnectionUtil.networkLocation + "/" +purchase_order+ "/" + purchase_order + "-RWC.csv", false);
 //            fos_FU = new FileOutputStream(ConnectionUtil.networkLocation + "/" +purchase_order+ "/" + purchase_order + "-FUN.csv", false);
 //            
+            //before
+//            fos_RW = new FileOutputStream(ConnectionUtil.desktopLocation + "/BMStemp/" +purchase_order+ "/" + purchase_order + "-RWC.csv", false);
+//            fos_FU = new FileOutputStream(ConnectionUtil.desktopLocation + "/BMStemp/" +purchase_order+ "/" + purchase_order + "-FUN.csv", false);
+            //after
+            fos_RW = new FileOutputStream(ConnectionUtil.dbDirectoryLocation()+"\\purchase_orders\\"+ purchase_order + "\\"+ purchase_order + "-RWC.csv", false);
+            fos_FU = new FileOutputStream(ConnectionUtil.dbDirectoryLocation()+"\\purchase_orders\\"+ purchase_order + "\\"+ purchase_order + "-FUN.csv", false);
             
-            fos_RW = new FileOutputStream(ConnectionUtil.desktopLocation + "/BMStemp/" +purchase_order+ "/" + purchase_order + "-RWC.csv", false);
-            fos_FU = new FileOutputStream(ConnectionUtil.desktopLocation + "/BMStemp/" +purchase_order+ "/" + purchase_order + "-FUN.csv", false);
+            
             
             System.out.println("CREATED FILES");
             
@@ -124,7 +145,12 @@ public class FileHelper {
                 sb.append(rwData).append("\n");
                 
 //                outFile = new FileOutputStream(ConnectionUtil.networkLocation + "/" +purchase_order+ "/" + purchase_order + "-RWC.csv",true);
-                outFile = new FileOutputStream(ConnectionUtil.desktopLocation + "/BMStemp/" +purchase_order+ "/" + purchase_order + "-RWC.csv",true);
+                
+                //before
+//                outFile = new FileOutputStream(ConnectionUtil.desktopLocation + "/BMStemp/" +purchase_order+ "/" + purchase_order + "-RWC.csv",true);
+                //after
+                outFile = new FileOutputStream(ConnectionUtil.dbDirectoryLocation()+"\\purchase_orders\\"+ purchase_order + "\\" +purchase_order + "-RWC.csv",true);
+                
                 
                 outFile.write(sb.toString().getBytes());
                 outFile.flush();
@@ -141,8 +167,9 @@ public class FileHelper {
                 sb.append(fuData).append("\n");
 
 //                outFile = new FileOutputStream(ConnectionUtil.networkLocation + "/" +purchase_order+ "/" + purchase_order + "-FUN.csv",true);
-                outFile = new FileOutputStream(ConnectionUtil.desktopLocation + "/BMStemp/" +purchase_order+ "/" + purchase_order + "-FUN.csv",true);
-                
+//                outFile = new FileOutputStream(ConnectionUtil.desktopLocation + "/BMStemp/" +purchase_order+ "/" + purchase_order + "-FUN.csv",true);
+                outFile = new FileOutputStream(ConnectionUtil.dbDirectoryLocation()+"\\purchase_orders\\"+ purchase_order + "\\" +purchase_order + "-FUN.csv",true);
+
                 outFile.write(sb.toString().getBytes());
                 outFile.flush();
 //                outFile.close();
@@ -163,7 +190,7 @@ public class FileHelper {
     }
     //##########################################################################
     //          USED BY NOTES VIEW, DO NOT CREATE NEW FILE
-    //          OPEN EXISTING FILE
+    //          OPEN EXISTING FILE  
     //          AND UPDATE po_notes table ATTACHMENT
     //##########################################################################
     public static boolean updateFUCsvFile(File file, String purchase_order, String new_content){
@@ -196,15 +223,18 @@ public class FileHelper {
     //##########################################################################       
     
     public static File getRWFile(String purchase_order){
+        
+        return new File(ConnectionUtil.dbDirectoryLocation()+ "\\purchase_orders\\" +purchase_order+"/"+ purchase_order+"-RWC.csv");
 //            return new File(ConnectionUtil.desktopLocation + "/BMStemp/" +purchase_order+ "/" + purchase_order + "-RWC.txt");
-      return new File(ConnectionUtil.desktopLocation + "/BMStemp/" +purchase_order+ "/" + purchase_order + "-RWC.csv");
+//      return new File(ConnectionUtil.desktopLocation + "/BMStemp/" +purchase_order+ "/" + purchase_order + "-RWC.csv");
 //      return new File(ConnectionUtil.networkLocation + "/" +purchase_order+ "/" + purchase_order + "-RWC.csv");
     }
 
     //##########################################################################
     
     public static File getFUFile(String purchase_order ){
-            return new File(ConnectionUtil.desktopLocation+ "/BMStemp/" +purchase_order+ "/" + purchase_order + "-FUN.csv");
+        return new File(ConnectionUtil.dbDirectoryLocation()+ "\\purchase_orders\\" +purchase_order+"/"+ purchase_order+"-FUN.csv");
+//            return new File(ConnectionUtil.desktopLocation+ "/BMStemp/" +purchase_order+ "/" + purchase_order + "-FUN.csv");
 //            return new File(ConnectionUtil.networkLocation+ "/" +purchase_order+ "/" + purchase_order + "-FUN.csv");
     }
     

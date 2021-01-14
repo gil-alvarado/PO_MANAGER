@@ -9,6 +9,8 @@
  */
 package Model;
 
+import java.sql.Date;
+
 /**
  *
  * @author Gilbert Alvarado
@@ -16,9 +18,11 @@ package Model;
 public class ModelOverviewTable {
     
     
-    private String confirmed,po,brg,supplier,cur,da,funotes;
+    private String confirmed,po,brg,supplier,cur,da;
 
     private String ip,lc;
+    
+    private Date originalDate;
     
     public ModelOverviewTable
         (String confirmed,
@@ -27,8 +31,7 @@ public class ModelOverviewTable {
             String supplier, 
              String cur,
              String date,
-             String funotes,
-            String ip, String lc) {
+            String ip, String lc, Date org_date) {
         
         //orderID,<--EXCLUDE 
         //PO,brg, supplier, parameter, confirmed, qty, ip,lc,org ship, eta, curShip, fu
@@ -38,15 +41,16 @@ public class ModelOverviewTable {
         this.supplier = supplier;
         this.cur = cur;
         this.da = date;
-        this.funotes = funotes;
         
         this.ip = ip;
         this.lc = lc;
-    }
-    
-
-    public ModelOverviewTable() {
         
+        this.originalDate = org_date;
+        
+    }
+        
+        public Date getOriginalDate() {
+        return originalDate;
     }
 
     /**
@@ -134,19 +138,7 @@ public class ModelOverviewTable {
         this.da = da;
     }
 
-    /**
-     * @return the fu
-     */
-    public String getFunotes() {
-        return funotes;
-    }
 
-    /**
-     * @param funotes the fu to set
-     */
-    public void setFunotes(String funotes) {
-        this.funotes = funotes;
-    } 
     public String getIp() {
         return ip;
     }

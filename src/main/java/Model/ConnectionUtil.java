@@ -41,7 +41,7 @@ public class ConnectionUtil {
 
     private final static String userprofile = System.getenv("USERPROFILE");
     public final static String desktopLocation = userprofile +"\\Desktop" ;
-    private final static String databaseURL = "jdbc:ucanaccess://"+userprofile+"\\Desktop\\BMS_DATABASE_TEST.accdb";
+    private final static String databaseURL = "jdbc:ucanaccess://"+userprofile+"\\Desktop\\BMStemp\\BMS_DATABASE_TEST.accdb";
     
     
     //OFFICE TEST
@@ -59,35 +59,55 @@ public class ConnectionUtil {
     
     private final static String query = "SELECT * FROM purchase_orders;";
 
-    public static Connection conDB(){
-//        System.out.println("CURRENT USER: " + System.getProperty("user.name"));
-        
-        try{
-            
-            Class.forName("net.ucanaccess.jdbc.UcanaccessDriver");
-            
-            Connection connection= DriverManager.getConnection(databaseURL,"app","app");
-//            Connection connection= DriverManager.getConnection(databaseNetworkLocation,"app","app");
-            
-            System.out.println("DB CONNECTED");
-            System.out.println("RETURNING DB CONNECTION: " + connection);
-            return connection;
-        } catch (SQLException ex ) {
-            System.err.println("ConnectionUtil : "+ex.getMessage());
-           return null;
-        }
-        catch (Exception err){
-            System.err.println("ConnectionUtil: " + err);
-            return null;
-        }
-    }
+    private static String dbLocation ;//= "jdbc:ucanaccess://";
+    private static String dbDirectory;
+    
+    
+    
+//    public static Connection conDB(){
+////        System.out.println("CURRENT USER: " + System.getProperty("user.name"));
+//        
+//        try{
+//            
+//            Class.forName("net.ucanaccess.jdbc.UcanaccessDriver");
+//            
+//            Connection connection= DriverManager.getConnection(databaseURL,"app","app");
+////            Connection connection= DriverManager.getConnection(databaseNetworkLocation,"app","app");
+//            
+//            System.out.println("DB CONNECTED");
+//            System.out.println("RETURNING DB CONNECTION: " + connection);
+//            return connection;
+//        } catch (SQLException ex ) {
+//            System.err.println("ConnectionUtil : "+ex.getMessage());
+//           return null;
+//        }
+//        catch (Exception err){
+//            System.err.println("ConnectionUtil: " + err);
+//            return null;
+//        }
+//    }
 //##############################################################################    
     //method called when user selects a different DataBase
-    public static Connection conDB(String dbLocation){
+    public static void setDbLocation(String dbLocation, String dbDirectory){
+        ConnectionUtil.dbLocation = "jdbc:ucanaccess://"+ dbLocation;
         
+        ConnectionUtil.dbDirectory = dbDirectory;
+        System.out.println("ConnectionUtil: dbDirectoty location=  " + ConnectionUtil.dbDirectory );
+//        System.out.println("SET CONNECTION:" + ConnectionUtil.dbLocation);
+    }
+    //--------------------------------------------------------------------------
+    public static final String dbDirectoryLocation (){
+        return ConnectionUtil.dbDirectory;
+    }
+    //##########################################################################
+    public static Connection conDB(){//String dbLocation){
+        
+//        System.out.println("DB SELECTED: "  + dbLocation);
         try{
             Class.forName("net.ucanaccess.jdbc.UcanaccessDriver");
-            Connection connection= DriverManager.getConnection(dbLocation,"app","app");
+            System.out.println("ATTEMPTING TO RETURN DATABASE: " + ConnectionUtil.dbLocation);
+            
+            Connection connection= DriverManager.getConnection(ConnectionUtil.dbLocation,"app","app");
             System.out.println("DB CONNECTED");
             System.out.println("RETURNING DB CONNECTION: " + connection);
             return connection;
@@ -106,7 +126,7 @@ public class ConnectionUtil {
     public static int addNewUser(String firstName, String lastName, String user_name, int role_id){
         
         try{
-            PreparedStatement pst = conDB().prepareStatement(addNewUser);
+            PreparedStatement pst = conDB().prepareStatement(addNewUser);//conDB().prepareStatement(addNewUser);
             pst.setString(1, firstName);
             pst.setString(2, lastName);
 //            String user_name = firstName.substring(0, 1) + "_" + lastName.substring(0, lastName.length()/2);
@@ -263,19 +283,72 @@ public class ConnectionUtil {
     }
 //##############################################################################
     
-    //fileAttachments column is going to cause problems
-    public static ArrayList columnNames(){
+    public static int updatePacketStatus(String purchase_order, String status){
+        
         try{
-            Statement statement = conDB().createStatement();
-            ResultSet rs = statement.executeQuery(query);
+            PreparedStatement pst = conDB().prepareStatement("UPDATE order_details "
+                    + "SET moved_to_packet = ? "
+                    + "WHERE purchase_order = ?;");
+            
+            System.out.println("CONNECTION UTIL, STATUS: " + status);
+            
+            pst.setString(1, status);
+//            if(status.equals("YES"))
+//                pst.setString(1, "TRUE");
+//            else
+//                pst.setString(1, "FALSE");
+            
+            pst.setString(2,purchase_order);
+            
+            
+            return pst.executeUpdate();
+        } catch (SQLException ex) {
+            Logger.getLogger(ConnectionUtil.class.getName()).log(Level.SEVERE, null, ex);
+            return 0;
+        }
+    }
+    
+    
+    //##########################################################################
+    private static final String getAllDataQuery = 
+            "SELECT "
+            + "purchase_orders.purchase_order, "
+            + "purchase_orders.original_ship_date, "//2
+            + "purchase_orders.current_ship_date, "//3
+            + "purchase_orders.eta_bms,"//4
+            + "purchase_orders.fu_date, "//5
+            + "order_details.quantity, order_details.landed_cost, order_details.invoice_price, "
+            + "order_details.confirmed, "
+            + "order_details.attachments, "//10
+            + "bearings.brg_name, "
+            + "bearings.PARAMETER, "
+            + "bearings.supplier_id, "
+            + "po_notes.rw_comments, "//14
+            + "po_notes.fu_notes, "//15
+            + "order_details.brg_id\n"
+            + "" 
+            +"FROM (purchase_orders "
+            + "INNER JOIN ((suppliers "
+            + "INNER JOIN bearings ON suppliers.[supplier_id] = bearings.[supplier_id]) "
+            + "INNER JOIN order_details ON bearings.[brg_id] = order_details.[brg_id]) "
+            +       "ON purchase_orders.[purchase_order] = order_details.[purchase_order]) "
+            + "INNER JOIN po_notes ON purchase_orders.[purchase_order] = po_notes.[purchase_order] "
+            + ""
+            + "WHERE purchase_orders.purchase_order = ?";
+    public static ArrayList columnNames(String purchase_order_parameter){
+        try{
+            PreparedStatement pst = conDB().prepareStatement(getAllDataQuery);
+            pst.setString(1, purchase_order_parameter);
+            
+            ResultSet rs = pst.executeQuery();
             ResultSetMetaData rsmd = rs.getMetaData();
             columnNames = new ArrayList<>();
             
             for(int i = 1; i <= rsmd.getColumnCount(); i++){
-                if(rsmd.getColumnName(i).equals("FileAttachments") == false){
+//                if(rsmd.getColumnName(i).equals("FileAttachments") == false){
                     columnNames.add(rsmd.getColumnName(i));
 //                    System.out.println(rsmd.getColumnName(i));
-                }
+//                }
             }
             
             return columnNames;
@@ -294,12 +367,12 @@ public class ConnectionUtil {
             Statement statement = conDB().createStatement();
             ResultSet result = statement.executeQuery(query);
 //            ResultSetMetaData rsmd = rs.getMetaData();
-            rows = new LinkedHashMap<Integer, ArrayList<String>>();
+            rows = new LinkedHashMap<>();
             ArrayList<String> rowData = null;
             
             while(result.next()){
                 
-                rowData = new ArrayList<String>();
+                rowData = new ArrayList<>();
                 for(int i = 1; i <= result.getMetaData().getColumnCount() ; i++){
                         //&& result.getMetaData().getColumnName(i).equals("FileAttachments") == false; i++){
                     if(result.getMetaData().getColumnName(i).equals("FileAttachments") == false){//then add data to hashmamp

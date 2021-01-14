@@ -10,21 +10,34 @@ import Model.FileHelper;
 import Model.ModelOverviewTable;
 import java.io.File;
 import java.io.IOException;
+import static java.lang.Double.MAX_VALUE;
 import java.net.URL;
 import java.sql.Connection;
+import java.sql.Date;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.text.DecimalFormat;
+import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.Month;
+import java.time.format.DateTimeFormatter;
 import java.util.ResourceBundle;
+import java.util.function.Predicate;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javafx.application.Platform;
+import javafx.beans.binding.Bindings;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
+import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
@@ -34,6 +47,7 @@ import javafx.scene.control.ButtonType;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.DatePicker;
 import javafx.scene.control.Dialog;
+import javafx.scene.control.SelectionMode;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
@@ -53,17 +67,12 @@ public class OverviewViewTesting_NOANCHORController implements Initializable {
 
 
     @FXML
-    private DatePicker CURSHIP_DatePicker;
-    @FXML
-    private DatePicker ETABMS_DatePicker;
-    @FXML
-    private TextField SUPPLIERTextField;
+    private TextField SUPPLIERTextField,POTextField,BRGTextField;
     @FXML
     private ComboBox<String> CONFIRMEDcomboBox;
+
     @FXML
-    private TextField POTextField;
-    @FXML
-    private TextField BRGTextField;
+    private DatePicker curShipSTART,curShipEND;
     
     private static DecimalFormat LCformat = new DecimalFormat("$###,###,##0.00");
     private static DecimalFormat IPformat = new DecimalFormat("$###,###,##0.000");
@@ -74,14 +83,15 @@ public class OverviewViewTesting_NOANCHORController implements Initializable {
     @FXML
     private TableColumn<ModelOverviewTable, String> IPcolumn, LCcolumn;
     
-    
-    ObservableList<ModelOverviewTable> obList = FXCollections.observableArrayList();
-//    ObservableList<ModelOverviewTable> dataList = FXCollections.observableArrayList();
+    private ObservableList<ModelOverviewTable> obList = FXCollections.observableArrayList();
     
     @FXML
     private TableView<ModelOverviewTable> OverviewTableView;
+
+    
     @FXML
-    private Button refreshButton;
+    private Button clearFieldsBUTTON;
+    
     
     
     /**
@@ -92,7 +102,10 @@ public class OverviewViewTesting_NOANCHORController implements Initializable {
         // TODO
         CONFIRMEDcomboBox.getItems().addAll("YES","NO");
         CONFIRMEDcomboBox.setEditable(false);
-        CONFIRMEDcomboBox.getSelectionModel().select("YES");
+        CONFIRMEDcomboBox.getSelectionModel().select("NO");
+        
+clearFieldsBUTTON.setStyle("-fx-font-size: 14px;-fx-font-weight: bold;\n" 
+                                + "-fx-font-family: Georgia;");
         //----------------------------------------------------------------------
 //            @FXML
 //    private TableColumn<ModelOverviewTable, String> CONFIRMEDcolumn, POcolumn,BRGcolumn,
@@ -109,58 +122,62 @@ public class OverviewViewTesting_NOANCHORController implements Initializable {
         LCcolumn.setCellValueFactory(new PropertyValueFactory<>("lc"));
         
 
-        
+        OverviewTableView.refresh();
         updateTableView();
+        OverviewTableView.refresh();
         addButtonsToTable();//NOTEScolumn
+//        addSearchFilters();
         
-        searchPO();
+//        addComboBoxFilter();
+        OverviewTableView.refresh();
+        addMultipleSearchFilters();
+        OverviewTableView.refresh();
     }
 //##############################################################################    
 
-//    @FXML
-//    private void updateTableFXML(){
-//        updateTableView();
-//    }
     public void updateTableView(){
         
         OverviewTableView.getItems().clear();
+        OverviewTableView.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
+//        OverviewTableView.setStyle("-fx-selection-bar-non-focused: green; -fx-selection-bar: brown;");
         
             try{
-                   Connection con = ConnectionUtil.conDB();
+//                   ConnectionUtil.setDbLocation(MainLayoutTesting_WITHANCHORController.getDBLocation());
+                   Connection con = ConnectionUtil.conDB();//ConnectionUtil.conDB();
                  
     ResultSet rs = 
             con.createStatement().executeQuery(
-                    "SELECT po.purchase_order, pd.confirmed, pd.invoice_price, pd.landed_cost, b.brg_name, "
-                            + "s.supplier_id, "
-                            + "FORMAT(po.current_ship_date,'Short Date'), "//7
-                            + "FORMAT(po.fu_date,'Short Date'), po.fu_notes,"
-                            + "FORMAT(pd.landed_cost, 'standard') "
-                            + ""
-                            + "FROM purchase_orders po, order_details pd, bearings b, suppliers s "
-                            + ""
-                            + "WHERE po.purchase_order = pd.purchase_order AND pd.brg_id = b.brg_id "
-                            + "AND b.supplier_id = s.supplier_id;");
-                   
+                    "SELECT "
+                            + "bearings.supplier_id, purchase_orders.purchase_order, "
+                            + "purchase_orders.current_ship_date, "//3
+                            + "bearings.brg_name, order_details.invoice_price, "
+                            + "order_details.landed_cost, "//6
+                            + "order_details.confirmed, FORMAT(purchase_orders.fu_date,'Short Date')\n"//8 
+                            + "FROM purchase_orders "
+                                + "INNER JOIN (bearings INNER JOIN order_details "
+                                + "ON bearings.[brg_id] = order_details.[brg_id]) "
+                                + "ON purchase_orders.[purchase_order] = order_details.[purchase_order]\n" );
+//                           + "WHERE order_details.confirmed = FALSE;");
+    
+                    SimpleDateFormat MMddyyyy = new SimpleDateFormat("MM/dd/yyyy");
+                    
                     while(rs.next()){
-
-                        String confirmation;
-                        if(rs.getString("confirmed").equals("TRUE"))
-                            confirmation = "YES";
-                        else
-                            confirmation = "NO";
                         
-                       obList.add(new 
+                        String confirmation;
+                        
+                        confirmation = (rs.getString("confirmed").equals("FALSE")) ? "NO" : "YES";
+                        
+                            obList.add(new 
                                ModelOverviewTable(confirmation,
                                rs.getString("purchase_order"),
                                rs.getString("brg_name"),//CHANGE TO name
                                rs.getString("supplier_id"),
-                               rs.getString(7),//current ship
+                               MMddyyyy.format(rs.getDate(3)),//current ship
                                rs.getString(8),//FU date
-                               "add FU-NOTE",
+                               
                                IPformat.format(Double.parseDouble(rs.getString("invoice_price"))),
-                               LCformat.format(Double.parseDouble(rs.getString("landed_cost")))));   
-                       
-//                       System.out.println("LC FORMAT: " + LCformat.format(Double.parseDouble(rs.getString("landed_cost"))));
+                               LCformat.format(Double.parseDouble(rs.getString("landed_cost"))),
+                               rs.getDate(3)));//original date
                    }
                         
             con.close();
@@ -170,34 +187,7 @@ public class OverviewViewTesting_NOANCHORController implements Initializable {
         
 
     }
-
-//##############################################################################
-    public void searchPO() {
-                //MAIN TABLE-begin filtering
-        FilteredList<ModelOverviewTable> filterData = new FilteredList<>(obList,b->true);
-        POTextField.textProperty().addListener((observable,oldValue,newValue)->{
-            filterData.setPredicate(po -> {
-                
-                if(newValue == null || newValue.isEmpty())
-                    return true;
-                
-                String lowercaseFilter = newValue.toLowerCase();
-                
-                if (po.getPo().toLowerCase().contains(lowercaseFilter) ) {
-                    return true; // Filter matches username
-                }
-                else
-                    return false;
-                
-            });
-            
-        });
-        
-        SortedList<ModelOverviewTable> sortedData = new SortedList<>(filterData);
-        sortedData.comparatorProperty().bind(OverviewTableView.comparatorProperty());
-                
-        OverviewTableView.setItems(sortedData);   
-    }    
+   
 //##############################################################################
     //BUTTONS- OPEN DIALOG/VIEW NOTES
 //##############################################################################    
@@ -215,12 +205,12 @@ public class OverviewViewTesting_NOANCHORController implements Initializable {
                     
                     private final Button btn = new Button("View\nNotes");
                     {
-                        btn.setMaxHeight(50);
-                        btn.setMaxWidth(100);
+                        btn.setMaxHeight(25);
+                        btn.setMaxWidth(75);
                         btn.setStyle("-fx-font-size: 18px;-fx-font-weight: bold;\n" 
                                 + "-fx-font-family: Georgia;");
                     }
-                    Dialog<String> dialog = new Dialog<String>();
+                    Dialog<String> dialog = new Dialog<>();
                     {
                             dialog.setTitle("Overview DIALOG");
                             ButtonType type = new ButtonType("Ok", ButtonBar.ButtonData.OK_DONE);
@@ -257,8 +247,10 @@ public class OverviewViewTesting_NOANCHORController implements Initializable {
                             }
                             else {
                                 //SHOULD UPDATE DATABASE IF FILE IS CREATED
-                                System.out.println("FILE DNE");
+//                                System.out.println("FILE DNE");
+//                                System.out.println("CREATE FILE FOR " + data.getPo());
                                 FileHelper.createDirectory(data.getPo());
+                                FileHelper.createPoAttachmentsDirectory(data.getPo());
                                 FileHelper.creatFile(data.getPo());//CREATE AND UPDATE TABLE
                                 
                                 if(FileHelper.getFUFile(data.getPo()).isFile()){
@@ -311,6 +303,7 @@ public class OverviewViewTesting_NOANCHORController implements Initializable {
                             
                             });
                             setGraphic(btn);
+                            OverviewTableView.refresh();
                         }
                     }
                 };
@@ -320,32 +313,117 @@ public class OverviewViewTesting_NOANCHORController implements Initializable {
         NOTEScolumn.setCellFactory(cellFactory);
     }
     
-    private void setGreenText(){
+    //##############################################################################
+    //private ObservableList<ModelOverviewTable> obList = FXCollections.observableArrayList();
+    //#####################################
+    FilteredList<ModelOverviewTable> filterData;
+    public void addSearchFilters() {
+                
+        filterData = new FilteredList<>(obList,b->true);
+//        filterData.setPredicate(prdct);
+        SortedList<ModelOverviewTable> sortedData = new SortedList<>(filterData);
+        sortedData.comparatorProperty().bind(OverviewTableView.comparatorProperty());
+        OverviewTableView.setItems(sortedData); 
         
-        Callback<TableColumn<ModelOverviewTable, String>, TableCell<ModelOverviewTable, String>> cellFactory;
+        filterData.predicateProperty().bind(Bindings.createObjectBinding(() -> {
         
-        cellFactory = new Callback<TableColumn<ModelOverviewTable, String>,TableCell<ModelOverviewTable, String>>(){
-            @Override
-            public TableCell<ModelOverviewTable, String> call(TableColumn<ModelOverviewTable, String> param) {
-                //throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-                final TableCell<ModelOverviewTable, String> cell = new TableCell<ModelOverviewTable, String>(){
-                    
-                    
-                    @Override
-                    public void updateItem(String item, boolean empty){
-                        super.updateItem(item, empty);
-                        if(empty){
-                            setGraphic(null);
-                        }else{
-                            
-                        }
-                    }
-                    
-                };
-                return cell;
-            }
-        };
+            LocalDate minDate = curShipSTART.getValue();
+            LocalDate maxDate = curShipEND.getValue();
+
+            // get final values != null
+            final LocalDate finalMin = minDate == null ? LocalDate.MIN : minDate;
+            final LocalDate finalMax = maxDate == null ? LocalDate.MAX : maxDate;
+
+            return search_field -> search_field.getSupplier().contains(SUPPLIERTextField.getText())
+               && search_field.getPo().contains(POTextField.getText()) 
+                && search_field.getBrg().contains(BRGTextField.getText())
+                    && !finalMin.isAfter(LocalDate.parse( search_field.getOriginalDate().toString())) 
+                    && !finalMax.isBefore(LocalDate.parse( search_field.getOriginalDate().toString() ) );
+//                    && search_field.getConfirmed().equals(CONFIRMEDcomboBox.getValue()) ;//CONFIRMEDcomboBox
+        },
+
+            SUPPLIERTextField.textProperty(),
+            POTextField.textProperty(),
+            BRGTextField.textProperty(),
+            curShipSTART.valueProperty(),
+            curShipEND.valueProperty()
+//            CONFIRMEDcomboBox.valueProperty()
+        ));
+        
+    }
+    
+    private void addMultipleSearchFilters(){
+        ObjectProperty<Predicate<ModelOverviewTable>> supplierFilter = new SimpleObjectProperty<>();
+        supplierFilter.bind(Bindings.createObjectBinding(() -> 
+            supplier -> supplier.getSupplier().toLowerCase().contains(SUPPLIERTextField.getText().toLowerCase()), 
+            SUPPLIERTextField.textProperty()));
+        //----------------------------------------------------------------------
+        ObjectProperty<Predicate<ModelOverviewTable>> poFilter = new SimpleObjectProperty<>();
+        poFilter.bind(Bindings.createObjectBinding(() -> 
+            po -> po.getPo().toLowerCase().contains(POTextField.getText().toLowerCase()), 
+            POTextField.textProperty()));
+        //----------------------------------------------------------------------
+        ObjectProperty<Predicate<ModelOverviewTable>> brgFilter = new SimpleObjectProperty<>();
+        brgFilter.bind(Bindings.createObjectBinding(() -> 
+            brg -> brg.getBrg().toLowerCase().contains(BRGTextField.getText().toLowerCase()), 
+            BRGTextField.textProperty()));
+        //----------------------------------------------------------------------
+        ObjectProperty<Predicate<ModelOverviewTable>> dateFilter = new SimpleObjectProperty<>();
+        dateFilter.bind(Bindings.createObjectBinding(() -> {
+        
+            LocalDate minDate = curShipSTART.getValue();
+            LocalDate maxDate = curShipEND.getValue();
+
+            // get final values != null
+            final LocalDate finalMin = minDate == null ? LocalDate.MIN : minDate;
+            final LocalDate finalMax = maxDate == null ? LocalDate.MAX : maxDate;
+
+            return search_field ->!finalMin.isAfter(LocalDate.parse( search_field.getOriginalDate().toString())) 
+                    && !finalMax.isBefore(LocalDate.parse( search_field.getOriginalDate().toString() ) );
+        },
+            curShipSTART.valueProperty(),
+            curShipEND.valueProperty()));
+//        //--------------------------------------------------------------------    
+        ObjectProperty<Predicate<ModelOverviewTable>> confirmedFilter = new SimpleObjectProperty<>();
+        confirmedFilter.bind(Bindings.createObjectBinding(() ->
+                
+                confirmed -> confirmed.getConfirmed().equals(CONFIRMEDcomboBox.getValue())                
+                , CONFIRMEDcomboBox.valueProperty()));
+        
+        //----------------------------------------------------------------------
+        
+        filterData = new FilteredList<>(FXCollections.observableList(obList));
+        OverviewTableView.setItems(filterData);
+        
+        filterData.predicateProperty().bind(Bindings.createObjectBinding(
+                () -> supplierFilter.get().and(poFilter.get().and(brgFilter.get().and(dateFilter.get().and(confirmedFilter.get())))), 
+                supplierFilter, poFilter, brgFilter, dateFilter, confirmedFilter));
+               
+        
+    }
+    
+    //##########################################################################
+    @FXML
+    private void clearFields(ActionEvent event) {
+        SUPPLIERTextField.clear();
+        POTextField.clear();
+        BRGTextField.clear();
+        curShipSTART.getEditor().clear();
+        curShipEND.getEditor().clear();
+        CONFIRMEDcomboBox.setValue("NO");
+//        filterData.getSource().remove(confirmedFilter);//removeFilter
+
+    }
+    //##########################################################################
+    
+    private void addComboBoxFilter(){
+        ObjectProperty<Predicate<ModelOverviewTable>> confirmedFilter = new SimpleObjectProperty<>();
+        /*
+        if: comboBox == ALL, remove predicate
+        else: add predicate
+        */
     }
 
+   
 }
     

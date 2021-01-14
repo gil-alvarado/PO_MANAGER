@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
 <?import javafx.scene.control.ComboBox?>
 <?import javafx.scene.control.DatePicker?>
 <?import javafx.scene.control.Label?>
@@ -18,123 +19,168 @@
     <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
   </columnConstraints>
   <rowConstraints>
-    <RowConstraints minHeight="10.0" percentHeight="15.0" prefHeight="30.0" vgrow="SOMETIMES" />
-    <RowConstraints minHeight="10.0" percentHeight="85.0" prefHeight="30.0" vgrow="SOMETIMES" />
+    <RowConstraints minHeight="10.0" percentHeight="17.0" prefHeight="30.0" vgrow="SOMETIMES" />
+    <RowConstraints minHeight="10.0" percentHeight="83.0" prefHeight="30.0" vgrow="SOMETIMES" />
   </rowConstraints>
    <children>
       <GridPane gridLinesVisible="true">
         <columnConstraints>
-          <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" percentWidth="15.0" prefWidth="100.0" />
-          <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" percentWidth="85.0" prefWidth="100.0" />
+            <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" percentWidth="10.0" prefWidth="100.0" />
+          <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" percentWidth="55.0" prefWidth="100.0" />
+            <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" percentWidth="35.0" prefWidth="100.0" />
         </columnConstraints>
         <rowConstraints>
           <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
         </rowConstraints>
          <children>
-            <GridPane gridLinesVisible="true">
-              <columnConstraints>
-                <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
-              </columnConstraints>
-              <rowConstraints>
-                <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
-              </rowConstraints>
-               <children>
-                  <GridPane GridPane.halignment="CENTER">
-                     <columnConstraints>
-                        <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" />
-                     </columnConstraints>
-                     <rowConstraints>
-                        <RowConstraints minHeight="10.0" vgrow="SOMETIMES" />
-                        <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
-                     </rowConstraints>
-                     <children>
-                        <Label alignment="CENTER" contentDisplay="BOTTOM" text="Search Fields" GridPane.halignment="CENTER">
-                           <font>
-                              <Font name="System Bold" size="15.0" />
-                           </font>
-                        </Label>
-                     </children>
-                  </GridPane>
-               </children>
-            </GridPane>
             <GridPane alignment="CENTER" focusTraversable="true" hgap="10.0" vgap="10.0" GridPane.columnIndex="1">
               <columnConstraints>
                   <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
                   <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
                   <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
                   <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
-                  <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
-                  <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
               </columnConstraints>
               <rowConstraints>
                 <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
                 <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
               </rowConstraints>
+               <children>
+                  <Label alignment="CENTER" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" text="CONFIRMED">
+                     <font>
+                        <Font name="System Bold" size="15.0" />
+                     </font></Label>
+                  <Label alignment="CENTER" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" text="PO#" GridPane.columnIndex="2">
+                     <font>
+                        <Font name="System Bold" size="15.0" />
+                     </font></Label>
+                  <Label alignment="CENTER" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" text="BRG#" GridPane.columnIndex="3">
+                     <font>
+                        <Font name="System Bold" size="15.0" />
+                     </font></Label>
+                  <Label alignment="CENTER" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" text="SUPPLIER" GridPane.columnIndex="1">
+                     <font>
+                        <Font name="System Bold" size="15.0" />
+                     </font></Label>
+                  <ComboBox fx:id="CONFIRMEDcomboBox" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" promptText="YES/NO" style="-fx-font-size: 14px;" GridPane.rowIndex="1" />
+                  <TextField fx:id="SUPPLIERTextField" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" promptText="SUPPLIER" GridPane.columnIndex="1" GridPane.rowIndex="1">
+                     <font>
+                        <Font size="18.0" />
+                     </font>
+                     <GridPane.margin>
+                        <Insets bottom="15.0" top="10.0" />
+                     </GridPane.margin>
+                  </TextField>
+                  <TextField fx:id="POTextField" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" promptText="PO#" GridPane.columnIndex="2" GridPane.rowIndex="1">
+                     <font>
+                        <Font size="18.0" />
+                     </font>
+                     <GridPane.margin>
+                        <Insets bottom="15.0" top="10.0" />
+                     </GridPane.margin>
+                  </TextField>
+                  <TextField fx:id="BRGTextField" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" promptText="BRG#" GridPane.columnIndex="3" GridPane.rowIndex="1">
+                     <font>
+                        <Font size="18.0" />
+                     </font>
+                     <GridPane.margin>
+                        <Insets bottom="15.0" top="10.0" />
+                     </GridPane.margin>
+                  </TextField>
+               </children>
                <padding>
                   <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
                </padding>
+            </GridPane>
+            <GridPane GridPane.columnIndex="2">
+              <columnConstraints>
+                <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+              </columnConstraints>
+              <rowConstraints>
+                <RowConstraints minHeight="10.0" percentHeight="25.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+              </rowConstraints>
                <children>
-                  <Label alignment="CENTER" disable="true" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" text="CONFIRMED">
+                  <GridPane GridPane.rowIndex="1">
+                    <columnConstraints>
+                      <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+                      <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+                    </columnConstraints>
+                    <rowConstraints>
+                        <RowConstraints />
+                      <RowConstraints minHeight="10.0" percentHeight="20.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                        <RowConstraints minHeight="10.0" percentHeight="80.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                    </rowConstraints>
+                     <children>
+                        <DatePicker fx:id="curShipSTART" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" promptText="CUR SHIP" style="-fx-font-size: 18px;" GridPane.rowIndex="2">
+                           <GridPane.margin>
+                              <Insets bottom="15.0" left="25.0" right="25.0" top="15.0" />
+                           </GridPane.margin>
+                        </DatePicker>
+                        <DatePicker fx:id="curShipEND" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" promptText="CUR SHIP" style="-fx-font-size: 18px;" GridPane.columnIndex="1" GridPane.rowIndex="2">
+                           <GridPane.margin>
+                              <Insets bottom="15.0" left="25.0" right="25.0" top="15.0" />
+                           </GridPane.margin>
+                        </DatePicker>
+                        <Label alignment="CENTER" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" text="START" GridPane.rowIndex="1">
+                           <font>
+                              <Font name="System Bold" size="15.0" />
+                           </font>
+                        </Label>
+                        <Label alignment="CENTER" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" text="END" GridPane.columnIndex="1" GridPane.rowIndex="1">
+                           <font>
+                              <Font name="System Bold" size="15.0" />
+                           </font>
+                        </Label>
+                     </children>
+                  </GridPane>
+                  <Label alignment="CENTER" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" text="CUR SHIP">
                      <font>
                         <Font name="System Bold" size="15.0" />
-                     </font></Label>
-                  <Label alignment="CENTER" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" text="PO#" GridPane.columnIndex="1">
-                     <font>
-                        <Font name="System Bold" size="15.0" />
-                     </font></Label>
-                  <Label alignment="CENTER" disable="true" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" text="BRG#" GridPane.columnIndex="2">
-                     <font>
-                        <Font name="System Bold" size="15.0" />
-                     </font></Label>
-                  <Label alignment="CENTER" disable="true" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" text="SUPPLIER" GridPane.columnIndex="3">
-                     <font>
-                        <Font name="System Bold" size="15.0" />
-                     </font></Label>
-                  <Label alignment="CENTER" disable="true" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" text="CUR SHIP" GridPane.columnIndex="4">
-                     <font>
-                        <Font name="System Bold" size="15.0" />
-                     </font></Label>
-                  <Label alignment="CENTER" disable="true" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" text="F/U DATE" GridPane.columnIndex="5">
-                     <font>
-                        <Font name="System Bold" size="15.0" />
-                     </font></Label>
-                  <ComboBox fx:id="CONFIRMEDcomboBox" disable="true" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" promptText="YES/NO" style="-fx-font-size: 18px;" GridPane.rowIndex="1" />
-                  <TextField fx:id="POTextField" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" promptText="PO#" GridPane.columnIndex="1" GridPane.rowIndex="1">
-                     <font>
-                        <Font size="18.0" />
                      </font>
-                  </TextField>
-                  <TextField fx:id="BRGTextField" disable="true" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" promptText="BRG#" GridPane.columnIndex="2" GridPane.rowIndex="1">
+                  </Label>
+               </children>
+            </GridPane>
+            <GridPane gridLinesVisible="true" GridPane.halignment="CENTER">
+               <GridPane.margin>
+                  <Insets />
+               </GridPane.margin>
+               <columnConstraints>
+                  <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" />
+               </columnConstraints>
+               <rowConstraints>
+                  <RowConstraints />
+                  <RowConstraints minHeight="10.0" vgrow="SOMETIMES" />
+               </rowConstraints>
+               <children>
+                  <Button fx:id="clearFieldsBUTTON" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#clearFields" style="-fx-font-size: 14;" stylesheets="@../../styles/styleManageButton.css" text="clear" GridPane.rowIndex="1">
+                     <GridPane.margin>
+                        <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />
+                     </GridPane.margin>
+                  </Button>
+                  <Label alignment="CENTER" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" text="search fields" wrapText="true">
                      <font>
-                        <Font size="18.0" />
+                        <Font name="System Bold" size="15.0" />
                      </font>
-                  </TextField>
-                  <TextField fx:id="SUPPLIERTextField" disable="true" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" promptText="SUPPLIER" GridPane.columnIndex="3" GridPane.rowIndex="1">
-                     <font>
-                        <Font size="18.0" />
-                     </font>
-                  </TextField>
-                  <DatePicker fx:id="CURSHIP_DatePicker" disable="true" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" promptText="CUR SHIP" style="-fx-font-size: 18px;" GridPane.columnIndex="4" GridPane.rowIndex="1" />
-                  <DatePicker fx:id="ETABMS_DatePicker" disable="true" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" promptText="F/U" style="-fx-font-size: 18px;" GridPane.columnIndex="5" GridPane.rowIndex="1" />
+                  </Label>
                </children>
             </GridPane>
          </children>
       </GridPane>
       <BorderPane prefHeight="200.0" prefWidth="200.0" GridPane.rowIndex="1">
          <center>
-            <TableView fx:id="OverviewTableView" prefHeight="200.0" prefWidth="200.0" stylesheets="@../../styles/tableStyle.css" BorderPane.alignment="CENTER">
+            <TableView fx:id="OverviewTableView" prefHeight="200.0" prefWidth="200.0" style="-fx-slection-bar-non-focused: green; -fx-selection-bar: brown;" stylesheets="@../../styles/tableStyle.css" BorderPane.alignment="CENTER">
               <columns>
-                  <TableColumn fx:id="CONFIRMEDcolumn" editable="false" prefWidth="120.0" text="CONFIRMED" />
+                  <TableColumn fx:id="SUPPLIERcolumn" editable="false" prefWidth="75.0" style="-fx-background-color: lime;" text="SUPPLIER" />
                   <TableColumn fx:id="POcolumn" prefWidth="75.0" text="PO" />
+                <TableColumn fx:id="CURSHIP_column" editable="false" prefWidth="133.0" style="-fx-background-color: lightblue;" text="CUR SHIP" />
+                  <TableColumn fx:id="BRGcolumn" editable="false" prefWidth="75.0" text="BRG#" />
                   <TableColumn fx:id="IPcolumn" prefWidth="75.0" style="-fx-text-fill: green;" text="I/P" />
                   <TableColumn fx:id="LCcolumn" prefWidth="75.0" style="-fx-text-fill: green;" text="L/C" />
-                  <TableColumn fx:id="BRGcolumn" editable="false" prefWidth="75.0" text="BRG#" />
-                  <TableColumn fx:id="SUPPLIERcolumn" editable="false" prefWidth="75.0" text="SUPPLIER" />
-                <TableColumn fx:id="CURSHIP_column" editable="false" prefWidth="133.0" text="CUR SHIP" />
+                  <TableColumn fx:id="CONFIRMEDcolumn" editable="false" prefWidth="120.0" text="CONFIRMED" />
                   <TableColumn editable="false" prefWidth="75.0" text="FOLLOW UP">
                      <columns>
-                        <TableColumn fx:id="DATEcolumn" prefWidth="75.0" text="DATE" />
-                        <TableColumn fx:id="NOTEScolumn" prefWidth="75.0" text="NOTES" />
+                        <TableColumn fx:id="DATEcolumn" prefWidth="75.0" style="-fx-background-color: lightgray;" text="DATE" />
+                        <TableColumn fx:id="NOTEScolumn" prefWidth="75.0" style="-fx-background-color: transparent;" text="NOTES" />
                      </columns></TableColumn>
               </columns>
                <columnResizePolicy>
@@ -142,9 +188,9 @@
                </columnResizePolicy>
             </TableView>
          </center>
-         <padding>
-            <Insets bottom="25.0" left="25.0" right="25.0" top="25.0" />
-         </padding>
+         <GridPane.margin>
+            <Insets bottom="10.0" left="25.0" right="25.0" top="5.0" />
+         </GridPane.margin>
       </BorderPane>
    </children>
 </GridPane>

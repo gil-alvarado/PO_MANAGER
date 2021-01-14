@@ -6,10 +6,9 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
 
+
 import java.io.IOException;
-
-//import net.ucanaccess.complex.Attachment;
-
+import javafx.stage.StageStyle;
 
 /**
  * JavaFX App
@@ -35,6 +34,8 @@ public class App extends Application {
 
     private static Scene scene;
     private double x,y;
+    
+    
     @Override
     public void start(Stage stage) throws IOException {
 
@@ -51,8 +52,8 @@ public class App extends Application {
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-Parent root = FXMLLoader.load(getClass().getResource("/View/Main/MainLayoutTesting_WITHANCHOR.fxml"));  
-Parent root_ = FXMLLoader.load(getClass().getResource("/View/Login/LoginView.fxml"));
+//Parent root = FXMLLoader.load(getClass().getResource("/View/Main/MainLayoutTesting_WITHANCHOR.fxml"));  
+//Parent root_ = FXMLLoader.load(getClass().getResource("/View/Login/LoginView.fxml"));
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -69,6 +70,8 @@ Parent root_ = FXMLLoader.load(getClass().getResource("/View/Login/LoginView.fxm
 //        
 //        scene = new Scene(root);
         //-------------------------
+
+        
         scene = new Scene(loadFXML("/View/Login/LoginView"));
         scene.setOnMousePressed(event -> {
             x = event.getSceneX();
@@ -84,10 +87,11 @@ Parent root_ = FXMLLoader.load(getClass().getResource("/View/Login/LoginView.fxm
         
         stage.setResizable(true);
         stage.setMinHeight(800);
-        stage.setMinWidth(1350);
-//        stage.initStyle(StageStyle.UNDECORATED);
-        stage.setTitle("BMS DATA MANAGER");
-        
+        stage.setMinWidth(1250);
+        //########################################
+        stage.initStyle(StageStyle.UNDECORATED);
+        //########################################
+        stage.setTitle("BMS PO MANAGER");
         
         stage.show();
     }
@@ -103,7 +107,8 @@ Parent root_ = FXMLLoader.load(getClass().getResource("/View/Login/LoginView.fxm
     }
 
     public static void main(String[] args) {
-        launch();
+        launch();  
+        
     }
 
 }

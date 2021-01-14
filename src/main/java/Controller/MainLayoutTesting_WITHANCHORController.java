@@ -7,10 +7,9 @@ package Controller;
 
 import Model.ConnectionUtil;
 import com.test.App;
+import java.io.File;
 import java.io.IOException;
 import java.net.URL;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.ResourceBundle;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -22,9 +21,6 @@ import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
-import javafx.scene.control.ButtonBar;
-import javafx.scene.control.ButtonType;
-import javafx.scene.control.Dialog;
 import javafx.scene.control.Label;
 
 import javafx.scene.layout.AnchorPane;
@@ -32,6 +28,11 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.StackPane;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
+
+
+import java.util.prefs.Preferences;
+import javafx.scene.layout.VBox;
+import javafx.stage.FileChooser;
 /**
  * FXML Controller class
  *
@@ -70,12 +71,24 @@ public class MainLayoutTesting_WITHANCHORController implements Initializable {
     private int role_ID;
     @FXML
     private GridPane userManagementLayout;
+    
+    
+    private Preferences DBpref;
+    @FXML
+    private Button changeDbLocationBUTTON;
+    
     /**
      * Initializes the controller class.
      */
     @Override
     public void initialize(URL url, ResourceBundle rb) {
-        // TODO
+        // TODO            
+        DBpref = Preferences.userRoot().node(LoginViewController.class.getClass().getName());//Preferences.userNodeForPackage(LoginViewController.class);
+        System.out.println("MainLayout: "+DBpref.absolutePath());
+        DBpref.putBoolean("signedIn", true);
+        System.out.println("SIGNING IN VALUE:" + DBpref.getBoolean("signedIn", true));
+        
+        
         
         overviewButton.setDisable(true);
         currentUserLabel.setText(LoginViewController.current_user);
@@ -127,12 +140,14 @@ public class MainLayoutTesting_WITHANCHORController implements Initializable {
             Logger.getLogger(MainLayoutTesting_WITHANCHORController.class.getName()).log(Level.SEVERE, null, ex);
         }
         
-    }    
+    }
     
     @FXML
     private void closeApplication(ActionEvent event) throws IOException {
 //        ((Stage)(((Button)event.getSource()).getScene().getWindow())).close();
 //        System.exit(0);
+DBpref.putBoolean("signedIn", false);
+System.out.println("SIGNING OUT VALUE:" + DBpref.getBoolean("signedIn", true));
         App.setRoot("/View/Login/LoginView");
     }
     //##########################################################################
@@ -242,6 +257,8 @@ public class MainLayoutTesting_WITHANCHORController implements Initializable {
         AddPOAnchor.toFront();
     }
 
+    //##########################################################################
+    
     @FXML
     private void openManageUsersView(ActionEvent event) {
         overviewButton.setDisable(false);
@@ -271,4 +288,32 @@ public class MainLayoutTesting_WITHANCHORController implements Initializable {
         }
         
     }
+    
+    //##########################################################################
+
+    @FXML
+    private void openFileChooserDialog(ActionEvent event) {
+        
+        try {
+            
+            //open view and use FIleChooser in the new view
+            FXMLLoader loader = new FXMLLoader (getClass().getResource("/View/Login/SelectDBView.fxml"));
+            Parent parent  = loader.load();
+            Scene scene = new Scene(parent, 500 ,300);
+            Stage stage = new Stage();
+            stage.setMinWidth(500);
+            stage.setMinHeight(300);
+            stage.setResizable(false);
+            stage.initModality(Modality.APPLICATION_MODAL);
+            stage.setScene(scene);
+        
+            stage.showAndWait();
+
+        } catch (IOException ex) {
+            Logger.getLogger(MainLayoutTesting_WITHANCHORController.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
+    }
+    
+    
 }

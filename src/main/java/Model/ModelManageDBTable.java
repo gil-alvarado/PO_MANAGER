@@ -6,11 +6,14 @@
 package Model;
 
 import java.io.File;
+import java.sql.Date;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.sql.ResultSet;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import net.ucanaccess.complex.Attachment;
 import net.ucanaccess.complex.SingleValue;
 
@@ -21,18 +24,34 @@ import net.ucanaccess.complex.SingleValue;
  */
 public class ModelManageDBTable {
     
-    private String confirmed,po, brg, cur, attachment,packet;
+    private String po, brg, cur, supplier,p,attachment;
     private SingleValue[] svs;
     private Attachment att[];
     
+    private boolean packet;
+    private BooleanProperty registered;
     
-    public ModelManageDBTable(String confirmed, String po, String brg, String cur, String attachment, String packet) {
-        this.confirmed = confirmed;
+    private Date originalDate;
+
+    public Date getOriginalDate() {
+        return originalDate;
+    }
+    
+    public ModelManageDBTable(String po,String supplier, String brg, String cur,  String packet, Date date) {
+//        this.confirmed = confirmed;
         this.po = po;
+        
+        this.supplier = supplier;
+        
         this.brg = brg;
         this.cur = cur;
-        this.attachment = attachment;
-        this.packet = packet;
+//        this.attachment = attachment;
+//        this.att = attachment;
+        this.p = packet;
+        this.packet = (packet.equals("YES"));
+        this.registered = new SimpleBooleanProperty(this.packet);
+        
+        this.originalDate = date;
     }
     public String getPo() {
         return po;
@@ -74,14 +93,14 @@ public class ModelManageDBTable {
 //            try (ResultSet rs = s.executeQuery("SELECT Attachments FROM AttachTest WHERE ID=1")) {
 //                rs.next();
 //                Attachment[] atts = (Attachment[]) rs.getObject(1);  // net.ucanaccess.complex.Attachment
-                System.out.println("NUMBER OF ATTACHMENTS: " + att.length);
-                for (Attachment a : att) {
-                    System.out.println("File Name: " + a.getName());//FileNAME
-                    System.out.println("File Type: " + a.getType());//File Type
-//                    org.apache.commons.io.FileUtils.writeByteArrayToFile(
-//                            new File("C:/Users/Gord/Desktop/" + att.getName()), 
-//                            att.getData());
-                }
+//                System.out.println("NUMBER OF ATTACHMENTS: " + att.length);
+//                for (Attachment a : att) {
+//                    System.out.println("File Name: " + a.getName());//FileNAME
+//                    System.out.println("File Type: " + a.getType());//File Type
+////                    org.apache.commons.io.FileUtils.writeByteArrayToFile(
+////                            new File("C:/Users/Gord/Desktop/" + att.getName()), 
+////                            att.getData());
+//                }
 //            }
 //        } catch (SQLException ex) {   
 //            Logger.getLogger(ModelManageDBTable.class.getName()).log(Level.SEVERE, null, ex);
@@ -96,19 +115,36 @@ public class ModelManageDBTable {
         this.attachment = attachment;
     }
 
-    public String getPacket() {
+    public boolean getPacket() {
         return packet;
     }
 
-    public void setPacket(String packet) {
+    public BooleanProperty registeredProperty() { return registered; }
+    
+    public void setPacket(boolean packet) {
         this.packet = packet;
     }
+//    public String getPacket() {
+//        return p;
+//    }
+//
+//    public void setPacket(String packet) {
+//        this.p = packet;
+//    }
+    
+//    public String getConfirmed() {
+//        return confirmed;
+//    }
+//
+//    public void setConfirmed(String confirmed) {
+//        this.confirmed = confirmed;
+//    }
 
-    public String getConfirmed() {
-        return confirmed;
+    public String getSupplier() {
+        return supplier;
     }
 
-    public void setConfirmed(String confirmed) {
-        this.confirmed = confirmed;
+    public void setSupplier(String supplier) {
+        this.supplier = supplier;
     }
 }

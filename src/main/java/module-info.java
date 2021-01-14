@@ -7,8 +7,18 @@ module com.test {
     requires ucanaccess;
     requires commons.io;
     requires java.desktop;
-    
-    
+    requires poi.ooxml;
+    requires poi.ooxml.schemas;
+    requires poi.scratchpad;
+//    requires org.apache.commons.codec;
+//    requires org.apache.commons.collections4;
+//    requires org.apache.commons.compress;
+//    
+//    requires org.apache.commons.lang3;
+    requires poi;
+    requires java.prefs;
+
+
 //    requires jfxrt;
 
 //    requires rt;
@@ -22,4 +32,5 @@ module com.test {
     exports com.test;
     exports Controller;
     exports Model;
+    
 }

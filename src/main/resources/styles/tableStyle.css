@@ -1,6 +1,7 @@
 
 .table-view{
     /*-fx-background-color: transparent;*/
+
  }
 
 .table-view:focused{
@@ -38,7 +39,7 @@
 
  .table-row-cell{
     -fx-background-color: #fffff0;
-    -fx-background-insets: 0.0, 0.0 0.0 1.0 0.0;
+    /*-fx-background-insets: 0.0, 0.0 0.0 1.0 0.0;*/
     -fx-padding: 0.0em; 
     -fx-border-color: #474747;
     -fx-cell-size: 50px;
@@ -49,10 +50,24 @@
     -fx-border-color: transparent;
 }
 
+.table-row-cell:selected{
+    -fx-background-color: brown;
+}
+.table-row-cell:selected .text{
+    
+}
+
 /* Selected row */
 .table-view:focused .table-row-cell:filled:focused:selected {
     -fx-background-color: brown;
-    -fx-background-insets: 0, 1, 2;
+    /*-fx-background-insets: 0, 1, 2;*/
+    -fx-background: -fx-accent;
+    -fx-text-fill: -fx-selection-bar-text;
+}
+
+.table-view:focused .table-row-cell:filled:visited {
+    -fx-background-color: brown;
+    /*-fx-background-insets: 0, 1, 2;*/
     -fx-background: -fx-accent;
     -fx-text-fill: -fx-selection-bar-text;
 }
@@ -60,7 +75,7 @@
 /* Row hovered */
 .table-view:row-selection .table-row-cell:filled:hover {
     -fx-background-color: #48D1CC;
-    -fx-background-insets: 0, 0 0 1 0;
+    /*-fx-background-insets: 0, 0 0 1 0;*/
     -fx-text-fill: -fx-text-inner-color;
     /*-fx-text-inner-color*/
 }
