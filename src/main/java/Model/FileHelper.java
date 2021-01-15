@@ -45,6 +45,8 @@ public class FileHelper {
         }
     }
     
+    //--------------------------------------------------------------------------
+    
     public static boolean updateDirectory(String originalPO, String newPO){
         
         return true;
@@ -52,17 +54,16 @@ public class FileHelper {
     
     //create attachments directory for specific PO
     
-    private static String poAttachmentDirectory;
 
-    public static String getPoAttachmentDirectory() {
-        return poAttachmentDirectory;
+    public static String getPoAttachmentDirectory(String purchase_order) {
+        return ConnectionUtil.dbDirectoryLocation()+"\\purchase_orders\\"+purchase_order +"/Attachments";
     }
     
     public static boolean createPoAttachmentsDirectory(String purchase_order){
 //        File tempDir = new File(ConnectionUtil.networkLocation + "/" + purchase_order +"/Attachments");
 //        File tempDir = new File(ConnectionUtil.desktopLocation + "/BMStemp/" + purchase_order +"/Attachments");
         File tempDir = new File(ConnectionUtil.dbDirectoryLocation()+"\\purchase_orders\\"+purchase_order +"/Attachments");
-        poAttachmentDirectory = tempDir.getAbsolutePath();
+//        poAttachmentDirectory = tempDir.getAbsolutePath();
         boolean dirExec = tempDir.mkdir();
         if(dirExec){
             System.out.println("created ATTACHMENTS directory");
@@ -70,7 +71,6 @@ public class FileHelper {
         }
         return false;
     }
-    
     
     //##########################################################################
     //relates to RW comment and notes

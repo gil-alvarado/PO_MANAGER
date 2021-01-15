@@ -289,7 +289,7 @@ else{
 //                            new File(ConnectionUtil.networkLocation + "/" +POparameter + "/Attachments/"+ file_cursor.getName());
 //                    File tempFile = 
 //                            new File(ConnectionUtil.desktopLocation + "/BMStemp/" +POparameter + "/Attachments/"+ file_cursor.getName());
-                  File tempFile = new File(FileHelper.getPoAttachmentDirectory() +"/"+file_cursor.getName());  
+                  File tempFile = new File(FileHelper.getPoAttachmentDirectory(TextFieldPO.getText()) +"/"+file_cursor.getName());  
                     org.apache.commons.io.FileUtils.writeByteArrayToFile(
                             tempFile, file_cursor.getData());                    
                     //##########################################################

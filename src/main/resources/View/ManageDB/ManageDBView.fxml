@@ -177,7 +177,7 @@
             <TableColumn fx:id="BRGcolumn" editable="false" minWidth="50.0" prefWidth="50.0" text="BRG#" />
           <TableColumn fx:id="CURSHIP_column" editable="false" minWidth="50.0" prefWidth="50.0" text="CUR SHIP" />
             <TableColumn fx:id="ATTACHMENTScolumn" editable="false" minWidth="50.0" prefWidth="89.0" text="#ATT" />
-            <TableColumn fx:id="PACKETcolumn" minWidth="100.0" prefWidth="239.0" text="MOVED TO PACKET" />
+            <!--<TableColumn fx:id="PACKETcolumn" minWidth="100.0" prefWidth="239.0" text="MOVED TO PACKET" />-->
             <TableColumn fx:id="BUTTONcolumn" editable="false" minWidth="15.0" prefWidth="15.0" />
         </columns>
          <columnResizePolicy>

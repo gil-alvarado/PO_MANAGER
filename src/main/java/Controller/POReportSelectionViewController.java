@@ -8,7 +8,9 @@ package Controller;
 import Model.ModelManageDBTable;
 import java.io.File;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.ResourceBundle;
 import javafx.collections.FXCollections;
@@ -27,6 +29,7 @@ import javafx.scene.control.ListView;
 import javafx.scene.control.SelectionMode;
 import javafx.scene.control.TextField;
 import javafx.scene.input.ClipboardContent;
+import javafx.scene.input.DataFormat;
 import javafx.scene.input.DragEvent;
 import javafx.scene.input.Dragboard;
 import javafx.scene.input.MouseEvent;
@@ -46,17 +49,25 @@ public class POReportSelectionViewController implements Initializable {
 
     @FXML
     private GridPane confirmItemsGridPane;//last step
-    @FXML
-    private ListView<Student> selectedPoOverviewListView;//FINAL STEP, USER CONFIRMS
     
-    //----------------------------------------------------------------
+    //##########################################################################
+    //      LIST VIEWS
+    //##########################################################################    
     @FXML
-    private ListView<Student> poItemsListView =new ListView<Student>(),reportItemsListView =new ListView<Student>();
+    private ListView<ModelManageDBTable> sourceView, targetView;
+    //--------------------------------------------------------------------------
+    //      LISTVIEW FINAL STAGE
+    //--------------------------------------------------------------------------
+    @FXML
+    private ListView<ModelManageDBTable> selectedPoOverviewListView;//FINAL STEP, USER CONFIRMS
+	// Set the Custom Data Format
+        //######################################################################
+        //Data format identifier used as means of identifying the data stored on a clipboard/dragboard.
+        //######################################################################    
+    private static final DataFormat DB_LIST = new DataFormat("DbList");
     
-    private static final ObservableList<Student> leftList = FXCollections
-      .observableArrayList();
-    private static final ObservableList<Student> rightList = FXCollections
-      .observableArrayList();
+    
+    //##########################################################################
   
     @FXML
     private TextField fileNameTextField;
@@ -85,7 +96,6 @@ public class POReportSelectionViewController implements Initializable {
     
     private Stage fileDirectoryStage;
     
-    
     /*
         STEPS
     
@@ -112,10 +122,78 @@ public class POReportSelectionViewController implements Initializable {
         
         fileDirectoryStage = new Stage();
         
-        initializeComponents();
-        initializeListeners();
+//        sourceView.getItems().addAll(this.getDBitems());
         
-        populateData();
+        sourceView.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
+        targetView.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
+		// Add mouse event handlers for the source
+		sourceView.setOnDragDetected(new EventHandler <MouseEvent>()
+		{
+            public void handle(MouseEvent event){
+            	System.out.println("Event on Source: drag detected");
+            	dragDetected(event, sourceView);
+            }
+        });
+        //----------------------------------------------------------------------        
+		sourceView.setOnDragOver(new EventHandler <DragEvent>()
+		{
+            public void handle(DragEvent event){
+            	System.out.println("Event on Source: drag over");
+            	dragOver(event, sourceView);
+            }
+        });
+        //----------------------------------------------------------------------        
+		sourceView.setOnDragDropped(new EventHandler <DragEvent>()
+		{
+            public void handle(DragEvent event){
+            	System.out.println("Event on Source: drag dropped");
+            	dragDropped(event, sourceView);
+            }
+        });
+        //----------------------------------------------------------------------
+		sourceView.setOnDragDone(new EventHandler <DragEvent>()
+		{
+            public void handle(DragEvent event){
+            	System.out.println("Event on Source: drag done");
+            	dragDone(event, sourceView);
+            }
+        });
+        //----------------------------------------------------------------------          
+		// Add mouse event handlers for the target
+		targetView.setOnDragDetected(new EventHandler <MouseEvent>()
+		{
+            public void handle(MouseEvent event){
+            	System.out.println("Event on Target: drag detected");
+            	dragDetected(event, targetView);
+            }
+        });
+        //----------------------------------------------------------------------        
+		targetView.setOnDragOver(new EventHandler <DragEvent>()
+		{
+            public void handle(DragEvent event){
+            	System.out.println("Event on Target: drag over");
+            	dragOver(event, targetView);
+            }
+        });
+        //----------------------------------------------------------------------        
+		targetView.setOnDragDropped(new EventHandler <DragEvent>()
+		{
+            public void handle(DragEvent event){
+            	System.out.println("Event on Target: drag dropped");
+            	dragDropped(event, targetView);
+            }
+        });
+        //----------------------------------------------------------------------        
+		targetView.setOnDragDone(new EventHandler <DragEvent>()
+		{
+            public void handle(DragEvent event){
+            	System.out.println("Event on Target: drag done");
+            	dragDone(event, targetView);
+            }
+        });
+                //##############################################################
+                //END initialize 
+                //##############################################################         
         
     }    
     
@@ -127,12 +205,121 @@ public class POReportSelectionViewController implements Initializable {
         if(!this.data.isEmpty()){
 //            reportItemsListView.getItems().add(data.get(""));
             for(Map.Entry<String, ModelManageDBTable> cursor : data.entrySet()){
-//                reportItemsListView.getItems().add(cursor.getKey());
-                
+                targetView.getItems().add(cursor.getValue());
+                selectedPoOverviewListView.getItems().add(cursor.getValue());
             }
         }
         
     }
+    private ObservableList getDBitems(){
+        
+//        ObservableList<ModelManageDBTable> list = //FXCollections.<ModelManageDBTable>observableArrayList();
+        
+        return null;// ManageDBViewController.getList();
+    }
+    //##########################################################################
+    //
+    //##########################################################################    
+    
+	private void dragDetected(MouseEvent event, ListView<ModelManageDBTable> listView){
+		// Make sure at least one item is selected
+		int selectedCount = listView.getSelectionModel().getSelectedIndices().size();
+
+		if (selectedCount == 0)
+		{
+			event.consume();
+			return;
+		}
+
+		// Initiate a drag-and-drop gesture
+		Dragboard dragboard = listView.startDragAndDrop(TransferMode.COPY_OR_MOVE);
+
+		// Put the the selected items to the dragboard
+		ArrayList<ModelManageDBTable> selectedItems = this.getSelectedFruits(listView);
+
+		ClipboardContent content = new ClipboardContent();
+		content.put(DB_LIST, selectedItems);
+
+		dragboard.setContent(content);
+		event.consume();
+	}
+        //######################################################################
+	private void dragOver(DragEvent event, ListView<ModelManageDBTable> listView){
+		// If drag board has an ITEM_LIST and it is not being dragged
+		// over itself, we accept the MOVE transfer mode
+		Dragboard dragboard = event.getDragboard();
+
+		if (event.getGestureSource() != listView && dragboard.hasContent(DB_LIST))
+		{
+			event.acceptTransferModes(TransferMode.COPY_OR_MOVE);
+		}
+
+		event.consume();
+	}
+        //######################################################################
+	@SuppressWarnings("unchecked")
+	private void dragDropped(DragEvent event, ListView<ModelManageDBTable> listView){
+		boolean dragCompleted = false;
+
+		// Transfer the data to the target
+		Dragboard dragboard = event.getDragboard();
+
+		if(dragboard.hasContent(DB_LIST))
+		{
+			ArrayList<ModelManageDBTable> list = (ArrayList<ModelManageDBTable>)dragboard.getContent(DB_LIST);
+			listView.getItems().addAll(list);
+			// Data transfer is successful
+			dragCompleted = true;
+		}
+
+		// Data transfer is not successful
+		event.setDropCompleted(dragCompleted);
+		event.consume();
+	}
+        //######################################################################
+	private void dragDone(DragEvent event, ListView<ModelManageDBTable> listView){
+		// Check how data was transfered to the target
+		// If it was moved, clear the selected items
+		TransferMode tm = event.getTransferMode();
+
+		if (tm == TransferMode.MOVE)
+		{
+			removeSelectedFruits(listView);
+		}
+
+		event.consume();
+	}
+        //######################################################################
+	private ArrayList<ModelManageDBTable> getSelectedFruits(ListView<ModelManageDBTable> listView){
+		// Return the list of selected Fruit in an ArratyList, so it is
+		// serializable and can be stored in a Dragboard.
+		ArrayList<ModelManageDBTable> list = new ArrayList<>(listView.getSelectionModel().getSelectedItems());
+
+		return list;
+	}
+        //######################################################################
+	private void removeSelectedFruits(ListView<ModelManageDBTable> listView){
+		// Get all selected Fruits in a separate list to avoid the shared list issue
+		List<ModelManageDBTable> selectedList = new ArrayList<>();
+
+		for(ModelManageDBTable fruit : listView.getSelectionModel().getSelectedItems())
+		{
+			selectedList.add(fruit);
+		}
+
+		// Clear the selection
+		listView.getSelectionModel().clearSelection();
+		// Remove items from the selected list
+		listView.getItems().removeAll(selectedList);
+	}    
+    
+    
+    
+    
+    
+    
+    //##########################################################################
+    //      MY FUNCTIONS
     //##########################################################################
     
     @FXML
@@ -159,7 +346,7 @@ public class POReportSelectionViewController implements Initializable {
         nextBUTTON.setDisable(true);
         if(!this.data.isEmpty()){
             for(Map.Entry<String, ModelManageDBTable> cursor : data.entrySet()){
-//                selectedPoOverviewListView.getItems().add(cursor.getKey());
+                selectedPoOverviewListView.getItems().add(cursor.getValue());
             }
         }
     }
@@ -184,154 +371,4 @@ public class POReportSelectionViewController implements Initializable {
     }
     
     //##########################################################################
-    
-    private void populateData() {
-    leftList.addAll(new Student("Adam"), new Student("Alex"), new Student(
-        "Alfred"));
-    System.out.println(leftList);
-    poItemsListView.setItems(leftList);
-    reportItemsListView.setItems(rightList);
-    }
-    
-    //##########################################################################
-    
-    private void initializeComponents() {
-        initializeListView(poItemsListView);//left
-
-        initializeListView(reportItemsListView);//right
-    }
-    
-    //##########################################################################
-    
-    private void initializeListeners(){
-    // drag from left to right
-    poItemsListView.setOnDragDetected(new EventHandler<MouseEvent>() {
-      @Override
-      public void handle(MouseEvent event) {
-        if (poItemsListView.getSelectionModel().getSelectedItem() == null) {
-          return;
-        }
-
-        Dragboard dragBoard = poItemsListView.startDragAndDrop(TransferMode.COPY_OR_MOVE);
-        
-//        ArrayList<Student> selectedItems = this.get
-        ClipboardContent content = new ClipboardContent();
-        content.putString(poItemsListView.getSelectionModel().getSelectedItem()
-            .getName());
-        dragBoard.setContent(content);
-      }
-    });
-    //--------------------------------------------------------------------------
-    reportItemsListView.setOnDragOver(new EventHandler<DragEvent>() {
-      @Override
-      public void handle(DragEvent dragEvent) {
-        dragEvent.acceptTransferModes(TransferMode.MOVE);
-      }
-    });
-    //--------------------------------------------------------------------------
-    reportItemsListView.setOnDragDropped(new EventHandler<DragEvent>() {
-      @Override
-      public void handle(DragEvent dragEvent) {
-        String player = dragEvent.getDragboard().getString();
-        reportItemsListView.getItems().addAll(new Student(player));
-        leftList.remove(new Student(player));
-        poItemsListView.setItems(leftList);
-        dragEvent.setDropCompleted(true);
-      }
-    });
-    // drag from right to left
-    reportItemsListView.setOnDragDetected(new EventHandler<MouseEvent>() {
-      @Override
-      public void handle(MouseEvent event) {
-        Dragboard dragBoard = reportItemsListView.startDragAndDrop(TransferMode.MOVE);
-        ClipboardContent content = new ClipboardContent();
-        content.putString(reportItemsListView.getSelectionModel().getSelectedItem()
-            .getName());
-        dragBoard.setContent(content);
-      }
-    });
-
-    poItemsListView.setOnDragOver(new EventHandler<DragEvent>() {
-      @Override
-      public void handle(DragEvent dragEvent) {
-        dragEvent.acceptTransferModes(TransferMode.MOVE);
-      }
-    });
-
-    poItemsListView.setOnDragDropped(new EventHandler<DragEvent>() {
-      @Override
-      public void handle(DragEvent dragEvent) {
-        String player = dragEvent.getDragboard().getString();
-        poItemsListView.getItems().remove(new Student(player));
-
-        rightList.remove(new Student(player));
-        dragEvent.setDropCompleted(true);
-      }
-    });
-  }
-
-    //##########################################################################
-    
-    private void initializeListView(ListView<Student> listView) {
-        listView.setEditable(false);
-        listView.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
-        listView.setCellFactory(new StringListCellFactory());
-    }
-    
-    //##########################################################################
-    
-    class StringListCellFactory implements
-      Callback<ListView<Student>, ListCell<Student>> {
-    @Override
-    public ListCell<Student> call(ListView<Student> playerListView) {
-      return new StringListCell();
-    }
-
-    class StringListCell extends ListCell<Student> {
-      @Override
-      protected void updateItem(Student player, boolean b) {
-        super.updateItem(player, b);
-
-        if (player != null) {
-          setText(player.getName());
-        }
-      }
-    }
-  }
 }
- //##########################################################################
-    class Student {
-        private String name;
-
-        public Student(String name) {
-          this.name = name;
-        }
-
-        public String getName() {
-          return name;
-        }
-
-        public void setName(String name) {
-          this.name = name;
-        }
-
-        @Override
-        public boolean equals(Object o) {
-          if (this == o)
-            return true;
-          if (o == null || getClass() != o.getClass())
-            return false;
-
-          Student player = (Student) o;
-
-          if (name != null ? !name.equals(player.name) : player.name != null)
-            return false;
-
-          return true;
-        }
-
-        @Override
-        public int hashCode() {
-          return name != null ? name.hashCode() : 0;
-        }
-    }

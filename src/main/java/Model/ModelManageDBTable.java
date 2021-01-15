@@ -5,27 +5,19 @@
  */
 package Model;
 
-import java.io.File;
+import java.io.Serializable;
 import java.sql.Date;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import java.sql.ResultSet;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import net.ucanaccess.complex.Attachment;
-import net.ucanaccess.complex.SingleValue;
-
 
 /**
  *
  * @author Gilbert Alvarado
  */
-public class ModelManageDBTable {
-    
+public class ModelManageDBTable  {
+        
     private String po, brg, cur, supplier,p,attachment;
-    private SingleValue[] svs;
     private Attachment att[];
     
     private boolean packet;
@@ -87,26 +79,7 @@ public class ModelManageDBTable {
         this.att = att;
     }
     
-    public void displayAttachmentCHANGE(){
-        
-//        try (Statement s = ConnectionUtil.conDB().createStatement()) {
-//            try (ResultSet rs = s.executeQuery("SELECT Attachments FROM AttachTest WHERE ID=1")) {
-//                rs.next();
-//                Attachment[] atts = (Attachment[]) rs.getObject(1);  // net.ucanaccess.complex.Attachment
-//                System.out.println("NUMBER OF ATTACHMENTS: " + att.length);
-//                for (Attachment a : att) {
-//                    System.out.println("File Name: " + a.getName());//FileNAME
-//                    System.out.println("File Type: " + a.getType());//File Type
-////                    org.apache.commons.io.FileUtils.writeByteArrayToFile(
-////                            new File("C:/Users/Gord/Desktop/" + att.getName()), 
-////                            att.getData());
-//                }
-//            }
-//        } catch (SQLException ex) {   
-//            Logger.getLogger(ModelManageDBTable.class.getName()).log(Level.SEVERE, null, ex);
-//        }
-        
-    }
+   
     public int getNumberAttachments(){
         return this.att.length;
     }
@@ -124,21 +97,6 @@ public class ModelManageDBTable {
     public void setPacket(boolean packet) {
         this.packet = packet;
     }
-//    public String getPacket() {
-//        return p;
-//    }
-//
-//    public void setPacket(String packet) {
-//        this.p = packet;
-//    }
-    
-//    public String getConfirmed() {
-//        return confirmed;
-//    }
-//
-//    public void setConfirmed(String confirmed) {
-//        this.confirmed = confirmed;
-//    }
 
     public String getSupplier() {
         return supplier;
@@ -146,5 +104,9 @@ public class ModelManageDBTable {
 
     public void setSupplier(String supplier) {
         this.supplier = supplier;
+    }
+    
+    public String toString(){
+        return this.po;
     }
 }

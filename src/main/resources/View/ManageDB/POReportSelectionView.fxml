@@ -175,12 +175,12 @@
                       <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
                     </rowConstraints>
                      <children>
-                        <ListView fx:id="poItemsListView" focusTraversable="false" prefHeight="200.0" prefWidth="200.0">
+                        <ListView fx:id="sourceView" focusTraversable="false" prefHeight="200.0" prefWidth="200.0">
                            <GridPane.margin>
                               <Insets bottom="10.0" left="20.0" right="20.0" top="10.0" />
                            </GridPane.margin>
                         </ListView>
-                        <ListView fx:id="reportItemsListView" focusTraversable="false" prefHeight="200.0" prefWidth="200.0" GridPane.columnIndex="2">
+                        <ListView fx:id="targetView" focusTraversable="false" prefHeight="200.0" prefWidth="200.0" GridPane.columnIndex="2">
                            <GridPane.margin>
                               <Insets bottom="10.0" left="20.0" right="20.0" top="10.0" />
                            </GridPane.margin>

@@ -122,16 +122,11 @@ clearFieldsBUTTON.setStyle("-fx-font-size: 14px;-fx-font-weight: bold;\n"
         LCcolumn.setCellValueFactory(new PropertyValueFactory<>("lc"));
         
 
-        OverviewTableView.refresh();
         updateTableView();
-        OverviewTableView.refresh();
         addButtonsToTable();//NOTEScolumn
-//        addSearchFilters();
         
 //        addComboBoxFilter();
-        OverviewTableView.refresh();
         addMultipleSearchFilters();
-        OverviewTableView.refresh();
     }
 //##############################################################################    
 
@@ -180,7 +175,7 @@ clearFieldsBUTTON.setStyle("-fx-font-size: 14px;-fx-font-weight: bold;\n"
                                rs.getDate(3)));//original date
                    }
                         
-            con.close();
+                        con.close();
         } catch (SQLException ex) {
             Logger.getLogger(OverviewViewTesting_NOANCHORController.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -205,8 +200,8 @@ clearFieldsBUTTON.setStyle("-fx-font-size: 14px;-fx-font-weight: bold;\n"
                     
                     private final Button btn = new Button("View\nNotes");
                     {
-                        btn.setMaxHeight(25);
-                        btn.setMaxWidth(75);
+                        btn.setMaxHeight(50);
+                        btn.setMaxWidth(100);
                         btn.setStyle("-fx-font-size: 18px;-fx-font-weight: bold;\n" 
                                 + "-fx-font-family: Georgia;");
                     }
@@ -303,7 +298,6 @@ clearFieldsBUTTON.setStyle("-fx-font-size: 14px;-fx-font-weight: bold;\n"
                             
                             });
                             setGraphic(btn);
-                            OverviewTableView.refresh();
                         }
                     }
                 };
@@ -316,42 +310,42 @@ clearFieldsBUTTON.setStyle("-fx-font-size: 14px;-fx-font-weight: bold;\n"
     //##############################################################################
     //private ObservableList<ModelOverviewTable> obList = FXCollections.observableArrayList();
     //#####################################
+//    FilteredList<ModelOverviewTable> filterData;
+//    public void addSearchFilters() {
+//                
+//        filterData = new FilteredList<>(obList,b->true);
+////        filterData.setPredicate(prdct);
+//        SortedList<ModelOverviewTable> sortedData = new SortedList<>(filterData);
+//        sortedData.comparatorProperty().bind(OverviewTableView.comparatorProperty());
+//        OverviewTableView.setItems(sortedData); 
+//        
+//        filterData.predicateProperty().bind(Bindings.createObjectBinding(() -> {
+//        
+//            LocalDate minDate = curShipSTART.getValue();
+//            LocalDate maxDate = curShipEND.getValue();
+//
+//            // get final values != null
+//            final LocalDate finalMin = minDate == null ? LocalDate.MIN : minDate;
+//            final LocalDate finalMax = maxDate == null ? LocalDate.MAX : maxDate;
+//
+//            return search_field -> search_field.getSupplier().contains(SUPPLIERTextField.getText())
+//               && search_field.getPo().contains(POTextField.getText()) 
+//                && search_field.getBrg().contains(BRGTextField.getText())
+//                    && !finalMin.isAfter(LocalDate.parse( search_field.getOriginalDate().toString())) 
+//                    && !finalMax.isBefore(LocalDate.parse( search_field.getOriginalDate().toString() ) );
+////                    && search_field.getConfirmed().equals(CONFIRMEDcomboBox.getValue()) ;//CONFIRMEDcomboBox
+//        },
+//
+//            SUPPLIERTextField.textProperty(),
+//            POTextField.textProperty(),
+//            BRGTextField.textProperty(),
+//            curShipSTART.valueProperty(),
+//            curShipEND.valueProperty()
+////            CONFIRMEDcomboBox.valueProperty()
+//        ));
+//        
+//    }
     FilteredList<ModelOverviewTable> filterData;
-    public void addSearchFilters() {
-                
-        filterData = new FilteredList<>(obList,b->true);
-//        filterData.setPredicate(prdct);
-        SortedList<ModelOverviewTable> sortedData = new SortedList<>(filterData);
-        sortedData.comparatorProperty().bind(OverviewTableView.comparatorProperty());
-        OverviewTableView.setItems(sortedData); 
-        
-        filterData.predicateProperty().bind(Bindings.createObjectBinding(() -> {
-        
-            LocalDate minDate = curShipSTART.getValue();
-            LocalDate maxDate = curShipEND.getValue();
-
-            // get final values != null
-            final LocalDate finalMin = minDate == null ? LocalDate.MIN : minDate;
-            final LocalDate finalMax = maxDate == null ? LocalDate.MAX : maxDate;
-
-            return search_field -> search_field.getSupplier().contains(SUPPLIERTextField.getText())
-               && search_field.getPo().contains(POTextField.getText()) 
-                && search_field.getBrg().contains(BRGTextField.getText())
-                    && !finalMin.isAfter(LocalDate.parse( search_field.getOriginalDate().toString())) 
-                    && !finalMax.isBefore(LocalDate.parse( search_field.getOriginalDate().toString() ) );
-//                    && search_field.getConfirmed().equals(CONFIRMEDcomboBox.getValue()) ;//CONFIRMEDcomboBox
-        },
-
-            SUPPLIERTextField.textProperty(),
-            POTextField.textProperty(),
-            BRGTextField.textProperty(),
-            curShipSTART.valueProperty(),
-            curShipEND.valueProperty()
-//            CONFIRMEDcomboBox.valueProperty()
-        ));
-        
-    }
-    
     private void addMultipleSearchFilters(){
         ObjectProperty<Predicate<ModelOverviewTable>> supplierFilter = new SimpleObjectProperty<>();
         supplierFilter.bind(Bindings.createObjectBinding(() -> 

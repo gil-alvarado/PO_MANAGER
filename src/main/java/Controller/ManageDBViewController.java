@@ -81,7 +81,9 @@ import net.ucanaccess.complex.Attachment;
  */
 public class ManageDBViewController implements Initializable {
 
-
+    //##########################################################################
+    //          SEARCH FIELDS
+    //##########################################################################
     @FXML
     private TextField SUPPLIERTextField;
     @FXML
@@ -90,29 +92,31 @@ public class ManageDBViewController implements Initializable {
     private TextField POTextField;
     @FXML
     private TextField BRGTextField;
-    
+    @FXML
+    private DatePicker curShipSTART, curShipEND;
+    //##########################################################################
+    //          TABLE FIELDS
+    //##########################################################################    
     @FXML
     private TableView<ModelManageDBTable> ManageDBTable;
     @FXML
     private TableColumn<ModelManageDBTable, String> POcolumn, BRGcolumn, CURSHIP_column, BUTTONcolumn,
             STATUScolumn, ATTACHMENTScolumn;// PACKETcolumn;
+//    @FXML
+//    private TableColumn<ModelManageDBTable, Boolean> PACKETcolumn;
+    
+    private ObservableList<ModelManageDBTable> obList = FXCollections.observableArrayList();
+    //##########################################################################
 
-    ObservableList<ModelManageDBTable> obList = FXCollections.observableArrayList();
     
     private EditPOView_NOANCHORController controller;//used to setItems in editPOView
     
     private FXMLLoader loader;
     private AnchorPane editPOAnchor;
     private MainLayoutTesting_WITHANCHORController instance;
-    @FXML
-    private TableColumn<ModelManageDBTable, Boolean> PACKETcolumn;
     
     @FXML
-    private DatePicker curShipSTART, curShipEND;
-    @FXML
     private Button clearFieldsBUTTON;
-    @FXML
-    private Button addToReportBUTTON;
     @FXML
     private Button printReportBUTTON;
     
@@ -140,22 +144,14 @@ public class ManageDBViewController implements Initializable {
         ATTACHMENTScolumn.setCellValueFactory(new PropertyValueFactory<>("attachment"));
         
         
-        PACKETcolumn.setCellValueFactory(new PropertyValueFactory<>("packet"));
+//        PACKETcolumn.setCellValueFactory(new PropertyValueFactory<>("packet"));
 //        checkBoxColumn.setCellValueFactory(new PropertyValueFactory<>("packet"));
 //checkBoxColumn.setCellValueFactory(new PropertyValueFactory<ModelManageDBTable, Boolean>("packet"));
 
 
         updateTableView();
         addButtonsToTable();
-
-//        addPacketControls();
-
-//addCheckboxControls();
-
-addCheckBoxTest();
-
-//        addSearchFilters();
-addMultipleSearchFilters();
+        addMultipleSearchFilters();
             
     }    
     //##########################################################################  
@@ -171,63 +167,64 @@ addMultipleSearchFilters();
     public void setMainLayoutInstance(MainLayoutTesting_WITHANCHORController instance){
         this.instance = instance;
     }
+    //--------------------------------------------------------------------------
+    public ObservableList getList(){
+        return obList;
+    }
     //##########################################################################
     public void updateTableView(){
         ManageDBTable.getItems().clear();
         ManageDBTable.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
-     try{
-            Connection con = ConnectionUtil.conDB();
-            
-            ResultSet rs =con.createStatement().executeQuery(
-            "SELECT purchase_orders.purchase_order, "
-                    + "bearings.supplier_id, "
-                    + "bearings.brg_name, "
-                    + "purchase_orders.current_ship_date, "//4
-                    + "order_details.attachments, "//5
-                    + "order_details.moved_to_packet \n" 
-           +"FROM purchase_orders "
-                    + "INNER JOIN "
-                    + "(bearings INNER JOIN order_details ON bearings.[brg_id] = order_details.[brg_id]) "
-                    + "ON purchase_orders.[purchase_order] = order_details.[purchase_order];");
-            
-            ModelManageDBTable dbItem;
-            SimpleDateFormat MMddyyyy = new SimpleDateFormat("MM/dd/yyyy");
-            
-            
-            while(rs.next()){
-                
-//                System.out.println("MMddyyyy TABLE DATE FORMAT: "+MMddyyyy.format(rs.getDate(4)));
-//                System.out.println("rs.getDate() FORMAT: "+rs.getDate(4));
-                
-                String moved_to_packet;
-                if(rs.getString("moved_to_packet").equals("TRUE"))
-                    moved_to_packet = "YES";
-                else
-                    moved_to_packet = "NO";
-                        
-                dbItem = new 
-                ModelManageDBTable(
-                        rs.getString("purchase_order"),
-                        rs.getString("supplier_id"),
-                        rs.getString("brg_name"),
-                        MMddyyyy.format(rs.getDate(4)),//CUR SHIP
-                        moved_to_packet,
-                        rs.getDate(4));
-                
-                Attachment att []= (Attachment[])rs.getObject(5);
-                dbItem.setAtt(att);
-                dbItem.displayAttachmentCHANGE();
-                dbItem.setAttachment(String.valueOf(dbItem.getNumberAttachments()));
-                obList.add(dbItem);
+        
+        try{
+               Connection con = ConnectionUtil.conDB();
 
-            }
-            con.close();
+               ResultSet rs =con.createStatement().executeQuery(
+               "SELECT purchase_orders.purchase_order, "
+                       + "bearings.supplier_id, "
+                       + "bearings.brg_name, "
+                       + "purchase_orders.current_ship_date, "//4
+                       + "order_details.attachments, "//5
+                       + "order_details.moved_to_packet \n" 
+              +"FROM purchase_orders "
+                       + "INNER JOIN "
+                       + "(bearings INNER JOIN order_details ON bearings.[brg_id] = order_details.[brg_id]) "
+                       + "ON purchase_orders.[purchase_order] = order_details.[purchase_order];");
 
-           
-           //###################################################################
-        } catch (SQLException ex) {
-            Logger.getLogger(ManageDBViewController.class.getName()).log(Level.SEVERE, null, ex);
-        }
+               ModelManageDBTable dbItem;
+               SimpleDateFormat MMddyyyy = new SimpleDateFormat("MM/dd/yyyy");
+
+
+               while(rs.next()){
+
+                   String moved_to_packet;
+                   if(rs.getString("moved_to_packet").equals("TRUE"))
+                       moved_to_packet = "YES";
+                   else
+                       moved_to_packet = "NO";
+
+                   dbItem = new 
+                   ModelManageDBTable(
+                           rs.getString("purchase_order"),
+                           rs.getString("supplier_id"),
+                           rs.getString("brg_name"),
+                           MMddyyyy.format(rs.getDate(4)),//CUR SHIP
+                           moved_to_packet,
+                           rs.getDate(4));
+
+                   Attachment att []= (Attachment[])rs.getObject(5);
+                   dbItem.setAtt(att);
+                   dbItem.setAttachment(String.valueOf(dbItem.getNumberAttachments()));
+                   obList.add(dbItem);
+
+               }
+               con.close();
+
+
+              //###################################################################
+           } catch (SQLException ex) {
+               Logger.getLogger(ManageDBViewController.class.getName()).log(Level.SEVERE, null, ex);
+           }
         
     }
     //##########################################################################
@@ -250,10 +247,7 @@ addMultipleSearchFilters();
                         edit_button.setMaxWidth(100);
                         edit_button.setStyle("-fx-font-size: 14px;-fx-font-weight: bold;\n" 
                                 + "-fx-font-family: Georgia;");
-                    }
-                    
-                    
-                    
+                    }      
                     
                     ButtonType YES = new ButtonType("YES", ButtonBar.ButtonData.YES);
                     ButtonType NO = new ButtonType("NO", ButtonBar.ButtonData.CANCEL_CLOSE);                     
@@ -286,9 +280,7 @@ addMultipleSearchFilters();
                                 if (result.orElse(NO) == YES){
                                     controller.setItems(data);//EditPOView controller
                                     instance.editToTop();//MainLayoutTesting_WITHANCHORController
-                                    
-                                    
-                                   
+                   
                                 }
                             
                         });
@@ -412,6 +404,7 @@ addMultipleSearchFilters();
     
     //##########################################################################
     
+    /*
     private void addCheckBoxTest(){
         
         PACKETcolumn.setCellValueFactory(
@@ -430,9 +423,11 @@ new Callback<CellDataFeatures<ModelManageDBTable,Boolean>,ObservableValue<Boolea
         PACKETcolumn.setCellFactory( CheckBoxTableCell.forTableColumn(PACKETcolumn) );
         
     }
+    */
     
     //##########################################################################
     
+    /*
     private void addCheckboxControls(){
         Callback<TableColumn<ModelManageDBTable, Boolean>, TableCell<ModelManageDBTable, Boolean>> cellFactory;
         
@@ -508,63 +503,17 @@ System.out.println("FAIL");
         
         PACKETcolumn.setCellFactory(cellFactory);        
     }
+    */
     
     //##########################################################################
-    private void update(){
-        obList.clear();
-        ManageDBTable.getItems().clear();
-        updateTableView();
-        addButtonsToTable();
-//        addPacketControls();
-//addCheckboxControls();
 
-    }
-    private boolean updatePo(String purchase_order, String moved_to_packet){
-        return (ConnectionUtil.updatePacketStatus(purchase_order, moved_to_packet) == 1);
-    }
-    //##############################################################################
-    public void addSearchFilters() {
-                
-        FilteredList<ModelManageDBTable> filterData = new FilteredList<>(obList,b->true);
-        SortedList<ModelManageDBTable> sortedData = new SortedList<>(filterData);
-        sortedData.comparatorProperty().bind(ManageDBTable.comparatorProperty());
-        ManageDBTable.setItems(sortedData); 
-        
-        filterData.predicateProperty().bind(Bindings.createObjectBinding(() -> {
-        
-            LocalDate minDate = curShipSTART.getValue();
-            LocalDate maxDate = curShipEND.getValue();
 
-            // get final values != null
-            final LocalDate finalMin = minDate == null ? LocalDate.MIN : minDate;
-            final LocalDate finalMax = maxDate == null ? LocalDate.MAX : maxDate;
-
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-d"); 
-
-    //        SimpleDateFormat sdp = new SimpleDateFormat("yyyy-MM-dd");//LocalDatePattern
-
-            // values for openDate need to be in the interval [finalMin, finalMax]
-            return search_field -> search_field.getSupplier().contains(SUPPLIERTextField.getText())
-               && search_field.getPo().contains(POTextField.getText()) 
-                && search_field.getBrg().contains(BRGTextField.getText())
-                    && !finalMin.isAfter(LocalDate.parse( search_field.getOriginalDate().toString())) 
-                    && !finalMax.isBefore(LocalDate.parse( search_field.getOriginalDate().toString()));
-        },
-
-            SUPPLIERTextField.textProperty(),
-            POTextField.textProperty(),
-            BRGTextField.textProperty(),
-            curShipSTART.valueProperty(),
-            curShipEND.valueProperty()
-
-        ));
-        
-    }
     //##########################################################################
-    //          NEW FILTER 
+    //          FILTER 
     //##########################################################################
     FilteredList<ModelManageDBTable> filterData;
         private void addMultipleSearchFilters(){
+            
         ObjectProperty<Predicate<ModelManageDBTable>> supplierFilter = new SimpleObjectProperty<>();
         supplierFilter.bind(Bindings.createObjectBinding(() -> 
             supplier -> supplier.getSupplier().toLowerCase().contains(SUPPLIERTextField.getText().toLowerCase()), 
@@ -613,7 +562,9 @@ System.out.println("FAIL");
                
         
     }
-
+    //##########################################################################
+    //          END FILTER 
+    //##########################################################################
     @FXML
     private void clearFields(ActionEvent event) {
         SUPPLIERTextField.clear();
@@ -623,7 +574,9 @@ System.out.println("FAIL");
         curShipEND.getEditor().clear();
         CONFIRMEDcomboBox.setValue("NO");
     }
-
+    //##########################################################################
+    //          BEGIN/LOAD REPORT
+    //##########################################################################    
     @FXML
     private void printReportBUTTON(ActionEvent event) {
         selectedPos = new LinkedHashMap<>();
@@ -647,74 +600,11 @@ System.out.println("FAIL");
             stage.initModality(Modality.APPLICATION_MODAL);
             stage.setScene(scene);
             POReportSelectionViewController controller =loader.getController();
-//            controller.setSelecteditems(selectedPos);
+            controller.setSelecteditems(selectedPos);
             stage.showAndWait();
 
         } catch (IOException ex) {
             Logger.getLogger(MainLayoutTesting_WITHANCHORController.class.getName()).log(Level.SEVERE, null, ex);
         }
-    }
-    
-    
-    class Row{
-    
-    //PO | SUPPLIER | BRG# | CUR SHIP | #ATT | (future) checkBox + reportButton | edit button
-    //idea: remove edit button, double click item to prompt user to edit
-    
-    
-    private String purchase_order, supplier, bearing, currentShip, number_attachments;
-    
-//    private List<String> rowData;
-    
-    public Row(String purchase_order, String supplier, String bearing, String currentShip, String number_attachments) {
-        this.purchase_order = purchase_order;
-        this.supplier = supplier;
-        this.bearing = bearing;
-        this.currentShip = currentShip;
-        this.number_attachments = number_attachments;
-    }
-
-    public String getPurchase_order() {
-        return purchase_order;
-    }
-
-    public void setPurchase_order(String purchase_order) {
-        this.purchase_order = purchase_order;
-    }
-
-    public String getSupplier() {
-        return supplier;
-    }
-
-    public void setSupplier(String supplier) {
-        this.supplier = supplier;
-    }
-
-    public String getBearing() {
-        return bearing;
-    }
-
-    public void setBearing(String bearing) {
-        this.bearing = bearing;
-    }
-
-    public String getCurrentShip() {
-        return currentShip;
-    }
-
-    public void setCurrentShip(String currentShip) {
-        this.currentShip = currentShip;
-    }
-
-    public String getNumber_attachments() {
-        return number_attachments;
-    }
-
-    public void setNumber_attachments(String number_attachments) {
-        this.number_attachments = number_attachments;
-    }
-    
+    }    
 }
-    
-}
-

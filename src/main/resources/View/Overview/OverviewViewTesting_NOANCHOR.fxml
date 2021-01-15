@@ -170,16 +170,16 @@
          <center>
             <TableView fx:id="OverviewTableView" prefHeight="200.0" prefWidth="200.0" style="-fx-slection-bar-non-focused: green; -fx-selection-bar: brown;" stylesheets="@../../styles/tableStyle.css" BorderPane.alignment="CENTER">
               <columns>
-                  <TableColumn fx:id="SUPPLIERcolumn" editable="false" prefWidth="75.0" style="-fx-background-color: lime;" text="SUPPLIER" />
+                  <TableColumn fx:id="SUPPLIERcolumn" editable="false" prefWidth="75.0" text="SUPPLIER" />
                   <TableColumn fx:id="POcolumn" prefWidth="75.0" text="PO" />
-                <TableColumn fx:id="CURSHIP_column" editable="false" prefWidth="133.0" style="-fx-background-color: lightblue;" text="CUR SHIP" />
+                <TableColumn fx:id="CURSHIP_column" editable="false" prefWidth="133.0" text="CUR SHIP" />
                   <TableColumn fx:id="BRGcolumn" editable="false" prefWidth="75.0" text="BRG#" />
                   <TableColumn fx:id="IPcolumn" prefWidth="75.0" style="-fx-text-fill: green;" text="I/P" />
                   <TableColumn fx:id="LCcolumn" prefWidth="75.0" style="-fx-text-fill: green;" text="L/C" />
                   <TableColumn fx:id="CONFIRMEDcolumn" editable="false" prefWidth="120.0" text="CONFIRMED" />
                   <TableColumn editable="false" prefWidth="75.0" text="FOLLOW UP">
                      <columns>
-                        <TableColumn fx:id="DATEcolumn" prefWidth="75.0" style="-fx-background-color: lightgray;" text="DATE" />
+                        <TableColumn fx:id="DATEcolumn" prefWidth="75.0" text="DATE" />
                         <TableColumn fx:id="NOTEScolumn" prefWidth="75.0" style="-fx-background-color: transparent;" text="NOTES" />
                      </columns></TableColumn>
               </columns>

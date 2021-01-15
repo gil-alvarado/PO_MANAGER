@@ -450,7 +450,7 @@ pst = con.prepareStatement("SELECT brg_name FROM bearings WHERE brg_name = ? "
 
                 clearAllFields();
             
-
+                con.close();
 
             } catch (SQLException ex) { 
             Logger.getLogger(EditPOView_NOANCHORController.class.getName()).log(Level.SEVERE, null, ex);
