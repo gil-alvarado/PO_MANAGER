@@ -17,7 +17,7 @@ import net.ucanaccess.complex.Attachment;
  */
 public class ModelManageDBTable  {
         
-    private String po, brg, cur, supplier,p,attachment;
+    private String po, brg, cur, supplier,p,attachment, confirmed;
     private Attachment att[];
     
     private boolean packet;
@@ -29,7 +29,7 @@ public class ModelManageDBTable  {
         return originalDate;
     }
     
-    public ModelManageDBTable(String po,String supplier, String brg, String cur,  String packet, Date date) {
+    public ModelManageDBTable(String po,String supplier, String brg, String cur,  String packet, Date date, String confirmed) {
 //        this.confirmed = confirmed;
         this.po = po;
         
@@ -44,6 +44,7 @@ public class ModelManageDBTable  {
         this.registered = new SimpleBooleanProperty(this.packet);
         
         this.originalDate = date;
+        this.confirmed = confirmed;
     }
     public String getPo() {
         return po;
@@ -108,5 +109,13 @@ public class ModelManageDBTable  {
     
     public String toString(){
         return this.po;
+    }
+
+    public String getConfirmed() {
+        return confirmed;
+    }
+
+    public void setConfirmed(String confirmed) {
+        this.confirmed = confirmed;
     }
 }

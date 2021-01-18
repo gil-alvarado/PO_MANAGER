@@ -10,7 +10,6 @@ import Model.FileHelper;
 import Model.ModelOverviewTable;
 import java.io.File;
 import java.io.IOException;
-import static java.lang.Double.MAX_VALUE;
 import java.net.URL;
 import java.sql.Connection;
 import java.sql.Date;

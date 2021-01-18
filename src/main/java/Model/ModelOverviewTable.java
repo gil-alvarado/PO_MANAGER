@@ -39,13 +39,13 @@ public class ModelOverviewTable {
         this.po = po;
         this.brg = brg;
         this.supplier = supplier;
-        this.cur = cur;
-        this.da = date;
+        this.cur = cur;//current ship
+        this.da = date;//fu date
         
         this.ip = ip;
         this.lc = lc;
         
-        this.originalDate = org_date;
+        this.originalDate = org_date;//current ship date
         
     }
         

@@ -8,6 +8,9 @@ package Controller;
 import Model.ConnectionUtil;
 import Model.FileHelper;
 import java.awt.Desktop;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
+import java.beans.PropertyChangeSupport;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -98,12 +101,26 @@ public class AddPOViewController implements Initializable {
     
     private boolean textFieldsAreFilled = false;
     private boolean datePickersAreFilled = false;
+    @FXML
+    private HBox HBoxButtons;
+    @FXML
+    private Button uploadButton;
+    
+    protected PropertyChangeSupport propertyChangeSupport;
+    MyClassWithBoolean tempEmailDirIsOpen = new MyClassWithBoolean();
+    MyBooleanListener listener = new MyBooleanListener();
+    @FXML
+    private Button refreshButton;
     
     /**
      * Initializes the controller class.
      */
     @Override
     public void initialize(URL url, ResourceBundle rb) {
+        
+        
+        tempEmailDirIsOpen.addPropertyChangeListener(listener);
+        tempEmailDirIsOpen.setBoolean(false);
         
         map_files = new LinkedHashMap<>();
         
@@ -118,12 +135,8 @@ public class AddPOViewController implements Initializable {
         TextFieldPO.focusedProperty().addListener((observable, oldValue, newValue) -> {
             if (!newValue) { 
                     if(TextFieldPO.getText().isEmpty()){
-                        //when it not matches the pattern (1.0 - 6.0)
-                        //set the textField empty
                         TextFieldPO.setText("");
                     }
-//                    else
-//                        isValidated = true;
                 }
         });
         //----------------------------------------------------------------------
@@ -179,7 +192,7 @@ public class AddPOViewController implements Initializable {
                 .or(DatePickerORGSHIP.valueProperty().isNull())
                 .or(DatePickerETABMS.valueProperty().isNull())
                 .or(DatePickerCURSHIP.valueProperty().isNull())))));
-     
+        
     }    
     //##########################################################################
     // 1) check if PO exist before continuing. Cancel event/process if PO already exists
@@ -464,8 +477,11 @@ pst = con.prepareStatement("SELECT brg_name FROM bearings WHERE brg_name = ? "
     //##########################################################################
     @FXML
     private void handleDragOver(DragEvent event){
-        if(event.getDragboard().hasFiles())
-        event.acceptTransferModes(TransferMode.COPY);
+        
+        if(event.getDragboard().hasFiles() ){
+            event.acceptTransferModes(TransferMode.COPY_OR_MOVE);
+            event.consume();
+        }
     }
     @FXML
     private void handleDrop(DragEvent event) throws FileNotFoundException{
@@ -473,7 +489,7 @@ pst = con.prepareStatement("SELECT brg_name FROM bearings WHERE brg_name = ? "
                 Dragboard db = event.getDragboard();
                 boolean success = false;
                 
-                if (db.hasFiles()) {
+                if ( db.hasFiles() ){//|| db.hasHtml() || db.hasString() || db.hasUrl() || db.hasImage()) {
                     
                     success = true;
                     String filePath;
@@ -516,24 +532,7 @@ pst = con.prepareStatement("SELECT brg_name FROM bearings WHERE brg_name = ? "
             
     }
     //##########################################################################
-    
-        private boolean isTextFieldAllFilled(){
 
-        return !( TextFieldPO.getText().isEmpty() || TextFieldSUPPLIER.getText().isEmpty() 
-                || TextFieldINVOICE.getText().isEmpty() || TextFieldBRG.getText().isEmpty()
-                || TextFieldPARAMETER.getText().isEmpty() || TextFieldQTY.getText().isEmpty()
-                || TextFieldLANDING.getText().isEmpty() );
-    }
-    //--------------------------------------------------------------------------
-//    @FXML
-//    private DatePicker DatePickerORGSHIP, DatePickerETABMS, DatePickerFUDATE, DatePickerCURSHIP;
-    private boolean isDatePickerFilled(){
-        
-        return  !( DatePickerORGSHIP.getEditor().getText().isEmpty()
-                || DatePickerETABMS.getEditor().getText().isEmpty()
-                || DatePickerCURSHIP.getEditor().getText().isEmpty() );
-    }
-    //--------------------------------------------------------------------------
     private void clearAllFields(){
         for(Node node : paneTextFieldsONE.getChildren()){
             if(node instanceof TextField){
@@ -639,4 +638,73 @@ pst = con.prepareStatement("SELECT brg_name FROM bearings WHERE brg_name = ? "
             listViewCount++;
         }
     }
+    
+    @FXML
+    private void openTempEmailAttachmentsFolder(ActionEvent event) {
+        try {
+            FileHelper.createEmailDirectory();
+            Desktop.getDesktop().open(new File(FileHelper.getTempEmailDirectoryLocation()));
+            tempEmailDirIsOpen.setBoolean(true);
+        } catch (IOException ex) {
+            Logger.getLogger(AddPOViewController.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+
+    @FXML
+    private void refreshListView(ActionEvent event) {
+        File folder = new File(FileHelper.getTempEmailDirectoryLocation());
+        File[] files = folder.listFiles();
+        
+        for(File attFile : files){
+            if( ListViewATTACHMENTS.getItems().contains(attFile.getName())){
+                System.out.println("FILE ALREADY ADDED: " + attFile.getAbsolutePath());
+                return;
+            }                            
+            else{
+
+//                                        System.out.println("-----------------------------");
+//                                        System.out.println("ADDING " + draggedFile.getName() + " to attfiles");
+//                                        System.out.println("-----------------------------");
+                ListViewATTACHMENTS.getItems().add(attFile.getName());
+                map_files.put(attFile.getName(), attFile);
+                listViewCount++;
+            }
+        }
+    }
+    
+    //##########################################################################
+    //##########################################################################
+    class MyClassWithBoolean {
+    protected PropertyChangeSupport propertyChangeSupport;
+    private boolean isOpen;
+
+    public MyClassWithBoolean () {
+        propertyChangeSupport = new PropertyChangeSupport(this);
+    }
+
+    public void setBoolean(boolean text) {
+        boolean oldText = this.isOpen;
+        this.isOpen = text;
+        propertyChangeSupport.firePropertyChange("MyTextProperty",oldText, text);
+    }
+    
+    public void addPropertyChangeListener(PropertyChangeListener listener) {
+        propertyChangeSupport.addPropertyChangeListener(listener);
+    }
+
+        public boolean isIsOpen() {
+            return isOpen;
+        }
+    }
+
+
+class MyBooleanListener implements PropertyChangeListener {
+    @Override
+    public void propertyChange(PropertyChangeEvent event) {
+        if (event.getPropertyName().equals("MyTextProperty")) {
+            System.out.println(event.getNewValue().toString() );
+        }
+    }
 }
+}
+

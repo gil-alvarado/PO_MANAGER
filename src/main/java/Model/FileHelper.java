@@ -35,7 +35,7 @@ public class FileHelper {
 
         File tempDir = new File(ConnectionUtil.dbDirectoryLocation()+ "\\purchase_orders\\" + purchase_order);
         System.out.println("FileHelper: CREATE PO DIRECTORY FOR " + purchase_order);
-        System.out.println(ConnectionUtil.dbDirectoryLocation());
+//        System.out.println(ConnectionUtil.dbDirectoryLocation());
         boolean dirExec = tempDir.mkdirs();
         if(dirExec){
             System.out.println("created PO directory");
@@ -44,13 +44,14 @@ public class FileHelper {
             System.err.println("FAIL:  " +ConnectionUtil.dbDirectoryLocation());
         }
     }
-    
-    //--------------------------------------------------------------------------
-    
-    public static boolean updateDirectory(String originalPO, String newPO){
-        
-        return true;
+    public static boolean createEmailDirectory(){
+        File tempDir = new File(ConnectionUtil.dbDirectoryLocation()+ "\\tempEmailDir");
+        return tempDir.mkdir();
     }
+    public static String getTempEmailDirectoryLocation(){
+        return ConnectionUtil.dbDirectoryLocation() + "\\tempEmailDir";
+    }    
+    //--------------------------------------------------------------------------
     
     //create attachments directory for specific PO
     
@@ -58,7 +59,7 @@ public class FileHelper {
     public static String getPoAttachmentDirectory(String purchase_order) {
         return ConnectionUtil.dbDirectoryLocation()+"\\purchase_orders\\"+purchase_order +"/Attachments";
     }
-    
+
     public static boolean createPoAttachmentsDirectory(String purchase_order){
 //        File tempDir = new File(ConnectionUtil.networkLocation + "/" + purchase_order +"/Attachments");
 //        File tempDir = new File(ConnectionUtil.desktopLocation + "/BMStemp/" + purchase_order +"/Attachments");

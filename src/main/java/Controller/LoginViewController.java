@@ -14,6 +14,7 @@ import java.util.LinkedHashMap;
 import java.util.ResourceBundle;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.prefs.BackingStoreException;
 import java.util.prefs.Preferences;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -64,11 +65,11 @@ public class LoginViewController implements Initializable {
 
 //        DBpref = Preferences.userNodeForPackage(LoginViewController.class);
         DBpref = Preferences.userRoot().node(LoginViewController.class.getClass().getName());
-//        try {
-//            DBpref.clear();
-//        } catch (BackingStoreException ex) {
-//            Logger.getLogger(LoginViewController.class.getName()).log(Level.SEVERE, null, ex);
-//        }
+        try {
+            DBpref.clear();
+        } catch (BackingStoreException ex) {
+            Logger.getLogger(LoginViewController.class.getName()).log(Level.SEVERE, null, ex);
+        }
         System.out.println("LoginCOntroller: "+DBpref.absolutePath());
         if(DBpref.getBoolean("firstStart", true)){
             //if first start have user select DB and THEN continue (use show and wait)
@@ -83,6 +84,10 @@ public class LoginViewController implements Initializable {
             
             dbLocation = DBpref.get("dbLocation", "root");
             dbDirectory = DBpref.get("dbDirectory", "root");
+            System.out.println("----------------------------");
+            System.out.println("dbLocation: " + dbLocation);
+            System.out.println("dbDirectory: " + dbDirectory );
+            System.out.println("----------------------------");
             ConnectionUtil.setDbLocation(dbLocation, dbDirectory);
         }
         

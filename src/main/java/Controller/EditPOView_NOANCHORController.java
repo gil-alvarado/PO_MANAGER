@@ -125,6 +125,10 @@ public class EditPOView_NOANCHORController implements Initializable {
     private HBox HBoxButtons;
     @FXML
     private Button BUTTONrwComment, BUTTONFUnote;
+    @FXML
+    private Button uploadButton;
+    @FXML
+    private Button refreshButton;
     /**
      * Initializes the controller class.
      */
@@ -700,7 +704,7 @@ update = con.prepareStatement("SELECT brg_name FROM bearings WHERE brg_name = ? 
     @FXML
     private void handleDragOver(DragEvent event){
         if(event.getDragboard().hasFiles())
-            event.acceptTransferModes(TransferMode.COPY);
+            event.acceptTransferModes(TransferMode.ANY);
     }
     
     @FXML
@@ -756,31 +760,7 @@ update = con.prepareStatement("SELECT brg_name FROM bearings WHERE brg_name = ? 
                 event.consume();
     }
     //##########################################################################
-   
-    public static boolean isTextFieldAllFilled(GridPane table){
-        for(Node node : table.getChildren()){ // cycle through every component in the table (GridPane)
-            if(node instanceof TextField){ // if it's a TextField
-            // after removing the leading spaces, check if it's empty
-                if(((TextField)node).getText().trim().isEmpty()){
-                        return false; // if so, return false
-                }
-            }       
-        }
-        return true;
-    }
-    //--------------------------------------------------------------------------
-    public static boolean isDatePickerFilled(GridPane table){
-        for(Node node : table.getChildren()){
-            if(node instanceof DatePicker){
-                LocalDate date = ((DatePicker) node).getValue();
-                if(((DatePicker) node).getValue() == null ||
-                        ((DatePicker) node).getValue().toString().trim().isEmpty())
-                    return false;
-            }
-        }
-        return true;
-    }
-    //--------------------------------------------------------------------------
+  
     private void clearAllFields(){
         for(Node node : paneTextFieldsONE.getChildren()){
             if(node instanceof TextField){
@@ -1001,6 +981,38 @@ note_controller.setFuDateLabel("no date");
         } catch (IOException ex) {
                 Logger.getLogger(OverviewViewTesting_NOANCHORController.class.getName()).log(Level.SEVERE, null, ex);
             }
+    }
+
+    @FXML
+    private void openTempEmailAttachmentsFolder(ActionEvent event) {
+        try {
+            FileHelper.createEmailDirectory();
+            Desktop.getDesktop().open(new File(FileHelper.getTempEmailDirectoryLocation()));
+        } catch (IOException ex) {
+            Logger.getLogger(AddPOViewController.class.getName()).log(Level.SEVERE, null, ex);
+        }        
+    }
+
+    @FXML
+    private void refreshListView(ActionEvent event) {
+        File folder = new File(FileHelper.getTempEmailDirectoryLocation());
+        File[] files = folder.listFiles();
+        
+        for(File attFile : files){
+            if( ListViewATTACHMENTS.getItems().contains(attFile.getName())){
+                System.out.println("FILE ALREADY ADDED: " + attFile.getAbsolutePath());
+                return;
+            }                            
+            else{
+
+//                                        System.out.println("-----------------------------");
+//                                        System.out.println("ADDING " + draggedFile.getName() + " to attfiles");
+//                                        System.out.println("-----------------------------");
+                ListViewATTACHMENTS.getItems().add(attFile.getName());
+                map_files.put(attFile.getName(), attFile);
+                listViewCount++;
+            }
+        }
     }
    
 }

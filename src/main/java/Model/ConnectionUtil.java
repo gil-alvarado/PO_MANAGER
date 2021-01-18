@@ -57,9 +57,7 @@ public class ConnectionUtil {
     
     private static LinkedHashMap<Integer, String> roleTableData = null;
     
-    private final static String query = "SELECT * FROM purchase_orders;";
-
-    private static String dbLocation ;//= "jdbc:ucanaccess://";
+    private static String dbURL ;//= "jdbc:ucanaccess://";
     private static String dbDirectory;
     
     
@@ -89,11 +87,14 @@ public class ConnectionUtil {
 //##############################################################################    
     //method called when user selects a different DataBase
     public static void setDbLocation(String dbLocation, String dbDirectory){
-        ConnectionUtil.dbLocation = "jdbc:ucanaccess://"+ dbLocation;
         
+        ConnectionUtil.dbURL = "jdbc:ucanaccess://"+ dbLocation;
+        
+        System.out.println("----------------------------");
+        System.out.println("ConnectionUtil: DATABASE LOCATION: " + ConnectionUtil.dbURL );
         ConnectionUtil.dbDirectory = dbDirectory;
-        System.out.println("ConnectionUtil: dbDirectoty location=  " + ConnectionUtil.dbDirectory );
-//        System.out.println("SET CONNECTION:" + ConnectionUtil.dbLocation);
+        System.out.println("ConnectionUtil: dbDirectoty location: " + ConnectionUtil.dbDirectory );
+        System.out.println("----------------------------");
     }
     //--------------------------------------------------------------------------
     public static final String dbDirectoryLocation (){
@@ -105,9 +106,9 @@ public class ConnectionUtil {
 //        System.out.println("DB SELECTED: "  + dbLocation);
         try{
             Class.forName("net.ucanaccess.jdbc.UcanaccessDriver");
-            System.out.println("ATTEMPTING TO RETURN DATABASE: " + ConnectionUtil.dbLocation);
+            System.out.println("ATTEMPTING TO RETURN DATABASE: " + ConnectionUtil.dbURL);
             
-            Connection connection= DriverManager.getConnection(ConnectionUtil.dbLocation,"app","app");
+            Connection connection= DriverManager.getConnection(ConnectionUtil.dbURL,"app","app");
             System.out.println("DB CONNECTED");
             System.out.println("RETURNING DB CONNECTION: " + connection);
             return connection;
@@ -360,36 +361,7 @@ public class ConnectionUtil {
     }
     
     //##########################################################################
-    //                  collect table data and return
-    //##########################################################################
-    public static LinkedHashMap dataRows(){
-        try{
-            Statement statement = conDB().createStatement();
-            ResultSet result = statement.executeQuery(query);
-//            ResultSetMetaData rsmd = rs.getMetaData();
-            rows = new LinkedHashMap<>();
-            ArrayList<String> rowData = null;
-            
-            while(result.next()){
-                
-                rowData = new ArrayList<>();
-                for(int i = 1; i <= result.getMetaData().getColumnCount() ; i++){
-                        //&& result.getMetaData().getColumnName(i).equals("FileAttachments") == false; i++){
-                    if(result.getMetaData().getColumnName(i).equals("FileAttachments") == false){//then add data to hashmamp
-                        rowData.add(result.getString(i));
-                    }
-                    rows.put(result.getInt("ORDER_NUMBER"), rowData);
-                }
-            } 
-            
-            return rows;
-        }
-        catch (SQLException e) {
-            System.out.println("Error in ConnectionUtil dataRows:" + e.getMessage());
-            return null;
-        }
-    }
-//##############################################################################
+    
     private static ArrayList<String> tableList = null;
     
     public static ArrayList getTables(){

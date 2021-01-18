@@ -134,9 +134,11 @@ public class ManageDBViewController implements Initializable {
         
         ManageDBTable.setEditable(true);
         
-//        CONFIRMEDcomboBox.getItems().addAll("YES","NO");
-//        CONFIRMEDcomboBox.setEditable(false);
-//        CONFIRMEDcomboBox.getSelectionModel().select("YES");
+        CONFIRMEDcomboBox.getItems().addAll("YES","NO");
+        CONFIRMEDcomboBox.setEditable(false);
+        CONFIRMEDcomboBox.getSelectionModel().select("YES");
+        CONFIRMEDcomboBox.setDisable(false);
+        
         POcolumn.setCellValueFactory(new PropertyValueFactory<>("po"));
         BRGcolumn.setCellValueFactory(new PropertyValueFactory<>("brg"));
         CURSHIP_column.setCellValueFactory(new PropertyValueFactory<>("cur"));
@@ -185,7 +187,7 @@ public class ManageDBViewController implements Initializable {
                        + "bearings.brg_name, "
                        + "purchase_orders.current_ship_date, "//4
                        + "order_details.attachments, "//5
-                       + "order_details.moved_to_packet \n" 
+                       + "order_details.moved_to_packet,order_details.confirmed \n" 
               +"FROM purchase_orders "
                        + "INNER JOIN "
                        + "(bearings INNER JOIN order_details ON bearings.[brg_id] = order_details.[brg_id]) "
@@ -202,6 +204,7 @@ public class ManageDBViewController implements Initializable {
                        moved_to_packet = "YES";
                    else
                        moved_to_packet = "NO";
+                   String confirmed = (rs.getString("confirmed").equals("FALSE")) ? "NO" : "YES";
 
                    dbItem = new 
                    ModelManageDBTable(
@@ -210,7 +213,8 @@ public class ManageDBViewController implements Initializable {
                            rs.getString("brg_name"),
                            MMddyyyy.format(rs.getDate(4)),//CUR SHIP
                            moved_to_packet,
-                           rs.getDate(4));
+                           rs.getDate(4),
+                            confirmed);
 
                    Attachment att []= (Attachment[])rs.getObject(5);
                    dbItem.setAtt(att);
@@ -545,11 +549,11 @@ System.out.println("FAIL");
             curShipSTART.valueProperty(),
             curShipEND.valueProperty()));
 //        //--------------------------------------------------------------------    
-//        ObjectProperty<Predicate<ModelManageDBTable>> confirmedFilter = new SimpleObjectProperty<>();
-//        confirmedFilter.bind(Bindings.createObjectBinding(() ->
-//                
-//                confirmed -> confirmed.getConfirmed().equals(CONFIRMEDcomboBox.getValue())                
-//                , CONFIRMEDcomboBox.valueProperty()));
+        ObjectProperty<Predicate<ModelManageDBTable>> confirmedFilter = new SimpleObjectProperty<>();
+        confirmedFilter.bind(Bindings.createObjectBinding(() ->
+                
+                confirmed -> confirmed.getConfirmed().equals(CONFIRMEDcomboBox.getValue())                
+                , CONFIRMEDcomboBox.valueProperty()));
         
         //----------------------------------------------------------------------
         
@@ -557,8 +561,8 @@ System.out.println("FAIL");
         ManageDBTable.setItems(filterData);
         
         filterData.predicateProperty().bind(Bindings.createObjectBinding(
-                () -> supplierFilter.get().and(poFilter.get().and(brgFilter.get().and(dateFilter.get()))), 
-                supplierFilter, poFilter, brgFilter, dateFilter));
+                () -> supplierFilter.get().and(poFilter.get().and(brgFilter.get().and(dateFilter.get().and(confirmedFilter.get())))), 
+                supplierFilter, poFilter, brgFilter, dateFilter, confirmedFilter));
                
         
     }
