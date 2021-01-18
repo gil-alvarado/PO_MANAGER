@@ -88,6 +88,7 @@ public class ConnectionUtil {
     //method called when user selects a different DataBase
     public static void setDbLocation(String dbLocation, String dbDirectory){
         
+        //print url and dir
         ConnectionUtil.dbURL = "jdbc:ucanaccess://"+ dbLocation;
         
         System.out.println("----------------------------");
