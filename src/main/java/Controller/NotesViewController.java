@@ -5,19 +5,13 @@
  */
 package Controller;
 
+import Model.BMSPurchaseOrderModel;
 import Model.ConnectionUtil;
 import Model.FileHelper;
-import Model.ModelOverviewTable;
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
 import java.net.URL;
 import java.util.Optional;
 import java.util.ResourceBundle;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -37,7 +31,6 @@ import javafx.stage.Stage;
  */
 public class NotesViewController implements Initializable {
 
-
     @FXML
     private Label poDisplayLabel;
     @FXML
@@ -45,18 +38,11 @@ public class NotesViewController implements Initializable {
     @FXML
     private TextArea existingMessageTextArea;
     @FXML
-    private Button addNoteBUTTON;
-    @FXML
-    private Button closeDialogButton;
-    @FXML
     private TextArea newMessageTextArea;
     
-    private ModelOverviewTable data;
-    private String currentPO;
+//    private String currentPO;
     private File csv_file;
-    /**
-     * Initializes the controller class.
-     */
+    private BMSPurchaseOrderModel po;
     
     @Override
     public void initialize(URL url, ResourceBundle rb) {
@@ -83,42 +69,41 @@ public class NotesViewController implements Initializable {
                     
         if( !new_content.trim().isEmpty() ){
             result = confirmation.showAndWait();
-                    
             
             //##################################################################
             //UPDATE FILE/ATTACHMENT
             //##################################################################
             
-                    if(result.orElse(NO) == YES){//user confirms yes to add note
-                        if(FileHelper.updateFUCsvFile(csv_file, poDisplayLabel.getText(),new_content) == true){//update/clear text areas
-                            //now add/update file to database
-                            if(ConnectionUtil.updateNotesAttachments(currentPO) == 1){
-                                ButtonType OK = new ButtonType("OK", ButtonBar.ButtonData.OK_DONE);
-                                Alert alert = new Alert(Alert.AlertType.NONE);
-                                {
-                                    alert.setTitle("update");
-                                    alert.getButtonTypes().clear();
-                                    alert.getDialogPane().getButtonTypes().addAll( OK );
-                                    alert.setContentText("SUCCESSFULLY UPDATED");
-                                    alert.showAndWait();
-                                }
-                                newMessageTextArea.clear();
-                                existingMessageTextArea.clear();
-                                setContext(this.csv_file);
-                            }
-                        }//else error
-                        else{
-                            ButtonType OK = new ButtonType("OK", ButtonBar.ButtonData.OK_DONE);
-                            Alert alert = new Alert(Alert.AlertType.NONE);
-                                {
-                                    alert.setTitle("update");
-                                    alert.getButtonTypes().clear();
-                                    alert.getDialogPane().getButtonTypes().addAll( OK );
-                                    alert.setContentText("ERROR: CANNOT UPDATE");
-                                    alert.showAndWait();
-                                }
-                        }    
+            if(result.orElse(NO) == YES){//user confirms yes to add note
+                if(FileHelper.updateFUCsvFile(csv_file, poDisplayLabel.getText(),new_content) == true){//update/clear text areas
+                    //now add/update file to database
+                    if(ConnectionUtil.updateNotesAttachments(this.po.getPurchase_order()) == 1){
+                        ButtonType OK = new ButtonType("OK", ButtonBar.ButtonData.OK_DONE);
+                        Alert alert = new Alert(Alert.AlertType.NONE);
+                        {
+                            alert.setTitle("update");
+                            alert.getButtonTypes().clear();
+                            alert.getDialogPane().getButtonTypes().addAll( OK );
+                            alert.setContentText("SUCCESSFULLY UPDATED");
+                            alert.showAndWait();
+                        }
+                        newMessageTextArea.clear();
+                        existingMessageTextArea.clear();
+                        setContext(this.csv_file, this.po);
                     }
+                }//else error
+                else{
+                    ButtonType OK = new ButtonType("OK", ButtonBar.ButtonData.OK_DONE);
+                    Alert alert = new Alert(Alert.AlertType.NONE);
+                        {
+                            alert.setTitle("update");
+                            alert.getButtonTypes().clear();
+                            alert.getDialogPane().getButtonTypes().addAll( OK );
+                            alert.setContentText("ERROR: CANNOT UPDATE");
+                            alert.showAndWait();
+                        }
+                }    
+            }
         }
     }
 
@@ -129,36 +114,32 @@ public class NotesViewController implements Initializable {
         stage.close();
     }
     
-    public void setPoLabel(String po){
-        poDisplayLabel.setText(po);
-        currentPO = po;
-    }
-    
-//    public void setDateTextLabel(String text){
-//        
-//    }
-    public void setFuDateLabel(String date){
-        if(date != null)
-            dateDisplayLabel.setText(date);
-        else{
-            fuDataLabel.setVisible(false);
-            dateDisplayLabel.setVisible(false);
-        }
-    }
     private static final String lineBreak = "-----------------------------------\n";
     
-    public void setContext(File csv_file){
+    public void setContext(File csv_file, BMSPurchaseOrderModel po){
         if(this.csv_file == null)
             this.csv_file = csv_file;
-        //        existingMessageTextArea.setText(existing_content);
-            //        this.data = data;//wont user, remove
+        if(this.po == null)
+            this.po = po;
+        
         if(csv_file !=null){
-            String file_content = FileHelper.csvFileContent(csv_file);
+            String file_content = FileHelper.csvFileContent(this.csv_file);
             existingMessageTextArea.setText(file_content);
         }
+        else
+            existingMessageTextArea.setPromptText("no notes added!");
+        
+        if(this.po.getFu_ship_date()!=null)
+            dateDisplayLabel.setText(this.po.getFuDateFormat());
         else{
-            existingMessageTextArea.setText("no notes added");
+            dateDisplayLabel.setText(this.po.getFuDateFormat());
         }
+        
+        if(this.po.getPurchase_order() != null)
+            poDisplayLabel.setText(this.po.getPurchase_order());
+        else
+            poDisplayLabel.setText("N/A");
+            
     }
     public void clearFields(){
         existingMessageTextArea.clear();

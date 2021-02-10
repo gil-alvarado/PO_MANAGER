@@ -6,6 +6,8 @@
 package Controller;
 
 import Model.ConnectionUtil;
+import Model.FileHelper;
+import Model.UserInfoModel;
 import com.test.App;
 import java.io.IOException;
 import java.net.URL;
@@ -14,7 +16,6 @@ import java.util.LinkedHashMap;
 import java.util.ResourceBundle;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.prefs.BackingStoreException;
 import java.util.prefs.Preferences;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -40,42 +41,28 @@ public class LoginViewController implements Initializable {
     public static String current_user;
     public static int role_ID;
     
-    private LinkedHashMap<Integer, String> users;
-    
     @FXML
     private Button login_button;
-    private static final String dbName = "BMS_DATABASE_TEST.accdb";
-        private Stage fileChooserStage;
     private Preferences DBpref;
     private static String dbLocation;
     private static String dbDirectory;
-    @FXML
-    private Button exit_button;
-    /**
-     * Initializes the controller class.
-     */
+    
     @Override
     public void initialize(URL url, ResourceBundle rb) {
-        // TODO: populate combobox
+
+        //LEAVE ALONE
+        DBpref = Preferences.userRoot().node(LoginViewController.class.getClass().getName());
         
-//        users = ConnectionUtil.userIDS();
-//        for(Map.Entry<Integer, String> cursor : users.entrySet()){
-//            
+//        try {
+//            DBpref.clear();
+//        } catch (BackingStoreException ex) {
+//            Logger.getLogger(LoginViewController.class.getName()).log(Level.SEVERE, null, ex);
 //        }
 
-//        DBpref = Preferences.userNodeForPackage(LoginViewController.class);
-        DBpref = Preferences.userRoot().node(LoginViewController.class.getClass().getName());
-        try {
-            DBpref.clear();
-        } catch (BackingStoreException ex) {
-            Logger.getLogger(LoginViewController.class.getName()).log(Level.SEVERE, null, ex);
-        }
         System.out.println("LoginCOntroller: "+DBpref.absolutePath());
         if(DBpref.getBoolean("firstStart", true)){
             //if first start have user select DB and THEN continue (use show and wait)
 //            System.out.println(DBpref.getBoolean("firstStart", true));
-            System.out.println("FIRST START");
-            fileChooserStage = new Stage();
             showStartDialog();
         }else{
             //get selectedFile pref and set file location in COnnection util and continue
@@ -87,31 +74,27 @@ public class LoginViewController implements Initializable {
             System.out.println("----------------------------");
             System.out.println("dbLocation: " + dbLocation);
             System.out.println("dbDirectory: " + dbDirectory );
+            if ( FileHelper.createEmailDirectory() )
+                System.out.println("CREATED TEMP EMAIL DIRECTORY");
+            
             System.out.println("----------------------------");
             ConnectionUtil.setDbLocation(dbLocation, dbDirectory);
         }
         
         login_button.setDisable(true);
-        for(Object un : ConnectionUtil.userIDS().values()){
+        for(Object un : ConnectionUtil.userIDS().values())
             userComboBox.getItems().add(un.toString());
-        }
-//        userComboBox.getSelectionModel().select(0);
-        userComboBox.getStyleClass().add("center-aligned");
+        
         userComboBox.setOnAction((event) -> {
             login_button.setDisable(false);
         });
         
-    }    
+    }
     
-    
-    
-    
-    //show new dialog
     private void showStartDialog(){
         
         try {
             
-            //open view and use FIleChooser in the new view
             FXMLLoader loader = new FXMLLoader (getClass().getResource("/View/Login/SelectDBView.fxml"));
             Parent parent  = loader.load();
             Scene scene = new Scene(parent, 500 ,300);
@@ -125,7 +108,7 @@ public class LoginViewController implements Initializable {
             stage.showAndWait();
 
         } catch (IOException ex) {
-            Logger.getLogger(MainLayoutTesting_WITHANCHORController.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(MainLayoutController.class.getName()).log(Level.SEVERE, null, ex);
         }
 
     }
@@ -141,21 +124,25 @@ public class LoginViewController implements Initializable {
 
     @FXML
     private void loginBMS(ActionEvent event) throws IOException  {
-        //LOAD MAIN LAYOUT
         
-        current_user = (String)userComboBox.getSelectionModel().getSelectedItem();
+        current_user = (String)userComboBox.getSelectionModel().getSelectedItem();//user_name
         try {
             role_ID = ConnectionUtil.userVerification(current_user).getInt("role_id");
-//        for(Map.Entry<Integer, String> cursor : users.entrySet()){
-//            if(curs)
-//        }
         } catch (SQLException ex) {
             role_ID = -1;
             Logger.getLogger(LoginViewController.class.getName()).log(Level.SEVERE, null, ex);
         }
 
-        App.setRoot("/View/Main/MainLayoutTesting_WITHANCHOR");
+        App.setRoot("/View/Main/MainLayout");
+        System.out.println("GETTING CONTROLLER, CURRENT USER : " + current_user);
+        System.out.println(ConnectionUtil.getUsersTable().get(current_user).getFirst());
+        MainLayoutController.getInstance().setCurrentUser(ConnectionUtil.getUsersTable().get(current_user));
         
     }
-    
+    public static void setCurrentUser (String current_user){
+        LoginViewController.current_user = current_user;
+    }
+    public static UserInfoModel getCurrentUser(){
+        return ConnectionUtil.getUsersTable().get(current_user);
+    }
 }

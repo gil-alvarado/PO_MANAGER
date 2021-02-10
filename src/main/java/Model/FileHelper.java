@@ -19,8 +19,6 @@ import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-
-
 /**
  *
  * @author Gilbert Alvarado
@@ -28,78 +26,53 @@ import java.util.logging.Logger;
 public class FileHelper {
     
     //create directory for specific PO
-    public static void createDirectory(String purchase_order){
-        
-//        File tempDir = new File(ConnectionUtil.desktopLocation + "/BMStemp/" + purchase_order);
-//        File tempDir = new File(ConnectionUtil.networkLocation + "/" + purchase_order);
-
+    public static boolean createDirectory(String purchase_order){
         File tempDir = new File(ConnectionUtil.dbDirectoryLocation()+ "\\purchase_orders\\" + purchase_order);
         System.out.println("FileHelper: CREATE PO DIRECTORY FOR " + purchase_order);
-//        System.out.println(ConnectionUtil.dbDirectoryLocation());
-        boolean dirExec = tempDir.mkdirs();
-        if(dirExec){
-            System.out.println("created PO directory");
-//            System.out.println("FileHelper, createDirectory: poDirectory = " + poDirectory);
-        }else{
-            System.err.println("FAIL:  " +ConnectionUtil.dbDirectoryLocation());
-        }
+        return tempDir.mkdirs();
     }
+    
     public static boolean createEmailDirectory(){
-        File tempDir = new File(ConnectionUtil.dbDirectoryLocation()+ "\\tempEmailDir");
-        return tempDir.mkdir();
+        File tempDir = new File(System.getenv("USERPROFILE") + "\\Documents\\BMS_DB_APP\\tempEmailDir");//ConnectionUtil.dbDirectoryLocation()+ "\\tempEmailDir");
+        return tempDir.mkdirs();
     }
     public static String getTempEmailDirectoryLocation(){
-        return ConnectionUtil.dbDirectoryLocation() + "\\tempEmailDir";
+        return System.getenv("USERPROFILE") + "\\Documents\\BMS_DB_APP\\tempEmailDir";//ConnectionUtil.dbDirectoryLocation() + "\\tempEmailDir";
     }    
     //--------------------------------------------------------------------------
-    
-    //create attachments directory for specific PO
-    
 
     public static String getPoAttachmentDirectory(String purchase_order) {
-        return ConnectionUtil.dbDirectoryLocation()+"\\purchase_orders\\"+purchase_order +"/Attachments";
+        return ConnectionUtil.dbDirectoryLocation()+"\\purchase_orders\\"+purchase_order +"\\Attachments";
     }
 
     public static boolean createPoAttachmentsDirectory(String purchase_order){
-//        File tempDir = new File(ConnectionUtil.networkLocation + "/" + purchase_order +"/Attachments");
-//        File tempDir = new File(ConnectionUtil.desktopLocation + "/BMStemp/" + purchase_order +"/Attachments");
-        File tempDir = new File(ConnectionUtil.dbDirectoryLocation()+"\\purchase_orders\\"+purchase_order +"/Attachments");
+        File tempDir = new File(ConnectionUtil.dbDirectoryLocation()+"\\purchase_orders\\"+purchase_order +"\\Attachments");
 //        poAttachmentDirectory = tempDir.getAbsolutePath();
-        boolean dirExec = tempDir.mkdir();
-        if(dirExec){
-            System.out.println("created ATTACHMENTS directory");
-            return true;
-        }
-        return false;
+        return tempDir.mkdir();
     }
-    
+    public static boolean createTemplateDirectory(){
+        File tempDir = new File(ConnectionUtil.dbDirectoryLocation()+"\\report_templates");
+//        poAttachmentDirectory = tempDir.getAbsolutePath();
+        return tempDir.mkdir();
+    }
+    public static String getTemplateDirectory(){
+        return ConnectionUtil.dbDirectoryLocation()+"\\report_templates\\template_TAG.docx";
+    }
     //##########################################################################
     //relates to RW comment and notes
-    public static void creatFile(String purchase_order){//prep_file
+    public static boolean createCSVfiles(String purchase_order){//prep_file
         
-        FileOutputStream fos_RW;
+//        FileOutputStream fos_RW;
         FileOutputStream fos_FU;
+        
+        FileOutputStream outFile = null;
+        
         StringBuilder data;
         
         try {
             data = new StringBuilder();
-            //created headers
-            
-            System.out.println("creating files");
-            
-//            fos_RW = new FileOutputStream(ConnectionUtil.networkLocation + "/" +purchase_order+ "/" + purchase_order + "-RWC.csv", false);
-//            fos_FU = new FileOutputStream(ConnectionUtil.networkLocation + "/" +purchase_order+ "/" + purchase_order + "-FUN.csv", false);
-//            
-            //before
-//            fos_RW = new FileOutputStream(ConnectionUtil.desktopLocation + "/BMStemp/" +purchase_order+ "/" + purchase_order + "-RWC.csv", false);
-//            fos_FU = new FileOutputStream(ConnectionUtil.desktopLocation + "/BMStemp/" +purchase_order+ "/" + purchase_order + "-FUN.csv", false);
-            //after
-            fos_RW = new FileOutputStream(ConnectionUtil.dbDirectoryLocation()+"\\purchase_orders\\"+ purchase_order + "\\"+ purchase_order + "-RWC.csv", false);
-            fos_FU = new FileOutputStream(ConnectionUtil.dbDirectoryLocation()+"\\purchase_orders\\"+ purchase_order + "\\"+ purchase_order + "-FUN.csv", false);
-            
-            
-            
-            System.out.println("CREATED FILES");
+
+            outFile = new FileOutputStream(ConnectionUtil.dbDirectoryLocation()+"\\purchase_orders\\"+ purchase_order + "\\" +purchase_order + "-RWC.csv",true);
             
             System.out.println("adding headers to buffer");
             data.append("purchase_order").append(",");
@@ -109,18 +82,23 @@ public class FileHelper {
             
             System.out.println("ADDING HEADERS TO FILES");
             
-            fos_RW.write(data.toString().getBytes());
-            fos_FU.write(data.toString().getBytes());
+            outFile.write(data.toString().getBytes());
+            
+            outFile = new FileOutputStream(ConnectionUtil.dbDirectoryLocation()+"\\purchase_orders\\"+ purchase_order + "\\" +purchase_order + "-FUN.csv",true);
+            
+            outFile.write(data.toString().getBytes());
             
             System.out.println("WROTE HEADERS TO CSV FILEs");
-                    
-            fos_RW.close();
-            fos_FU.close();
+            
+            outFile.close();
+            
+            return true;
             
         } catch (IOException ex) {
             Logger.getLogger(FileHelper.class.getName()).log(Level.SEVERE, null, ex);
         }
         
+        return false;
     }
     //##########################################################################   
     //USED WHEN USER ADDS A NEW PO, CONSIDER RENAMING
@@ -131,6 +109,7 @@ public class FileHelper {
             return true;
         
         FileOutputStream outFile = null;
+        
         try{
                 
             StringBuilder sb = new StringBuilder();
@@ -144,14 +123,8 @@ public class FileHelper {
                 sb.append(user).append(",");
                 sb.append(new Date().toString()).append(",");
                 sb.append(rwData).append("\n");
-                
-//                outFile = new FileOutputStream(ConnectionUtil.networkLocation + "/" +purchase_order+ "/" + purchase_order + "-RWC.csv",true);
-                
-                //before
-//                outFile = new FileOutputStream(ConnectionUtil.desktopLocation + "/BMStemp/" +purchase_order+ "/" + purchase_order + "-RWC.csv",true);
-                //after
+ 
                 outFile = new FileOutputStream(ConnectionUtil.dbDirectoryLocation()+"\\purchase_orders\\"+ purchase_order + "\\" +purchase_order + "-RWC.csv",true);
-                
                 
                 outFile.write(sb.toString().getBytes());
                 outFile.flush();
@@ -167,13 +140,11 @@ public class FileHelper {
                 sb.append(new Date().toString()).append(",");
                 sb.append(fuData).append("\n");
 
-//                outFile = new FileOutputStream(ConnectionUtil.networkLocation + "/" +purchase_order+ "/" + purchase_order + "-FUN.csv",true);
-//                outFile = new FileOutputStream(ConnectionUtil.desktopLocation + "/BMStemp/" +purchase_order+ "/" + purchase_order + "-FUN.csv",true);
                 outFile = new FileOutputStream(ConnectionUtil.dbDirectoryLocation()+"\\purchase_orders\\"+ purchase_order + "\\" +purchase_order + "-FUN.csv",true);
 
                 outFile.write(sb.toString().getBytes());
                 outFile.flush();
-//                outFile.close();
+                outFile.close();
             }
             return true;
                 

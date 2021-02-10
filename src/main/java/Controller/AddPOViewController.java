@@ -8,19 +8,11 @@ package Controller;
 import Model.ConnectionUtil;
 import Model.FileHelper;
 import java.awt.Desktop;
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
-import java.beans.PropertyChangeSupport;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.URL;
 import java.nio.file.Paths;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -30,6 +22,7 @@ import java.util.Optional;
 import java.util.ResourceBundle;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javafx.beans.binding.Bindings;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -59,6 +52,8 @@ import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javax.swing.text.NumberFormatter;
 import net.ucanaccess.complex.Attachment;
+import org.apache.commons.io.FileUtils;
+
 /**
  * FXML Controller class
  *
@@ -66,8 +61,6 @@ import net.ucanaccess.complex.Attachment;
  */
 public class AddPOViewController implements Initializable {
 
-    @FXML
-    private GridPane DataEntryPanes;
     @FXML
     private GridPane paneTextFieldsONE;
     //--------------------------------------------------------------------------
@@ -94,37 +87,30 @@ public class AddPOViewController implements Initializable {
     
     private LinkedHashMap<String,File> map_files;
     
-    
     private List<String> removedFiles;
     private int listViewCount;
-    private Attachment att[];
-    
-    private boolean textFieldsAreFilled = false;
-    private boolean datePickersAreFilled = false;
-    @FXML
-    private HBox HBoxButtons;
+    private Attachment attachments[];
+
     @FXML
     private Button uploadButton;
     
-    protected PropertyChangeSupport propertyChangeSupport;
-    MyClassWithBoolean tempEmailDirIsOpen = new MyClassWithBoolean();
-    MyBooleanListener listener = new MyBooleanListener();
     @FXML
-    private Button refreshButton;
+    private Button refreshButton,removeButton,reloadButton;
     
-    /**
-     * Initializes the controller class.
-     */
     @Override
     public void initialize(URL url, ResourceBundle rb) {
-        
-        
-        tempEmailDirIsOpen.addPropertyChangeListener(listener);
-        tempEmailDirIsOpen.setBoolean(false);
         
         map_files = new LinkedHashMap<>();
         
         removedFiles = new ArrayList<>();
+        
+        if(!FileHelper.createEmailDirectory())
+        try {    
+            System.out.println("TEMP EMAIL DIR EXISTS, CLEANING OUT DIR");
+            FileUtils.cleanDirectory(new File(FileHelper.getTempEmailDirectoryLocation()));
+        } catch (IOException ex) {
+            Logger.getLogger(EditPOViewController.class.getName()).log(Level.SEVERE, null, ex);
+        }
         
         BUTTONaddToDatabase.setDisable(true);
         
@@ -193,285 +179,141 @@ public class AddPOViewController implements Initializable {
                 .or(DatePickerETABMS.valueProperty().isNull())
                 .or(DatePickerCURSHIP.valueProperty().isNull())))));
         
+        ListViewATTACHMENTS.disableProperty().bind(BUTTONaddToDatabase.disabledProperty());
+        
+        uploadButton.disableProperty().bind(ListViewATTACHMENTS.disabledProperty());
+        refreshButton.disableProperty().bind(ListViewATTACHMENTS.disabledProperty());
+        //----------------------------------------------------------------------
+        reloadButton.disableProperty().bind(ListViewATTACHMENTS.disabledProperty());
+        removeButton.disableProperty().bind(Bindings.isEmpty(ListViewATTACHMENTS.getItems()));
     }    
-    //##########################################################################
-    // 1) check if PO exist before continuing. Cancel event/process if PO already exists
-    // 2) check if PARAMETER is in table, if not, add to parent table
-    // 3) check if supplier_id is in table, if not, add to table 
-    // 4) check if new brg_id is in table, if not, add to parent table
-    //##########################################################################
     
-    //including FU date
-    private final String 
-            insert_purchase_orders_dates 
-            = "INSERT INTO "
-            + "purchase_orders(purchase_order, original_ship_date, current_ship_date, eta_bms, fu_date) " 
-            + "values(?,?,?,?,?);";
-    private final String insert_purchase_orders_nofu
-            = "INSERT INTO "
-            + "purchase_orders(purchase_order, original_ship_date, current_ship_date, eta_bms) " 
-            + "values(?,?,?,?);";
+    
+    //##########################################################################
+    //
+    //##########################################################################
+
     
     @FXML
     private void addToDatabase(ActionEvent event) {
         
-        try{
-            Connection con = ConnectionUtil.conDB();         
-//------------------------------------------------------------------------------
-//PURCHASE_ORDERS
-//------------------------------------------------------------------------------
-PreparedStatement pst = null;
-        
-                pst = con.prepareStatement("SELECT purchase_order FROM purchase_orders WHERE purchase_order = ?;");
-                pst.setString(1, TextFieldPO.getText());
-                
-                ResultSet rs = pst.executeQuery();
-        
-                System.out.println("CHECKING IF ENTERED PO EXISTS. IF EXISTS, WARN USER AND END PROCESS");
-        
-                if(rs.next()){
-                    System.out.println("PO ALREADY EXIST! ALERT USER, END PROCESS");
-                    ButtonType NO = new ButtonType("Ok", ButtonBar.ButtonData.CANCEL_CLOSE);                     
-                    Alert alert = new Alert(Alert.AlertType.NONE);
-                    {
-                        alert.setTitle("WARNING");
-                        alert.getButtonTypes().clear();
-                        alert.getDialogPane().getButtonTypes().addAll( NO );
-                        alert.setContentText(TextFieldPO.getText() + " ALREADY EXISTS!");
-                        alert.showAndWait();
-                    }  
-                    return;
-                }
-                //##############################################################
-                //      Date Validation
-                //##############################################################
-                if(DatePickerFUDATE.getValue() != null){
-                    pst = 
-                        con.prepareStatement(insert_purchase_orders_dates);
-           
-                        System.out.println("ADDING NEW PO TO DATABASE WITH FUDATE");
-                        pst.setString(1, TextFieldPO.getText());
-                        pst.setDate(2, java.sql.Date.valueOf(DatePickerORGSHIP.getValue()));
-                        pst.setDate(3, java.sql.Date.valueOf(DatePickerCURSHIP.getValue()));
-                        pst.setDate(4, java.sql.Date.valueOf(DatePickerETABMS.getValue()));
-                        pst.setDate(5, java.sql.Date.valueOf(DatePickerFUDATE.getValue()));
-                }else if(DatePickerFUDATE.getValue() == null){
-                    pst = 
-                        con.prepareStatement(insert_purchase_orders_nofu);
-                    System.out.println("ADDING NEW PO TO DATABASE WITHOUT FUDATE");
-                        pst.setString(1, TextFieldPO.getText());
-                        pst.setDate(2, java.sql.Date.valueOf(DatePickerORGSHIP.getValue()));
-                        pst.setDate(3, java.sql.Date.valueOf(DatePickerCURSHIP.getValue()));
-                        pst.setDate(4, java.sql.Date.valueOf(DatePickerETABMS.getValue()));
-                }
-                
-                
-                if(pst.executeUpdate() == 1)
-                    System.out.println("SUCCESSFULLY ADDED TO PURCHASE_ORDER TABLE");
-                    
-//------------------------------------------------------------------------------
-//ORDER_DETAILS
-//------------------------------------------------------------------------------  
-
-//PARAMETER 
-pst = con.prepareStatement("SELECT PARAMETER\n" +
-"FROM PARAMETER\n" +
-"WHERE PARAMETER = ?;");
-                pst.setString(1,TextFieldPARAMETER.getText());  
-      
-                rs = pst.executeQuery();
-                
-                System.out.println("CHECKING IF PARAMETER EXISTS");
-                
-                if(rs.next()){//PARAMETER DNE, add to PARAMETER then INSERT details
-                    System.out.println(TextFieldPARAMETER.getText() + ": DOES EXIST");
-                }
-                else{
-                    System.out.println(TextFieldPARAMETER.getText() + " DOES NOT EXIST, ADDING TO PARAMETER" );
-                    pst = 
-                    con.prepareStatement("INSERT INTO PARAMETER "
-                            + "( PARAMETER )"
-                            + "values(?);");
-                    pst.setString(1, TextFieldPARAMETER.getText());
-                    pst.executeUpdate();
-                    System.out.println("added PARAMETER : " + TextFieldPARAMETER.getText());
-                }
-//SUPPLIERS                
-pst = con.prepareStatement("SELECT supplier_id FROM suppliers WHERE supplier_id = ?;");
-                pst.setString(1, TextFieldSUPPLIER.getText());
-                
-                rs = pst.executeQuery();
-                
-                if(rs.next()){//SUPPLIER_ID DNE, add to bearings then INSERT details
-                    System.out.println(TextFieldSUPPLIER.getText() + " DOES EXIST" );
-                }
-                else{
-                    System.out.println(TextFieldSUPPLIER.getText() + " DOES NOT EXIST, ADDING TO SUPPLIERS" );
-                    pst = 
-                    con.prepareStatement("INSERT INTO suppliers "
-                            + "( supplier_id )"
-                            + "values(?);");
-                    pst.setString(1, TextFieldSUPPLIER.getText());
-                    pst.executeUpdate();
-                    System.out.println("added SUPPLIER : " + TextFieldSUPPLIER.getText());
-                }
-//BEARINGS                
-pst = con.prepareStatement("SELECT brg_name FROM bearings WHERE brg_name = ? "
-        + "AND PARAMETER = ? AND supplier_id = ?;");
-                pst.setString(1, TextFieldBRG.getText());
-                pst.setString(2, TextFieldPARAMETER.getText());
-                pst.setString(3, TextFieldSUPPLIER.getText());
-                
-                rs = pst.executeQuery();
-                
-                if(rs.next()){//SUPPLIER_ID DNE, add to bearings then INSERT details
-                    System.out.println(TextFieldBRG.getText()+" DOES EXIST" );
-                }
-                else{
-                    System.out.println(TextFieldBRG.getText()+ " DOES NOT EXIST, ADDING TO BEARINGS" );
-                    pst = 
-                    con.prepareStatement("INSERT INTO bearings "
-                            + "( brg_name, PARAMETER, supplier_id )"
-                            + "values(?,?,?);");
-                    pst.setString(1, TextFieldBRG.getText());
-                    pst.setString(2, TextFieldPARAMETER.getText());
-                    pst.setString(3, TextFieldSUPPLIER.getText());
-                    pst.executeUpdate();
-                }
-                
-//ORDER DETAILS: ADD BRG NUMBER ID TO DETAILS
-                pst = con.prepareStatement("SELECT brg_id FROM bearings "
-                        + "WHERE brg_name = ?  AND "
-                        + "PARAMETER = ? AND "
-                        + "supplier_id = ?;");
-                            
-                pst.setString(1, TextFieldBRG.getText());
-                pst.setString(2, TextFieldPARAMETER.getText());
-                pst.setString(3, TextFieldSUPPLIER.getText());
-                
-                rs = pst.executeQuery();
-                
-                if(rs.next()){//SUPPLIER_ID DNE, add to bearings then INSERT details
-                    System.out.println(TextFieldBRG.getText()+" DOES EXIST" + " , ID = "  +rs.getString("brg_id"));
-                    
-                    //note that I did NOT inculde attachments, I'll UPDATE the table after succesffuly 
-                    //insertings new data
-                    
-                    //update order details
-                    pst = 
-                    con.prepareStatement("INSERT INTO order_details "
-                            + "( purchase_order, brg_id, quantity, landed_cost, invoice_price, confirmed )"
-                            + "values(?,?,?,?,?,?);");
-                    pst.setString(1, TextFieldPO.getText());
-                    pst.setInt(2, Integer.parseInt(rs.getString("brg_id")));
-                    pst.setString(3, TextFieldQTY.getText());
-                    pst.setString(4, TextFieldLANDING.getText());
-                    pst.setString(5, TextFieldINVOICE.getText());
-                        if(ComboBoxCONFIRMED.getValue().equals("YES"))
-                        pst.setString(6, "TRUE");
-                    else
-                        pst.setString(6, "FALSE");
-//###########################################
-//ATTACHMENTS
-//###########################################
-                    if(pst.executeUpdate() == 1){
-                            
-                            for(String rf : removedFiles){
-                                    map_files.remove(rf);
-                            }
-                            
-                            att = new Attachment[map_files.size()];
-                            
-                            Iterator<Map.Entry<String, File>> iterator = map_files.entrySet().iterator();
-                            int i = 0;
-                            while(iterator.hasNext() && i < map_files.size()){
-                                Map.Entry<String, File> entry = iterator.next();
-                                String path = entry.getValue().getAbsolutePath();
-                                byte []attachmentData = java.nio.file.Files.readAllBytes(Paths.get(path));
-                                att[i] = new Attachment(path,entry.getKey(),null, attachmentData,null,null);
-                                i++;
-                            }
-                            
-                            
-                            pst = con.prepareStatement("UPDATE order_details SET attachments = ? WHERE purchase_order = ?;");
-
-                            pst.setObject(1, att);
-                            pst.setString(2, TextFieldPO.getText());//new/same PO parameter
-                            
-                            if(pst.executeUpdate() == 1){
-//###############################################
-//          NOTES/COMMENTS INSERT
-//###############################################
-                                System.out.println("EXECUTED UPDATE ATTACHMENTS");
-                                
-                                FileHelper.createDirectory(TextFieldPO.getText());
-                                if(FileHelper.createPoAttachmentsDirectory(TextFieldPO.getText())){
-                                System.out.println("ATTACHMENTS DIRECTORY CREATED IN ADD PO");
-                                }else{
-                                    System.out.println("DIRECTORY ALREADY CREATED");
-                                }
-                                FileHelper.creatFile(TextFieldPO.getText());//
-                                
-                                //##############################################
-                                //          VALIDATE EMPTY ENTRY
-                                //##############################################
-                                if(FileHelper.wirteToFile
-                                    (TextFieldPO.getText(), LoginViewController.current_user, TextAreaRWCOMMENTS.getText().replaceAll("[\\t\\n\\r]+"," "), 
-                                            TextAreaFUNOTES.getText().replaceAll("[\\t\\n\\r]+"," ")) )
-                                {
-                                    System.out.println("Successfuly created and wrote to file for RWCOMMENTS");
-                                    System.out.println("NOW add file to attachments");
-                                }else{
-                                    System.out.println("failed to write to file");
-                                }                                
-
-                                System.out.println("ATTEMPTING TO INSERT DATA");
-//                                pst.execute();
-                                if(ConnectionUtil.updateNotesTable(TextFieldPO.getText()) == 1){
-//                                
-                                    Dialog<String> dialog = new Dialog<String>();{
-                                    dialog.setTitle("Overview DIALOG");
-                                    ButtonType type = new ButtonType("Ok", ButtonBar.ButtonData.OK_DONE);
-                                    dialog.getDialogPane().getButtonTypes().add(type);
-                                    dialog.setContentText("SUCCESSFULY ADDED: " + TextFieldPO.getText());
-                                    dialog.showAndWait();
-                    }
-                                }
-                                else{
-                                    ButtonType OK = new ButtonType("OK", ButtonBar.ButtonData.OK_DONE);
-                                    Alert alert = new Alert(Alert.AlertType.NONE);
-                                    {
-                                        alert.setTitle("update");
-                                        alert.getButtonTypes().clear();
-                                        alert.getDialogPane().getButtonTypes().addAll( OK );
-                                        alert.setContentText("UNSUCCESSFULLY ADDED ATTACHMENTS");//now insert into po_notes
-                                        alert.showAndWait();
-                                    }
-                                }
-                                
-                            }
-                            else{
-                                System.out.println("error ):");
-                            }                                     
-                    }
-                
-                }
-                else{
-                    System.out.println(TextFieldBRG.getText()+ " DOES NOT EXIST" );
-                }
-                System.out.println("successfuly added!");
-
-                clearAllFields();
-            
-                con.close();
-
-            } catch (SQLException ex) { 
-            Logger.getLogger(EditPOView_NOANCHORController.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (IOException ex) {
-            Logger.getLogger(AddPOViewController.class.getName()).log(Level.SEVERE, null, ex);
+        if(ConnectionUtil.poExists(TextFieldPO.getText().trim())){
+            ButtonType NO = new ButtonType("Ok", ButtonBar.ButtonData.CANCEL_CLOSE);                     
+            Alert alert = new Alert(Alert.AlertType.NONE);
+            {
+                alert.setTitle("WARNING");
+                alert.getButtonTypes().clear();
+                alert.getDialogPane().getButtonTypes().addAll( NO );
+                alert.setContentText(TextFieldPO.getText() + " ALREADY EXISTS!");
+                alert.showAndWait();
+            }     
+            return;
         }
         
-    }
+        //DatePickerORGSHIP, DatePickerETABMS, DatePickerFUDATE, DatePickerCURSHIP;
+        if( !ConnectionUtil.addPo(TextFieldPO.getText().trim(),
+                DatePickerORGSHIP.getValue(), DatePickerCURSHIP.getValue(),
+                DatePickerETABMS.getValue(), DatePickerFUDATE.getValue()) )
+            return;
+        
+        if(!ConnectionUtil.parameterExists(TextFieldPARAMETER.getText())){
+            return;
+        }
+        
+        if( !ConnectionUtil.supplierExists(TextFieldSUPPLIER.getText()) )
+            return;
+        
+        if( !ConnectionUtil.bearingsExists(TextFieldBRG.getText(), 
+                TextFieldPARAMETER.getText(), TextFieldSUPPLIER.getText()) )
+            return;
+        
+        int brg_id = ConnectionUtil.getBrgId(TextFieldBRG.getText(),
+                TextFieldPARAMETER.getText(), TextFieldSUPPLIER.getText());
+        
+        //after inserting new bearings, insert order details
+        if(brg_id >= 0){
+            String confirmed =  (ComboBoxCONFIRMED.getValue().equals("YES")) ? "TRUE" : "FALSE";
+            
+            if(ConnectionUtil.insertOrderDetails(TextFieldPO.getText().trim(), 
+                    brg_id, TextFieldQTY.getText(), TextFieldLANDING.getText(),
+                    TextFieldINVOICE.getText(), confirmed)){
+                
+                //now update table/po for attachments
+                //###########################################
+                //ATTACHMENTS
+                //###########################################      
+
+                for(String rf : removedFiles)
+                        map_files.remove(rf);
+                
+                attachments = new Attachment[map_files.size()];
+                Iterator<Map.Entry<String, File>> iterator = map_files.entrySet().iterator();
+                int i = 0;
+                while(iterator.hasNext() && i < map_files.size()){
+                    try {
+                        Map.Entry<String, File> entry = iterator.next();
+                        String path = entry.getValue().getAbsolutePath();
+                        byte []attachmentData = java.nio.file.Files.readAllBytes(Paths.get(path));
+                        attachments[i] = new Attachment(path,entry.getKey(),null, attachmentData,null,null);
+                        i++;
+                    } catch (IOException ex) {
+                        Logger.getLogger(MainLayoutController.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                }
+                if( ConnectionUtil.updateOrderDetailsATTACHMENTS(attachments, TextFieldPO.getText()) ){
+                
+                    if( FileHelper.createDirectory(TextFieldPO.getText()) )
+                        if( FileHelper.createPoAttachmentsDirectory(TextFieldPO.getText()) ){
+                        System.out.println("ATTACHMENTS DIRECTORY CREATED IN ADD PO");
+                        }else{
+                            System.out.println("DIRECTORY ALREADY CREATED");
+                        }
+
+                    //##############################################
+                    //          VALIDATE EMPTY ENTRY
+                    //##############################################
+                if ( FileHelper.createCSVfiles(TextFieldPO.getText()) )
+                    if( FileHelper.wirteToFile
+                        (TextFieldPO.getText(), LoginViewController.current_user, TextAreaRWCOMMENTS.getText().replaceAll("[\\t\\n\\r]+"," "), 
+                                TextAreaFUNOTES.getText().replaceAll("[\\t\\n\\r]+"," ")) )
+                    {
+                        System.out.println("Successfuly created and wrote to file for RWCOMMENTS");
+                        System.out.println("NOW add file to attachments");
+                    }else{
+                        System.out.println("failed to write to file");
+                    }                                
+
+                    System.out.println("ATTEMPTING TO INSERT NOTES/COMMENTS TO DB");
+                    
+                    if( ConnectionUtil.updateNotesTable(TextFieldPO.getText()) ){
+                        
+                        Dialog<String> dialog = new Dialog<String>();
+                        {
+                        dialog.setTitle("Overview DIALOG");
+                        ButtonType type = new ButtonType("Ok", ButtonBar.ButtonData.OK_DONE);
+                        dialog.getDialogPane().getButtonTypes().add(type);
+                        dialog.setContentText("SUCCESSFULY ADDED: " + TextFieldPO.getText());
+                        dialog.showAndWait();
+                        }
+                        clearAllFields();
+                    }
+                    else{
+                        ButtonType OK = new ButtonType("OK", ButtonBar.ButtonData.OK_DONE);
+                        Alert alert = new Alert(Alert.AlertType.NONE);
+                        {
+                            alert.setTitle("update");
+                            alert.getButtonTypes().clear();
+                            alert.getDialogPane().getButtonTypes().addAll( OK );
+                            alert.setContentText("UNSUCCESSFULLY ADDED: " + TextFieldPO.getText());//now insert into po_notes
+                            alert.showAndWait();
+                        }
+                    }
+                }
+            }//end insert order details
+            
+        }
+        
+    }//end add
     //##########################################################################
     //LABEL AND ITEMLIST
     //##########################################################################
@@ -479,7 +321,7 @@ pst = con.prepareStatement("SELECT brg_name FROM bearings WHERE brg_name = ? "
     private void handleDragOver(DragEvent event){
         
         if(event.getDragboard().hasFiles() ){
-            event.acceptTransferModes(TransferMode.COPY_OR_MOVE);
+            event.acceptTransferModes(TransferMode.COPY);
             event.consume();
         }
     }
@@ -498,26 +340,33 @@ pst = con.prepareStatement("SELECT brg_name FROM bearings WHERE brg_name = ? "
                         for (File file_cursor : db.getFiles()) {
                             ListViewATTACHMENTS.getItems().add(file_cursor.getName());
                             map_files.put(file_cursor.getName(), file_cursor);
+                            listViewCount++;
                         }
                     }
                     else{
+                        
+                        
+                        LinkedHashMap<String,File> map_files_temp = new LinkedHashMap<>(map_files);
+                        System.out.println("----------\nGOING THROUGH DRAGGED FILES\nNUM FILES: "+db.getFiles().size()+"\n----------");
                         for (File draggedFile : db.getFiles()) {
 
                             filePath = draggedFile.getAbsolutePath();
 
-                                for(File attFile : map_files.values()){
+                                for(File attFile : map_files_temp.values()){
+//                                    System.out.println("DRAGGED FILE NAME: " + draggedFile.getName()+"\n-------");
+                                    
                                     if( attFile.getName().equals(draggedFile.getName())  
                                             || attFile.equals(draggedFile)
-                                            || attFile.getAbsolutePath().equals(filePath)
+//                                            || attFile.getAbsolutePath().equals(filePath)
                                             || ListViewATTACHMENTS.getItems().contains(draggedFile.getName())){
                                         System.out.println("FILE ALREADY ADDED: " + draggedFile.getAbsolutePath());
-                                        return;
+//                                        return;//doesnt read through entire file list if already listed in listView
                                     }                            
                                     else{
 
-//                                        System.out.println("-----------------------------");
-//                                        System.out.println("ADDING " + draggedFile.getName() + " to attfiles");
-//                                        System.out.println("-----------------------------");
+                                        System.out.println("-----------------------------");
+                                        System.out.println("ADDING " + draggedFile.getName() + " to attfiles");
+                                        System.out.println("-----------------------------");
                                         ListViewATTACHMENTS.getItems().add(draggedFile.getName());
                                         map_files.put(draggedFile.getName(), draggedFile);
                                         listViewCount++;
@@ -539,6 +388,7 @@ pst = con.prepareStatement("SELECT brg_name FROM bearings WHERE brg_name = ? "
                 ((TextField)node).clear();
             }
             else if(node instanceof DatePicker){
+                
                 ((DatePicker)node).getEditor().clear();
             }
         }
@@ -546,7 +396,7 @@ pst = con.prepareStatement("SELECT brg_name FROM bearings WHERE brg_name = ? "
         TextAreaFUNOTES.clear();
         ListViewATTACHMENTS.getItems().clear();
         map_files.clear();
-        att = null; 
+        attachments = null; 
         removedFiles.clear();
         listViewCount = 0;
     }
@@ -566,13 +416,14 @@ pst = con.prepareStatement("SELECT brg_name FROM bearings WHERE brg_name = ? "
                 return;  
             } 
             Desktop desktop = Desktop.getDesktop();  
-            if(event.getClickCount() ==2){        //checks file exists or not  
+            if(event.getClickCount() ==2){        //checks file exists or not 
+                System.out.println("ATTEMPTING TO OPEN FILE");
                 try {
-                    System.out.println("ATTEMPTING TO OPEN FILE");
-                    File tempFile = map_files.get(ListViewATTACHMENTS.getItems().get(ListViewATTACHMENTS.getSelectionModel().getSelectedIndex()));
+                    
+                    File tempFile = map_files.get((String)ListViewATTACHMENTS.getItems().get(ListViewATTACHMENTS.getSelectionModel().getSelectedIndex()));
                     desktop.open(tempFile);
                 } catch (IOException ex) {
-                    Logger.getLogger(EditPOView_NOANCHORController.class.getName()).log(Level.SEVERE, null, ex);
+                    Logger.getLogger(EditPOViewController.class.getName()).log(Level.SEVERE, null, ex);
                 }
             }
         }
@@ -605,6 +456,7 @@ pst = con.prepareStatement("SELECT brg_name FROM bearings WHERE brg_name = ? "
         
         if ( result.isPresent() ) {
             if(result.get().equals("Balls22")){
+                System.out.println("ATTEMPTING TO REMOVE FILE\nNumber Files: " + listViewCount);
                 if(listViewCount>0 && !ListViewATTACHMENTS.getItems().isEmpty() 
                     && ListViewATTACHMENTS.getSelectionModel().getSelectedIndex() >=0){
 
@@ -631,7 +483,7 @@ pst = con.prepareStatement("SELECT brg_name FROM bearings WHERE brg_name = ? "
     private void reloadListView(ActionEvent event) {
         ListViewATTACHMENTS.getItems().clear();
         removedFiles.clear();
-
+        listViewCount = ListViewATTACHMENTS.getItems().size();//0
         for (Iterator<Map.Entry<String, File>> it = map_files.entrySet().iterator(); it.hasNext();) {
             Map.Entry<String, File> cursor = it.next();
             ListViewATTACHMENTS.getItems().add(cursor.getKey());
@@ -644,7 +496,6 @@ pst = con.prepareStatement("SELECT brg_name FROM bearings WHERE brg_name = ? "
         try {
             FileHelper.createEmailDirectory();
             Desktop.getDesktop().open(new File(FileHelper.getTempEmailDirectoryLocation()));
-            tempEmailDirIsOpen.setBoolean(true);
         } catch (IOException ex) {
             Logger.getLogger(AddPOViewController.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -658,53 +509,13 @@ pst = con.prepareStatement("SELECT brg_name FROM bearings WHERE brg_name = ? "
         for(File attFile : files){
             if( ListViewATTACHMENTS.getItems().contains(attFile.getName())){
                 System.out.println("FILE ALREADY ADDED: " + attFile.getAbsolutePath());
-                return;
             }                            
             else{
-
-//                                        System.out.println("-----------------------------");
-//                                        System.out.println("ADDING " + draggedFile.getName() + " to attfiles");
-//                                        System.out.println("-----------------------------");
                 ListViewATTACHMENTS.getItems().add(attFile.getName());
                 map_files.put(attFile.getName(), attFile);
                 listViewCount++;
             }
         }
     }
-    
-    //##########################################################################
-    //##########################################################################
-    class MyClassWithBoolean {
-    protected PropertyChangeSupport propertyChangeSupport;
-    private boolean isOpen;
 
-    public MyClassWithBoolean () {
-        propertyChangeSupport = new PropertyChangeSupport(this);
-    }
-
-    public void setBoolean(boolean text) {
-        boolean oldText = this.isOpen;
-        this.isOpen = text;
-        propertyChangeSupport.firePropertyChange("MyTextProperty",oldText, text);
-    }
-    
-    public void addPropertyChangeListener(PropertyChangeListener listener) {
-        propertyChangeSupport.addPropertyChangeListener(listener);
-    }
-
-        public boolean isIsOpen() {
-            return isOpen;
-        }
-    }
-
-
-class MyBooleanListener implements PropertyChangeListener {
-    @Override
-    public void propertyChange(PropertyChangeEvent event) {
-        if (event.getPropertyName().equals("MyTextProperty")) {
-            System.out.println(event.getNewValue().toString() );
-        }
-    }
 }
-}
-

@@ -9,19 +9,27 @@ package Model;
  *
  * @author Gilbert Alvarado
  */
+import Controller.LoginViewController;
+import Controller.ManageUsersViewController;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.sql.Connection;
+import java.sql.Date;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.text.DecimalFormat;
+import java.time.LocalDate;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import net.ucanaccess.complex.Attachment;
@@ -40,8 +48,8 @@ public class ConnectionUtil {
 //    private static final String databaseURL = "jdbc:ucanaccess://" + file.getAbsolutePath();
 
     private final static String userprofile = System.getenv("USERPROFILE");
-    public final static String desktopLocation = userprofile +"\\Desktop" ;
-    private final static String databaseURL = "jdbc:ucanaccess://"+userprofile+"\\Desktop\\BMStemp\\BMS_DATABASE_TEST.accdb";
+//    public final static String desktopLocation = userprofile +"\\Desktop" ;
+//    private final static String databaseURL = "jdbc:ucanaccess://"+userprofile+"\\Desktop\\BMStemp\\BMS_DATABASE_TEST.accdb";
     
     
     //OFFICE TEST
@@ -53,42 +61,15 @@ public class ConnectionUtil {
     private static LinkedHashMap<Integer, String> userLoginInfo = null;
     
     
-    private static LinkedHashMap<Integer, ArrayList<String>> rows= null;
-    
     private static LinkedHashMap<Integer, String> roleTableData = null;
     
     private static String dbURL ;//= "jdbc:ucanaccess://";
     private static String dbDirectory;
     
-    
-    
-//    public static Connection conDB(){
-////        System.out.println("CURRENT USER: " + System.getProperty("user.name"));
-//        
-//        try{
-//            
-//            Class.forName("net.ucanaccess.jdbc.UcanaccessDriver");
-//            
-//            Connection connection= DriverManager.getConnection(databaseURL,"app","app");
-////            Connection connection= DriverManager.getConnection(databaseNetworkLocation,"app","app");
-//            
-//            System.out.println("DB CONNECTED");
-//            System.out.println("RETURNING DB CONNECTION: " + connection);
-//            return connection;
-//        } catch (SQLException ex ) {
-//            System.err.println("ConnectionUtil : "+ex.getMessage());
-//           return null;
-//        }
-//        catch (Exception err){
-//            System.err.println("ConnectionUtil: " + err);
-//            return null;
-//        }
-//    }
 //##############################################################################    
     //method called when user selects a different DataBase
     public static void setDbLocation(String dbLocation, String dbDirectory){
         
-        //print url and dir
         ConnectionUtil.dbURL = "jdbc:ucanaccess://"+ dbLocation;
         
         System.out.println("----------------------------");
@@ -96,15 +77,20 @@ public class ConnectionUtil {
         ConnectionUtil.dbDirectory = dbDirectory;
         System.out.println("ConnectionUtil: dbDirectoty location: " + ConnectionUtil.dbDirectory );
         System.out.println("----------------------------");
+        if(!FileHelper.createTemplateDirectory())
+            System.out.println("TEMPLATE DIRECTORY ALREADY EXISTS");
+        else
+            System.out.println("CREATED TEMPLATE DIRECTORY");
     }
+    
     //--------------------------------------------------------------------------
+    
     public static final String dbDirectoryLocation (){
         return ConnectionUtil.dbDirectory;
     }
     //##########################################################################
-    public static Connection conDB(){//String dbLocation){
+    public static Connection conDB(){
         
-//        System.out.println("DB SELECTED: "  + dbLocation);
         try{
             Class.forName("net.ucanaccess.jdbc.UcanaccessDriver");
             System.out.println("ATTEMPTING TO RETURN DATABASE: " + ConnectionUtil.dbURL);
@@ -112,8 +98,9 @@ public class ConnectionUtil {
             Connection connection= DriverManager.getConnection(ConnectionUtil.dbURL,"app","app");
             System.out.println("DB CONNECTED");
             System.out.println("RETURNING DB CONNECTION: " + connection);
+            System.out.println("CURRENT WINDOWS USER: " + System.getenv("USERPROFILE"));
             return connection;
-        } catch (SQLException ex ) {
+        } catch ( SQLException ex ) {
             System.err.println("ConnectionUtil : "+ex.getMessage());
            return null;
         }
@@ -131,8 +118,6 @@ public class ConnectionUtil {
             PreparedStatement pst = conDB().prepareStatement(addNewUser);//conDB().prepareStatement(addNewUser);
             pst.setString(1, firstName);
             pst.setString(2, lastName);
-//            String user_name = firstName.substring(0, 1) + "_" + lastName.substring(0, lastName.length()/2);
-//            pst.setInt(2, role_id);
             pst.setString(3, user_name);
             pst.setInt(4, role_id);
             return pst.executeUpdate();
@@ -143,6 +128,37 @@ public class ConnectionUtil {
         }
         
     }
+    
+    public static HashMap<String, UserInfoModel> getUsersTable(){
+
+        try {
+            ResultSet rs = conDB().createStatement().executeQuery("SELECT * FROM users;");
+            
+            HashMap<String,UserInfoModel> user_data = new HashMap<>();
+//            List <UserInfoModel> data = new ArrayList<>();
+            
+            while(rs.next()){
+                String position = (rs.getInt("role_id") == 1) ? "ADMIN": "STAFF";
+//                if(rs.getInt("role_id") == 1)
+//                    position = "ADMIN";
+//                else
+//                    position = "STAFF";
+                user_data.put(rs.getString("user_name"),new UserInfoModel(
+                        rs.getString("first_name"),
+                        rs.getString("last_name"),
+                        rs.getString("user_name"),position,
+                        rs.getInt("role_id")
+                ));
+            }
+            
+            return user_data;
+
+        } catch (SQLException ex) {
+            Logger.getLogger(ManageUsersViewController.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return null;
+    }
+    
     //##########################################################################
     
     private static final String users_query = "SELECT user_id, user_name FROM users;";
@@ -152,14 +168,9 @@ public class ConnectionUtil {
         try{
             Statement statement = conDB().createStatement();
             ResultSet rs = statement.executeQuery(users_query);
-//            ResultSetMetaData rsmd = rs.getMetaData();
-//
-//            userIds = new ArrayList<>();
-//            userNames = new ArrayList<>();
             userLoginInfo = new LinkedHashMap<>();
             
             while(rs.next()){
-//                userIds.add(rs.getInt("user_id"));
                 userLoginInfo.put(rs.getInt("user_id"), rs.getString("user_name"));
             }
             
@@ -256,14 +267,9 @@ public class ConnectionUtil {
             return false;
         }
     }
+
+    //--------------------------------------------------------------------------
     
-    public int updateUser(String fname, String lname, int role, String uname){
-        
-        
-        
-        return 1;
-    }
-    //-------------------------------------------------------------------------
     public static boolean userExists(String user_name){
         
         try{
@@ -283,7 +289,8 @@ public class ConnectionUtil {
             return false;
         }
     }
-//##############################################################################
+    
+    //##########################################################################
     
     public static int updatePacketStatus(String purchase_order, String status){
         
@@ -295,11 +302,6 @@ public class ConnectionUtil {
             System.out.println("CONNECTION UTIL, STATUS: " + status);
             
             pst.setString(1, status);
-//            if(status.equals("YES"))
-//                pst.setString(1, "TRUE");
-//            else
-//                pst.setString(1, "FALSE");
-            
             pst.setString(2,purchase_order);
             
             
@@ -337,6 +339,8 @@ public class ConnectionUtil {
             + "INNER JOIN po_notes ON purchase_orders.[purchase_order] = po_notes.[purchase_order] "
             + ""
             + "WHERE purchase_orders.purchase_order = ?";
+    
+    //EditPOView No Anchor LINE 259
     public static ArrayList columnNames(String purchase_order_parameter){
         try{
             PreparedStatement pst = conDB().prepareStatement(getAllDataQuery);
@@ -361,66 +365,7 @@ public class ConnectionUtil {
         }
     }
     
-    //##########################################################################
-    
-    private static ArrayList<String> tableList = null;
-    
-    public static ArrayList getTables(){
-        
-        try{
-//            Statement statement = conDB().createStatement();
-//            ResultSet rs = statement.executeQuery(tables);
-            ResultSet rs = conDB().getMetaData().getTables(null, null, null, null);
-            tableList = new ArrayList<String>();
-            
-            while(rs.next()){
-                    tableList.add(rs.getString("TABLE_NAME"));
-            }
-            return tableList;
-            
-        }   catch (SQLException ex) {
-                Logger.getLogger(ConnectionUtil.class.getName()).log(Level.SEVERE, null, ex);
-                return null;
-            }
-//        return null;
-    }
-//##############################################################################    
-    private static final String fileAttachments = "SELECT ORDER_NUMBER, fileAttachments FROM PO_2020;";
-    //handle file Attachments
-    public static ArrayList attachments(String OrderId){
-        try{
-            Statement statement = conDB().createStatement();
-            ResultSet result = statement.executeQuery(fileAttachments);
-//            ResultSetMetaData rsmd = rs.getMetaData();
-            rows = new LinkedHashMap<Integer, ArrayList<String>>();
-            ArrayList<String> files = null;
-            
-            return files;
-            
-        } catch (SQLException ex) {
-            Logger.getLogger(ConnectionUtil.class.getName()).log(Level.SEVERE, null, ex);
-            return null;
-        }
-        
-    }
-    
-//##############################################################################
-    public static int rowCount(){
-        try{
-            Statement statement = conDB().createStatement();
-            ResultSet result = statement.executeQuery("SELECT COUNT(*) FROM purchaseorders;");
-//            ResultSetMetaData rsmd = rs.getMetaData();
-           System.out.println(result);
-            
-           result.next();
-           System.out.println("COUNT: " + result.getString(1));
-            return Integer.parseInt(result.getString(1));
-            
-        } catch (SQLException ex) {
-            Logger.getLogger(ConnectionUtil.class.getName()).log(Level.SEVERE, null, ex);
-            return 0;
-        }
-    }
+
 //##############################################################################  
     private static final String getAllQuery = 
             "SELECT "
@@ -447,6 +392,88 @@ public class ConnectionUtil {
             + "INNER JOIN po_notes ON purchase_orders.[purchase_order] = po_notes.[purchase_order] "
             + ""
             + "WHERE purchase_orders.purchase_order = ?";
+    
+    
+    private static final String newGetAll =
+            "SELECT "
+            + "purchase_orders.purchase_order, "
+            + "purchase_orders.original_ship_date, "//2
+            + "purchase_orders.current_ship_date, "//3
+            + "purchase_orders.eta_bms,"//4
+            + "purchase_orders.fu_date, "//5
+            + "order_details.quantity, order_details.landed_cost, order_details.invoice_price, "
+            + "order_details.confirmed, "
+            + "order_details.attachments, "//10
+            + "bearings.brg_name, "
+            + "bearings.PARAMETER, "
+            + "bearings.supplier_id, "
+            + "po_notes.rw_comments, "//14
+            + "po_notes.fu_notes, "//15
+            + "order_details.brg_id\n"
+            + "" 
+            +"FROM (purchase_orders "
+            + "INNER JOIN ((suppliers "
+            + "INNER JOIN bearings ON suppliers.[supplier_id] = bearings.[supplier_id]) "
+            + "INNER JOIN order_details ON bearings.[brg_id] = order_details.[brg_id]) "
+            +       "ON purchase_orders.[purchase_order] = order_details.[purchase_order]) "
+            + "INNER JOIN po_notes ON purchase_orders.[purchase_order] = po_notes.[purchase_order] ;";
+    public static HashMap<String,BMSPurchaseOrderModel> getAllData(){
+        /*
+        BMSPurchaseOrderModel(String purchase_order, String supplier, 
+            String confirmed, String invoice_price, String brg_number, 
+            String parameter, String quantity, String landing_cost, 
+            Date original_ship, Date current_ship, Date eta_ship, Date fu_ship, 
+            Attachment attachments)
+        */
+        DecimalFormat LCformat = new DecimalFormat("$###,###,##0.00");
+        DecimalFormat IPformat = new DecimalFormat("$###,###,##0.000");
+        try{
+            Statement statement = conDB().createStatement();
+            ResultSet rs = statement.executeQuery(newGetAll);
+            HashMap<String, BMSPurchaseOrderModel> allData = new HashMap<>();
+            
+            while(rs.next()){
+                allData.put(rs.getString("purchase_order"),//KEY
+                        
+                        new BMSPurchaseOrderModel(
+                                rs.getString("purchase_order"),
+                                rs.getString("supplier_id"),
+                                rs.getString("confirmed"),
+                                IPformat.format(rs.getDouble("invoice_price")),
+                                rs.getString("brg_name"),
+                                rs.getString("PARAMETER"),
+                                rs.getString("quantity"),
+                                LCformat.format(rs.getDouble("landed_cost")),
+                                rs.getDate("original_ship_date"),
+                                rs.getDate("current_ship_date"),
+                                rs.getDate("eta_bms"),
+                                rs.getDate("fu_date"),(Attachment[])rs.getObject("attachments")
+                        ));
+            }
+            
+            return allData;
+        } catch (SQLException ex) {
+            Logger.getLogger(ConnectionUtil.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
+        return null;          
+    }
+    public static List<BMSPurchaseOrderModel> getOrderList(String po, String supplier){
+        
+        PreparedStatement pst = null;
+        
+        List <BMSPurchaseOrderModel> order_list = new ArrayList<>(); 
+        
+        for(Map.Entry<String, BMSPurchaseOrderModel> item : getAllData().entrySet()){     
+            if(item.getValue().getSupplier().equals(supplier) && item.getKey().equals(po)){
+                order_list.add(item.getValue());
+           } 
+        }
+        return order_list;
+    }
+    //--------------------------------------------------------------------------
+    
+    //EDIT POVIEW LINE 257
     public static ResultSet getAllData(String purchase_order){
         
         try{
@@ -469,11 +496,12 @@ public class ConnectionUtil {
     //USED IN ADD PO
     //CREATE METHOD TO UPDATE
     //##########################################################################
-    //files were modified before calling method
+    
     private static final String updateNotesTable = 
             "INSERT INTO po_notes( purchase_order, rw_comments, fu_notes ) "
             + "VALUES(?,?,?)";
-    public static int updateNotesTable(String purchase_order){
+    
+    public static boolean updateNotesTable(String purchase_order){
         try{
             
             PreparedStatement pst = conDB().prepareStatement(updateNotesTable);
@@ -483,7 +511,7 @@ public class ConnectionUtil {
             byte[] attachmentData = java.nio.file.Files.readAllBytes(Paths.get(file.getAbsolutePath()));
             System.out.println("READ RW DATA");
             Attachment[] attachment = new Attachment[]{ 
-                    new Attachment(file.getAbsolutePath(), file.getName(),null,attachmentData,null,null)};
+                    new Attachment(file.getAbsolutePath(), file.getName(),"csv",attachmentData,null,null)};
             //2: rw_comment
 
             pst.setObject(2, attachment);
@@ -495,16 +523,14 @@ public class ConnectionUtil {
             file = FileHelper.getFUFile(purchase_order);
             attachmentData = java.nio.file.Files.readAllBytes(Paths.get(file.getAbsolutePath()));
             System.out.println("READ FU DATA");
-            attachment = new Attachment[]{new Attachment(file.getAbsolutePath(), file.getName(),null,attachmentData,null,null)};
+            attachment = new Attachment[]{new Attachment(file.getAbsolutePath(), file.getName(),"csv",attachmentData,null,null)};
             pst.setObject(3, attachment);
             
-            return pst.executeUpdate();
+            return pst.executeUpdate() == 1;
         } catch (SQLException | IOException ex) {
             Logger.getLogger(ConnectionUtil.class.getName()).log(Level.SEVERE, null, ex);
-            return 0;
+            return false;
         }
-        
-//        return 0;
     }
     //--------------------------------------------------------------------------
     private static final String updateNotes = "UPDATE po_notes "
@@ -542,5 +568,308 @@ public class ConnectionUtil {
             return 0;
         }
     }
-   
+    
+    //##########################################################################
+    //                  ADD PO METHODS
+    //##########################################################################
+    public static boolean poExists(String purchase_order){
+        
+        PreparedStatement pst = null;
+        
+        try {
+            pst = conDB().prepareStatement("SELECT purchase_order FROM purchase_orders WHERE purchase_order = ?;");
+            pst.setString(1, purchase_order);
+            
+            ResultSet rs = pst.executeQuery();
+            
+            System.out.println("CHECKING IF ENTERED PO EXISTS. IF EXISTS, WARN USER AND END PROCESS");
+            
+            if(rs.next())
+                return true;
+        } catch (SQLException ex) {
+            Logger.getLogger(ConnectionUtil.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
+        return false;
+    }
+    
+    //--------------------------------------------------------------------------
+    
+    public static boolean addPo(String po, LocalDate org, LocalDate cur, LocalDate eta, LocalDate fu){
+        PreparedStatement pst = null;
+        try {
+            pst =conDB().prepareStatement("INSERT INTO "
+            + "purchase_orders(purchase_order, original_ship_date, current_ship_date, eta_bms, fu_date) " 
+            + "values(?,?,?,?,?);");
+            pst.setString(1, po);
+            pst.setDate(2, java.sql.Date.valueOf(org));
+            pst.setDate(3, java.sql.Date.valueOf(cur));
+            pst.setDate(4, java.sql.Date.valueOf(eta));
+            if(fu != null)
+                pst.setDate(5, java.sql.Date.valueOf(fu));   
+            else
+                pst.setDate(5, null);  
+            
+            return (pst.executeUpdate() == 1);
+        } catch (SQLException ex) {
+            Logger.getLogger(ConnectionUtil.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
+        return false;
+    }        
+    
+    //--------------------------------------------------------------------------
+    
+    public static boolean parameterExists(String parameter){
+        
+        PreparedStatement pst = null;
+        
+        try {
+            pst = conDB().prepareStatement("SELECT PARAMETER\n" +
+                    "FROM PARAMETER\n" +
+                    "WHERE PARAMETER = ?;");
+            
+            pst.setString(1, parameter);
+            ResultSet rs = pst.executeQuery();
+            
+            if(rs.next()){
+                return true;
+            }else{
+                System.out.println(parameter + " DOES NOT EXIST, ADDING TO PARAMETER" );
+                    pst = 
+                    conDB().prepareStatement("INSERT INTO PARAMETER "
+                            + "( PARAMETER )"
+                            + "values(?);");
+                    pst.setString(1, parameter);
+                    return (pst.executeUpdate() == 1);
+            }
+            
+        } catch (SQLException ex) {
+            Logger.getLogger(ConnectionUtil.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
+        return false;
+    }
+    
+    //--------------------------------------------------------------------------
+    
+    public static boolean supplierExists(String supplier){
+        
+        PreparedStatement pst = null;
+        
+        try {
+            pst = conDB().prepareStatement("SELECT supplier_id FROM suppliers WHERE supplier_id = ?;");
+            pst.setString(1, supplier);
+            
+            ResultSet rs = pst.executeQuery();
+            
+            if(rs.next()){
+                return true;
+            }else{
+                    pst =conDB().prepareStatement("INSERT INTO suppliers "
+                            + "( supplier_id )"
+                            + "values(?);");
+                    pst.setString(1, supplier);
+                    return ( pst.executeUpdate() == 1 );
+            }
+        } catch (SQLException ex) {
+            Logger.getLogger(ConnectionUtil.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return false;
+    }
+    
+    //--------------------------------------------------------------------------
+    
+    public static boolean bearingsExists(String bearing, String parameter, String supplier){
+        PreparedStatement pst = null;
+        
+        try {
+            pst = conDB().prepareStatement("SELECT brg_name FROM bearings WHERE brg_name = ? "
+                    + "AND PARAMETER = ? AND supplier_id = ?;");
+            pst.setString(1, bearing);
+            pst.setString(2, parameter);
+            pst.setString(3, supplier);
+                
+            ResultSet rs = pst.executeQuery();
+            
+            if(rs.next())
+                return true;
+            else{
+                
+                pst = 
+                    conDB().prepareStatement("INSERT INTO bearings "
+                            + "( brg_name, PARAMETER, supplier_id )"
+                            + "values(?,?,?);");
+                pst.setString(1, bearing);
+                pst.setString(2, parameter);
+                pst.setString(3, supplier);
+                return pst.executeUpdate() == 1;
+            }
+            
+            
+        } catch (SQLException ex) {
+            Logger.getLogger(ConnectionUtil.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
+        return false;
+    }
+    
+    //--------------------------------------------------------------------------
+    
+    public static int getBrgId(String bearing, String parameter, String supplier){
+        PreparedStatement pst = null;
+        try {
+            pst = conDB().prepareStatement("SELECT brg_id FROM bearings "
+                    + "WHERE brg_name = ?  AND "
+                    + "PARAMETER = ? AND "
+                    + "supplier_id = ?;");
+            
+            pst.setString(1, bearing);
+            pst.setString(2, parameter);
+            pst.setString(3, supplier);
+            
+            ResultSet rs = pst.executeQuery();
+            
+            if(rs.next())
+                return rs.getInt("brg_id");
+            else
+                return -1;
+        } catch (SQLException ex) {
+            Logger.getLogger(ConnectionUtil.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return -1;
+    }
+    
+    //--------------------------------------------------------------------------
+    
+    public static boolean insertOrderDetails(String purchase_order, int brg_id, String quantity, String landing_cost,
+                            String invoice_price, String confirmed){
+        
+        PreparedStatement pst = null;
+        try {
+            pst =conDB().prepareStatement("INSERT INTO order_details "
+                    + "( purchase_order, brg_id, quantity, landed_cost, invoice_price, confirmed )"
+                    + " values(?,?,?,?,?,?);");
+            pst.setString(1, purchase_order);
+            pst.setInt(2, brg_id);
+            pst.setString(3, quantity);
+            pst.setString(4, landing_cost);
+            pst.setString(5, invoice_price);
+            pst.setString(6,confirmed);
+            
+            return (pst.executeUpdate() == 1);
+            
+        } catch (SQLException ex) {
+            Logger.getLogger(ConnectionUtil.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
+        return false;
+    }
+    
+    //--------------------------------------------------------------------------
+    
+    public static boolean updateOrderDetailsATTACHMENTS(Attachment[] attachments, String purchase_order){
+        
+        PreparedStatement pst = null;
+        
+        try {
+            pst = conDB().prepareStatement("UPDATE order_details SET attachments = ? WHERE purchase_order = ?;");
+            pst.setObject(1, attachments);
+            pst.setString(2, purchase_order);
+            
+            
+            return ( pst.executeUpdate() == 1 );
+        } catch (SQLException ex) {
+            Logger.getLogger(ConnectionUtil.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
+        return false;
+    }
+    
+    //##########################################################################
+    //                  END ADD METHODS
+    //##########################################################################
+    //                  EDIT PO METHODS
+    //##########################################################################    
+    private static final String UPDATEpurchase_orders = "UPDATE purchase_orders SET "
+        + "purchase_order = ?, "
+        + "original_ship_date = ?, "
+        + "current_ship_date = ?, "
+        + "eta_bms = ?, "
+        + "fu_date = ? "
+        + "WHERE "
+        + "purchase_order = ?;";
+    public static boolean updatePurchaseOrders(String purchase_order, LocalDate org, LocalDate cur, LocalDate eta,LocalDate fu ){
+        
+        PreparedStatement pst = null;
+        
+        try {
+            pst = conDB().prepareStatement(UPDATEpurchase_orders);
+            
+            pst.setString(1, purchase_order);
+            pst.setDate(2, java.sql.Date.valueOf(org));
+            pst.setDate(3, java.sql.Date.valueOf(cur));
+            pst.setDate(4, java.sql.Date.valueOf(eta));
+            if(fu != null)
+                pst.setDate(5, java.sql.Date.valueOf(fu));
+            else
+                pst.setDate(5, null);
+            
+            pst.setString(6, purchase_order);
+            
+            return ( pst.executeUpdate() == 1) ;
+            
+        } catch (SQLException ex) {
+            Logger.getLogger(ConnectionUtil.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return false;
+    }
+    private static final String UPDATEorder_details = "UPDATE order_details SET "
+        + "order_details.brg_id = ?, "
+        + "order_details.quantity = ?, "
+        + "order_details.landed_cost = ?, "
+        + "order_details.invoice_price = ?, "
+        + "order_details.confirmed = ? "
+        + "WHERE "
+        + "order_details.purchase_order = ?;" ;
+    public static boolean updateOrderDetails(int brg_id, String quantity, String landed_cost, String invoice_price,
+            String confirmed, String purchase_order){
+        
+        PreparedStatement pst = null;
+        
+        try {
+            pst = conDB().prepareStatement(UPDATEorder_details);
+            pst.setInt(1, brg_id);
+            pst.setString(2, quantity);
+            pst.setString(3, landed_cost);
+            pst.setString(4, invoice_price);
+            pst.setString(5, confirmed);
+            pst.setString(6, purchase_order);
+            
+            return ( pst.executeUpdate() == 1 );
+                
+        } catch (SQLException ex) {
+            Logger.getLogger(ConnectionUtil.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
+        return false;
+    }
+    
+    public static boolean deleteFromDatabase(String purchase_order){
+        
+        PreparedStatement pst = null;
+        
+        try {
+            pst = conDB().prepareStatement("DELETE FROM purchase_orders WHERE purchase_order = ?;");
+            pst.setString(1, purchase_order);
+            
+            return ( pst.executeUpdate() == 1 );
+            
+        } catch (SQLException ex) {
+            Logger.getLogger(ConnectionUtil.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
+        return false;
+    }
+    
 }

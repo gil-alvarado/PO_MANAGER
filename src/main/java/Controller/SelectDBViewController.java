@@ -50,7 +50,6 @@ public class SelectDBViewController implements Initializable {
         DBpref = Preferences.userRoot().node(LoginViewController.class.getClass().getName());
         
         String dbLocation = DBpref.get("dbLocation", "no db selected");
-//        dbStatusLABEL.setText(dbLocation);
         dbLocationTextField.setText(dbLocation);
        if(dbLocation.contains(dbName))
            dbStatusLABEL.setText("correct DB already selected");
@@ -63,13 +62,10 @@ public class SelectDBViewController implements Initializable {
         dbLocationTextField.setDisable(true);
         fileChooserStage = new Stage();
         
-        
-        
     }    
     
-private static final String dbName = "BMS_DATABASE_TEST.accdb";
+private static final String dbName = "BMS_DATABASE.accdb";
 private Stage fileChooserStage;
-//private Preferences DBpref;
 private static String dbLocation;
 File selectedFile;
 
@@ -101,12 +97,10 @@ File selectedFile;
                 okBUTTON.setDisable(false);
                 dbStatusLABEL.setText("correct DB selected");
                 dbStatusLABEL.setStyle("-fx-text-fill : #06f50a;");
-                dbLocationTextField.setText(selectedFile.getAbsolutePath());                
-//                dbLocationTextField.setText(selectedFile.getParent());
+                dbLocationTextField.setText(selectedFile.getAbsolutePath());     
                 fileChooserStage.close();
             }else{
                 okBUTTON.setDisable(true);
-                
                 dbStatusLABEL.setText("locate and slecect correct DB");
                 dbStatusLABEL.setStyle("-fx-text-fill : red;");
                 dbLocationTextField.setText(selectedFile.getAbsolutePath());
@@ -116,7 +110,7 @@ File selectedFile;
 
     //confirm and continue
     //update pref
-    @FXML
+    @FXML//ok button
     private void closeDialog(ActionEvent event) {
         Node  source = (Node)  event.getSource(); 
         Stage stage  = (Stage) source.getScene().getWindow();
@@ -125,12 +119,14 @@ File selectedFile;
         stage.close();
     }
 
-    //backout without setting dbLocation
+    //CLOS APPLICATION
     @FXML
     private void close(ActionEvent event) {
-        Node  source = (Node)  event.getSource(); 
-        Stage stage  = (Stage) source.getScene().getWindow();
-        stage.close();
+//        Node  source = (Node)  event.getSource(); 
+//        Stage stage  = (Stage) source.getScene().getWindow();
+//        stage.close();
+        ((Stage)(((Button)event.getSource()).getScene().getWindow())).close();
+        System.exit(0);
     }
     
 }

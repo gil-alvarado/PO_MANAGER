@@ -12,6 +12,7 @@
 
 .table-view .column-header {
      -fx-background-color: transparent;
+	-fx-alignment:TOP_RIGHT;
 } 
 
 .table-view .column-header-background{

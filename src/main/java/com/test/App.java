@@ -1,5 +1,6 @@
 package com.test;
 
+import Controller.MainLayoutController;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -73,6 +74,7 @@ public class App extends Application {
 
         
         scene = new Scene(loadFXML("/View/Login/LoginView"));
+//scene = new Scene(loadFXML("/View/Main/MainLayout_SINGLE"));
         scene.setOnMousePressed(event -> {
             x = event.getSceneX();
             y = event.getSceneY();
@@ -89,7 +91,7 @@ public class App extends Application {
         stage.setMinHeight(800);
         stage.setMinWidth(1250);
         //########################################
-        stage.initStyle(StageStyle.UNDECORATED);
+        //stage.initStyle(StageStyle.UNDECORATED);
         //########################################
         stage.setTitle("BMS PO MANAGER");
         
@@ -97,10 +99,12 @@ public class App extends Application {
     }
 
     public static void setRoot(String fxml) throws IOException {
-        
         scene.setRoot(loadFXML(fxml));
     }
-
+//    public static MainLayoutController getController(){
+//        return fxmlLoader.getController();
+//    }
+//    private static FXMLLoader fxmlLoader;
     private static Parent loadFXML(String fxml) throws IOException {
         FXMLLoader fxmlLoader = new FXMLLoader(App.class.getResource(fxml + ".fxml"));
         return fxmlLoader.load();

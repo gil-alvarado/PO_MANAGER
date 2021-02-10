@@ -5,32 +5,25 @@
  */
 package Controller;
 
+import Model.BMSPurchaseOrderModel;
 import Model.ConnectionUtil;
-import Model.ModelManageDBTable;
 import java.io.IOException;
 import java.net.URL;
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.text.SimpleDateFormat;
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.ResourceBundle;
 import java.util.function.Predicate;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javafx.beans.Observable;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
-import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
@@ -38,40 +31,31 @@ import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
-import javafx.geometry.Pos;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonBar;
-import javafx.scene.control.ButtonBar.ButtonData;
 import javafx.scene.control.ButtonType;
-import javafx.scene.control.CheckBox;
 
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.DatePicker;
 
-import javafx.scene.control.Dialog;
 import javafx.scene.control.SelectionMode;
 
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableColumn.CellDataFeatures;
 import javafx.scene.control.TablePosition;
+import javafx.scene.control.TableRow;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
-import javafx.scene.control.cell.CheckBoxTableCell;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.AnchorPane;
-import javafx.scene.layout.HBox;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.util.Callback;
 
-
-
-import net.ucanaccess.complex.Attachment;
 
 
 /**
@@ -98,153 +82,77 @@ public class ManageDBViewController implements Initializable {
     //          TABLE FIELDS
     //##########################################################################    
     @FXML
-    private TableView<ModelManageDBTable> ManageDBTable;
+    private TableView<BMSPurchaseOrderModel> ManageDBTable;
     @FXML
-    private TableColumn<ModelManageDBTable, String> POcolumn, BRGcolumn, CURSHIP_column, BUTTONcolumn,
-            STATUScolumn, ATTACHMENTScolumn;// PACKETcolumn;
+    private TableColumn<BMSPurchaseOrderModel, String> POcolumn, BRGcolumn, CURSHIP_column, BUTTONcolumn,
+            STATUScolumn, ATTACHMENTScolumn;// PACKETcolumn
 //    @FXML
 //    private TableColumn<ModelManageDBTable, Boolean> PACKETcolumn;
-    
-    private ObservableList<ModelManageDBTable> obList = FXCollections.observableArrayList();
-    //##########################################################################
-
-    
-    private EditPOView_NOANCHORController controller;//used to setItems in editPOView
-    
-    private FXMLLoader loader;
-    private AnchorPane editPOAnchor;
-    private MainLayoutTesting_WITHANCHORController instance;
-    
-    @FXML
-    private Button clearFieldsBUTTON;
     @FXML
     private Button printReportBUTTON;
     
+    private final ObservableList<BMSPurchaseOrderModel> obList = FXCollections.observableArrayList();
+    //##########################################################################
+
+    private MainLayoutController instance;    
     
     //KEY = PO
     //VALUE = fetch data from Model OR 
-    private LinkedHashMap<String, ModelManageDBTable> selectedPos;
+    private LinkedHashMap<String, BMSPurchaseOrderModel> selectedPos;
+    FilteredList<BMSPurchaseOrderModel> filterData;
+    ObjectProperty<Predicate<BMSPurchaseOrderModel>> 
+            supplierFilter, poFilter, brgFilter,dateFilter,confirmedFilter;
     
-    /**
-     * Initializes the controller class.
-     */
     @Override
     public void initialize(URL url, ResourceBundle rb) {
         // TODO
         
         ManageDBTable.setEditable(true);
-        
-        CONFIRMEDcomboBox.getItems().addAll("YES","NO");
+        setInstance(this);
+        CONFIRMEDcomboBox.getItems().addAll("YES","NO","VIEW ALL");
         CONFIRMEDcomboBox.setEditable(false);
-        CONFIRMEDcomboBox.getSelectionModel().select("YES");
+        CONFIRMEDcomboBox.getSelectionModel().select("VIEW ALL");
         CONFIRMEDcomboBox.setDisable(false);
         
-        POcolumn.setCellValueFactory(new PropertyValueFactory<>("po"));
-        BRGcolumn.setCellValueFactory(new PropertyValueFactory<>("brg"));
-        CURSHIP_column.setCellValueFactory(new PropertyValueFactory<>("cur"));
-        STATUScolumn.setCellValueFactory(new PropertyValueFactory<>("supplier"));//replce with SUPPLIER,was confirmed
-        ATTACHMENTScolumn.setCellValueFactory(new PropertyValueFactory<>("attachment"));
+        POcolumn.setCellValueFactory(new PropertyValueFactory<>("purchase_order"));
+        BRGcolumn.setCellValueFactory(new PropertyValueFactory<>("brg_number"));
+        CURSHIP_column.setCellValueFactory(new PropertyValueFactory<>("curDateFormat"));
+        STATUScolumn.setCellValueFactory(new PropertyValueFactory<>("supplier"));
+        ATTACHMENTScolumn.setCellValueFactory(new PropertyValueFactory<>("attachmentLength"));
+        printReportBUTTON.setDisable(true);
         
-        
-//        PACKETcolumn.setCellValueFactory(new PropertyValueFactory<>("packet"));
-//        checkBoxColumn.setCellValueFactory(new PropertyValueFactory<>("packet"));
-//checkBoxColumn.setCellValueFactory(new PropertyValueFactory<ModelManageDBTable, Boolean>("packet"));
-
-
         updateTableView();
-        addButtonsToTable();
-        addMultipleSearchFilters();
-            
-    }    
-    //##########################################################################  
-    public void setEditPOController(EditPOView_NOANCHORController controller){
-        this.controller = controller;
+        printReportBUTTON.disableProperty().bind(Bindings.isEmpty(ManageDBTable.getSelectionModel().getSelectedItems()));            
     }
-    public void setEditPOLoader(FXMLLoader loader){
-        this.loader = loader;
-    }
-    public void setAnchorEditPO(AnchorPane editPOAnchor){
-        this.editPOAnchor = editPOAnchor;
-    }
-    public void setMainLayoutInstance(MainLayoutTesting_WITHANCHORController instance){
+    
+    //##########################################################################
+    
+    public void setMainLayoutContoller(MainLayoutController instance){
         this.instance = instance;
-    }
-    //--------------------------------------------------------------------------
-    public ObservableList getList(){
-        return obList;
     }
     //##########################################################################
     public void updateTableView(){
-        ManageDBTable.getItems().clear();
+        
+        obList.removeAll(obList);
         ManageDBTable.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
         
-        try{
-               Connection con = ConnectionUtil.conDB();
-
-               ResultSet rs =con.createStatement().executeQuery(
-               "SELECT purchase_orders.purchase_order, "
-                       + "bearings.supplier_id, "
-                       + "bearings.brg_name, "
-                       + "purchase_orders.current_ship_date, "//4
-                       + "order_details.attachments, "//5
-                       + "order_details.moved_to_packet,order_details.confirmed \n" 
-              +"FROM purchase_orders "
-                       + "INNER JOIN "
-                       + "(bearings INNER JOIN order_details ON bearings.[brg_id] = order_details.[brg_id]) "
-                       + "ON purchase_orders.[purchase_order] = order_details.[purchase_order];");
-
-               ModelManageDBTable dbItem;
-               SimpleDateFormat MMddyyyy = new SimpleDateFormat("MM/dd/yyyy");
-
-
-               while(rs.next()){
-
-                   String moved_to_packet;
-                   if(rs.getString("moved_to_packet").equals("TRUE"))
-                       moved_to_packet = "YES";
-                   else
-                       moved_to_packet = "NO";
-                   String confirmed = (rs.getString("confirmed").equals("FALSE")) ? "NO" : "YES";
-
-                   dbItem = new 
-                   ModelManageDBTable(
-                           rs.getString("purchase_order"),
-                           rs.getString("supplier_id"),
-                           rs.getString("brg_name"),
-                           MMddyyyy.format(rs.getDate(4)),//CUR SHIP
-                           moved_to_packet,
-                           rs.getDate(4),
-                            confirmed);
-
-                   Attachment att []= (Attachment[])rs.getObject(5);
-                   dbItem.setAtt(att);
-                   dbItem.setAttachment(String.valueOf(dbItem.getNumberAttachments()));
-                   obList.add(dbItem);
-
-               }
-               con.close();
-
-
-              //###################################################################
-           } catch (SQLException ex) {
-               Logger.getLogger(ManageDBViewController.class.getName()).log(Level.SEVERE, null, ex);
-           }
+        for(BMSPurchaseOrderModel data : ConnectionUtil.getAllData().values())  
+            obList.add(data);
+        addButtonsToTable();
+        setupPredicates();
+        setFilterType();
         
     }
     //##########################################################################
     private void addButtonsToTable(){
   
         //BUTTONcolumn
-        Callback<TableColumn<ModelManageDBTable, String>, TableCell<ModelManageDBTable, String>> cellFactory;
+        Callback<TableColumn<BMSPurchaseOrderModel, String>, TableCell<BMSPurchaseOrderModel, String>> cellFactory;
         
-        cellFactory = new Callback<TableColumn<ModelManageDBTable, String>,TableCell<ModelManageDBTable, String>>(){
+        cellFactory = new Callback<TableColumn<BMSPurchaseOrderModel, String>,TableCell<BMSPurchaseOrderModel, String>>(){
             @Override
-            public TableCell<ModelManageDBTable, String> call(TableColumn<ModelManageDBTable, String> param) {
-                //throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-                final TableCell<ModelManageDBTable, String> cell = new TableCell<ModelManageDBTable, String>(){
-                    
-//                    ModelManageDBTable dbItem = getTableView().getItems().get(getIndex());
-                    
+            public TableCell<BMSPurchaseOrderModel, String> call(TableColumn<BMSPurchaseOrderModel, String> param) {
+               final TableCell<BMSPurchaseOrderModel, String> cell = new TableCell<BMSPurchaseOrderModel, String>(){   
                     private final Button edit_button = new Button("Edit");
                     {
                         edit_button.setMaxHeight(50);
@@ -267,25 +175,21 @@ public class ManageDBViewController implements Initializable {
                         if(empty){
                             setGraphic(null);
                         }else{
-                            //ACTION EVENT FOR BUTTON/ROW SELECTED
-                            
-                                setGraphic(edit_button);
-                                
-                                
-                                edit_button.setOnAction((ActionEvent event) -> {
+                            setGraphic(edit_button);
 
-                                ModelManageDBTable data = getTableView().getItems().get(getIndex());
+                            edit_button.setOnAction((ActionEvent event) -> {
 
-                                alert.setContentText("Edit " + data.getPo() + "?\n");
+                            BMSPurchaseOrderModel data = getTableView().getItems().get(getIndex());
 
-    //                            alert.showAndWait();
-                                Optional<ButtonType> result = alert.showAndWait();
-                                //goto EditPOView
-                                if (result.orElse(NO) == YES){
-                                    controller.setItems(data);//EditPOView controller
-                                    instance.editToTop();//MainLayoutTesting_WITHANCHORController
-                   
-                                }
+                            alert.setContentText("Edit " + data.getPurchase_order() + "?\n");
+
+                            Optional<ButtonType> result = alert.showAndWait();
+                            //goto EditPOView
+                            if (result.orElse(NO) == YES){
+                                MainLayoutController.getEditPOController().setItems(data);//EditPOView controller
+                                instance.openEditPOView(null);//MainLayoutTesting_WITHANCHORController
+
+                            }
                             
                         });
                         }
@@ -298,242 +202,29 @@ public class ManageDBViewController implements Initializable {
     }
     
     //##########################################################################
-    
-    private void addPacketControls(){
-//        Callback<TableColumn<ModelManageDBTable, String>, TableCell<ModelManageDBTable, String>> cellFactory;
-//        
-//        cellFactory = new Callback<TableColumn<ModelManageDBTable, String>,TableCell<ModelManageDBTable, String>>(){
-//            @Override
-//            public TableCell<ModelManageDBTable, String> call(TableColumn<ModelManageDBTable, String> param) {
-//                //throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-//                final TableCell<ModelManageDBTable, String> cell = new TableCell<ModelManageDBTable, String>(){
-//      
-//                    private final CheckBox checkBox = new CheckBox();
-//                    
-//                    ButtonType YES = new ButtonType("YES", ButtonBar.ButtonData.YES);
-//                    ButtonType NO = new ButtonType("NO", ButtonBar.ButtonData.CANCEL_CLOSE);                     
-//                    Alert alert = new Alert(AlertType.CONFIRMATION);
-//                    {
-//                        alert.setTitle("Manage DIALOG");
-//                        alert.getButtonTypes().clear();
-//                        alert.getDialogPane().getButtonTypes().addAll( YES, NO );
-//                    }          
-//                    private final Button report_button = new Button("report");
-//                    {
-//                        report_button.setMaxHeight(50);
-//                        report_button.setMaxWidth(100);
-//                        report_button.setStyle("-fx-font-size: 14px;-fx-font-weight: bold;\n" 
-//                                + "-fx-font-family: Georgia;");
-//                    }
-//                    
-//                    
-//                    @Override
-//                    public void updateItem(String item, boolean empty){
-//                        super.updateItem(item, empty);
-//                        if(empty){
-//                            setGraphic(null);
-//                        }else{
-//                            //ACTION EVENT FOR BUTTON/ROW SELECTED
-//                            ModelManageDBTable data = getTableView().getItems().get(getIndex());
-//                            
-//                            HBox b = new HBox(checkBox, report_button);
-//                            b.setAlignment(Pos.CENTER);
-//                            b.setSpacing(30);
-//                            
-//                            setGraphic(b);
-//                            
-//                            if(data.getPacket().equals("YES")){// && data.getConfirmed().equals("YES")){
-//                                checkBox.selectedProperty().setValue(true);
-//                                report_button.setDisable(false);
-//                            }else{
-//                                checkBox.selectedProperty().set(false);
-//                                report_button.setDisable(true);
-//                            }
-//                            
-//                            
-//                            //##################################################
-//                            //          UPDATE CHECKBOX HERE
-//                            //##################################################
-//                            checkBox.selectedProperty().addListener(new ChangeListener<Boolean>() {
-//
-//                                @Override
-//                                public void changed(ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean newValue) {
-//                                    // TODO Auto-generated method stub
-//                                    
-//                                    String newPacketValue = (newValue == true) ? "TRUE" : "FALSE";
-//                                    if(newValue){
-//                                        
-//                                        if(ConnectionUtil.updatePacketStatus(data.getPo(), newPacketValue) ==1){
-////                                        report_button.setDisable(false);
-//System.out.println("VALUE SHOULD CHANGE, CHECK ACCESS");
-//                                        update();}
-//                                    }else{
-//                                        if(ConnectionUtil.updatePacketStatus(data.getPo(), newPacketValue) ==1){
-////                                        report_button.setDisable(true);
-//System.out.println("FAIL");
-//                                        update();}
-//                                    }
-//                                }
-//                            });
-//                            
-//                                report_button.setOnAction((ActionEvent event) -> {
-//
-//                                alert.setContentText("Create report for " + data.getPo() + "?\n");
-//
-//    //                            alert.showAndWait();
-//                                Optional<ButtonType> result = alert.showAndWait();
-//                                //goto EditPOView
-//                                if (result.orElse(NO) == YES){
-//                                    Dialog<String> dialog = new Dialog<String>();
-//      //Setting the title
-//      dialog.setTitle("Dialog");
-//      ButtonType type = new ButtonType("Ok", ButtonData.OK_DONE);
-//      //Setting the content of the dialog
-//      dialog.setContentText("report created, press ok to view");
-//      //Adding buttons to the dialog pane
-//      dialog.getDialogPane().getButtonTypes().add(type);
-//       dialog.showAndWait();
-//                                }
-//                            
-//                        });
-//                                                                
-//                        }
-//                    }
-//                };
-//                return cell;
-//            }
-//        };
-//        PACKETcolumn.setCellFactory(cellFactory);        
-    }
-    
-    //##########################################################################
-    
-    /*
-    private void addCheckBoxTest(){
-        
-        PACKETcolumn.setCellValueFactory(
-new Callback<CellDataFeatures<ModelManageDBTable,Boolean>,ObservableValue<Boolean>>()
-{
-    //This callback tell the cell how to bind the data model 'Registered' property to
-    //the cell, itself.
-    @Override
-    public ObservableValue<Boolean> call(CellDataFeatures<ModelManageDBTable, Boolean> param)
-    {
-        System.out.println("SELECTED PO VALUE: "+ param.getValue().getPo() + ", PACKET VALUE: " + param.getValue().getPacket());
-        return param.getValue().registeredProperty();
-    }   
-});
-        
-        PACKETcolumn.setCellFactory( CheckBoxTableCell.forTableColumn(PACKETcolumn) );
-        
-    }
-    */
-    
-    //##########################################################################
-    
-    /*
-    private void addCheckboxControls(){
-        Callback<TableColumn<ModelManageDBTable, Boolean>, TableCell<ModelManageDBTable, Boolean>> cellFactory;
-        
-        cellFactory = new Callback<TableColumn<ModelManageDBTable, Boolean>,TableCell<ModelManageDBTable, Boolean>>(){
-            @Override
-            public TableCell<ModelManageDBTable, Boolean> call(TableColumn<ModelManageDBTable, Boolean> param) {
-                //throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-                final TableCell<ModelManageDBTable, Boolean> cell = new TableCell<ModelManageDBTable, Boolean>(){
-      
-                    private final CheckBox checkBox = new CheckBox();
-                    
-                    ButtonType YES = new ButtonType("YES", ButtonBar.ButtonData.YES);
-                    ButtonType NO = new ButtonType("NO", ButtonBar.ButtonData.CANCEL_CLOSE);                     
-                    Alert alert = new Alert(AlertType.CONFIRMATION);
-                    {
-                        alert.setTitle("Manage DIALOG");
-                        alert.getButtonTypes().clear();
-                        alert.getDialogPane().getButtonTypes().addAll( YES, NO );
-                    }          
-                    
-                    
-                    
-                    @Override
-                    public void updateItem(Boolean item, boolean empty){
-                        super.updateItem(item, empty);
-                        if(empty){
-                            setGraphic(null);
-                        }else{
-                            //ACTION EVENT FOR BUTTON/ROW SELECTED
-                            ModelManageDBTable data = getTableView().getItems().get(getIndex());
-                            
-                            
-                            
-                            setGraphic(checkBox);
-                            
-                            if(data.getPacket()){// && data.getConfirmed().equals("YES")){
-                                checkBox.selectedProperty().setValue(true);
-                            }else{
-                                checkBox.selectedProperty().set(false);
-                            }
-                            
-                            
-                            //##################################################
-                            //          UPDATE CHECKBOX HERE
-                            //##################################################
-                            checkBox.selectedProperty().addListener(new ChangeListener<Boolean>() {
-
-                                @Override
-                                public void changed(ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean newValue) {
-                                    // TODO Auto-generated method stub
-                                    
-                                    String newPacketValue = (newValue == true) ? "TRUE" : "FALSE";
-                                    if(newValue){
-                                        if(ConnectionUtil.updatePacketStatus(data.getPo(), newPacketValue) ==1){
-//                                        
-System.out.println("VALUE SHOULD CHANGE, CHECK ACCESS");
-                                        update();}
-                                    }else{
-                                        if(ConnectionUtil.updatePacketStatus(data.getPo(), newPacketValue) ==1){
-//                                        report_button.setDisable(true);
-System.out.println("FAIL");
-                                        update();}
-                                    }
-                                }
-                            });
-                                                                
-                        }
-                    }
-                };
-                return cell;
-            }
-        };
-        
-        PACKETcolumn.setCellFactory(cellFactory);        
-    }
-    */
-    
-    //##########################################################################
-
-
-    //##########################################################################
     //          FILTER 
     //##########################################################################
-    FilteredList<ModelManageDBTable> filterData;
-        private void addMultipleSearchFilters(){
-            
-        ObjectProperty<Predicate<ModelManageDBTable>> supplierFilter = new SimpleObjectProperty<>();
+    
+    private void setupPredicates(){
+                    
+        filterData = new FilteredList<>(obList);
+        
+        supplierFilter = new SimpleObjectProperty<>();
         supplierFilter.bind(Bindings.createObjectBinding(() -> 
             supplier -> supplier.getSupplier().toLowerCase().contains(SUPPLIERTextField.getText().toLowerCase()), 
             SUPPLIERTextField.textProperty()));
         //----------------------------------------------------------------------
-        ObjectProperty<Predicate<ModelManageDBTable>> poFilter = new SimpleObjectProperty<>();
+        poFilter = new SimpleObjectProperty<>();
         poFilter.bind(Bindings.createObjectBinding(() -> 
-            po -> po.getPo().toLowerCase().contains(POTextField.getText().toLowerCase()), 
+            po -> po.getPurchase_order().toLowerCase().contains(POTextField.getText().toLowerCase()), 
             POTextField.textProperty()));
         //----------------------------------------------------------------------
-        ObjectProperty<Predicate<ModelManageDBTable>> brgFilter = new SimpleObjectProperty<>();
+        brgFilter = new SimpleObjectProperty<>();
         brgFilter.bind(Bindings.createObjectBinding(() -> 
-            brg -> brg.getBrg().toLowerCase().contains(BRGTextField.getText().toLowerCase()), 
+            brg -> brg.getBrg_number().toLowerCase().contains(BRGTextField.getText().toLowerCase()), 
             BRGTextField.textProperty()));
         //----------------------------------------------------------------------
-        ObjectProperty<Predicate<ModelManageDBTable>> dateFilter = new SimpleObjectProperty<>();
+        dateFilter = new SimpleObjectProperty<>();
         dateFilter.bind(Bindings.createObjectBinding(() -> {
         
             LocalDate minDate = curShipSTART.getValue();
@@ -543,28 +234,38 @@ System.out.println("FAIL");
             final LocalDate finalMin = minDate == null ? LocalDate.MIN : minDate;
             final LocalDate finalMax = maxDate == null ? LocalDate.MAX : maxDate;
 
-            return search_field ->!finalMin.isAfter(LocalDate.parse( search_field.getOriginalDate().toString())) 
-                    && !finalMax.isBefore(LocalDate.parse( search_field.getOriginalDate().toString() ) );
+            return search_field ->!finalMin.isAfter(LocalDate.parse( search_field.getCurrent_ship_date().toString())) 
+                    && !finalMax.isBefore(LocalDate.parse( search_field.getCurrent_ship_date().toString() ) );
         },
             curShipSTART.valueProperty(),
             curShipEND.valueProperty()));
-//        //--------------------------------------------------------------------    
-        ObjectProperty<Predicate<ModelManageDBTable>> confirmedFilter = new SimpleObjectProperty<>();
+        //----------------------------------------------------------------------  
+        confirmedFilter = new SimpleObjectProperty<>();
         confirmedFilter.bind(Bindings.createObjectBinding(() ->
                 
                 confirmed -> confirmed.getConfirmed().equals(CONFIRMEDcomboBox.getValue())                
                 , CONFIRMEDcomboBox.valueProperty()));
         
         //----------------------------------------------------------------------
+        SortedList<BMSPurchaseOrderModel> sortedData = new SortedList<>(filterData);
+        sortedData.comparatorProperty().bind(ManageDBTable.comparatorProperty());
+        ManageDBTable.setItems(sortedData);
         
-        filterData = new FilteredList<>(FXCollections.observableList(obList));
-        ManageDBTable.setItems(filterData);
+    }
+    
+    private void addMultipleSearchFilters(){
         
         filterData.predicateProperty().bind(Bindings.createObjectBinding(
                 () -> supplierFilter.get().and(poFilter.get().and(brgFilter.get().and(dateFilter.get().and(confirmedFilter.get())))), 
-                supplierFilter, poFilter, brgFilter, dateFilter, confirmedFilter));
-               
-        
+                supplierFilter, poFilter, brgFilter, dateFilter,confirmedFilter));
+    }
+    //--------------------------------------------------------------------------
+    //      "removed" comboBox Filter
+    //--------------------------------------------------------------------------
+    private void viewAllItems(){
+        filterData.predicateProperty().bind(Bindings.createObjectBinding(
+                () -> supplierFilter.get().and(poFilter.get().and(brgFilter.get().and(dateFilter.get()))), 
+                supplierFilter, poFilter, brgFilter, dateFilter));
     }
     //##########################################################################
     //          END FILTER 
@@ -576,39 +277,73 @@ System.out.println("FAIL");
         BRGTextField.clear();
         curShipSTART.getEditor().clear();
         curShipEND.getEditor().clear();
-        CONFIRMEDcomboBox.setValue("NO");
+        CONFIRMEDcomboBox.setValue("VIEW ALL");
+//        setFilterType();
     }
     //##########################################################################
     //          BEGIN/LOAD REPORT
-    //##########################################################################    
-    @FXML
+    //##########################################################################
+    private List<BMSPurchaseOrderModel> po;
+    @FXML    
     private void printReportBUTTON(ActionEvent event) {
         selectedPos = new LinkedHashMap<>();
-        for(TablePosition<ModelManageDBTable,?> pos : ManageDBTable.getSelectionModel().getSelectedCells()){
+        
+        po = new ArrayList<>();
+        for(TablePosition<BMSPurchaseOrderModel,?> pos : ManageDBTable.getSelectionModel().getSelectedCells()){
             int row = pos.getRow();
-            ModelManageDBTable data = ManageDBTable.getItems().get(row);
-            System.out.println("PO selected: " + data.getPo() );
-            selectedPos.put(ManageDBTable.getItems().get(row).getPo(), ManageDBTable.getItems().get(row));
+            BMSPurchaseOrderModel data = ManageDBTable.getItems().get(row);
+            System.out.println("ROW SELECTED: " +row+ " | PO selected: " + data.getPurchase_order() );
+            selectedPos.put(ManageDBTable.getItems().get(row).getPurchase_order(), ManageDBTable.getItems().get(row));  
+            po.add(data);
         }
         
         try {
             
-            //open view and use FIleChooser in the new view
             FXMLLoader loader = new FXMLLoader (getClass().getResource("/View/ManageDB/POReportSelectionView.fxml"));
             Parent parent  = loader.load();
-            Scene scene = new Scene(parent, 600 ,400);
+            Scene scene = new Scene(parent, 1150 ,600);
             Stage stage = new Stage();
-            stage.setMinWidth(600);
-            stage.setMinHeight(400);
-            stage.setResizable(false);
+            stage.setMinWidth(1000);
+            stage.setMinHeight(600);
+            stage.setResizable(true);
             stage.initModality(Modality.APPLICATION_MODAL);
             stage.setScene(scene);
-            POReportSelectionViewController controller =loader.getController();
-            controller.setSelecteditems(selectedPos);
+            POReportSelectionViewController po_controller =loader.getController();
+            
+     
+           
+//            po_controller.setSelecteditems(selectedPos,obList,po);
+            
+            selectedPos.clear();
             stage.showAndWait();
-
+            
         } catch (IOException ex) {
-            Logger.getLogger(MainLayoutTesting_WITHANCHORController.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(ManageDBViewController.class.getName()).log(Level.SEVERE, null, ex);
         }
     }    
+
+    @FXML
+    private void setFilterType() {
+        
+        if(CONFIRMEDcomboBox.getValue().equals("VIEW ALL"))
+            viewAllItems();
+        else
+            addMultipleSearchFilters();
+    }
+    
+    private static ManageDBViewController ManageInstance;
+    private void setInstance(ManageDBViewController instance){
+        ManageDBViewController.ManageInstance = instance;
+    }
+    
+    public static ManageDBViewController getInstance(){
+        return ManageInstance;
+    }
+    
+    public ObservableList getList(){
+        return obList;
+    }
+    public List<BMSPurchaseOrderModel> getSelectedList(){
+        return po;
+    }
 }

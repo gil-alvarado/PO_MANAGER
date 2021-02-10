@@ -15,7 +15,7 @@
 -fx-text-fill : #a4ab1b;
 
 -fx-font-weight: bold;
--fx-font-size: 18px;
+-fx-font-size: 14px;
 
 -fx-background-radius: 0;
 
@@ -31,7 +31,7 @@
 
 -fx-font-weight: bold;
 -fx-font-family: Georgia;
--fx-font-size: 20px;
+-fx-font-size: 16px;
 }
 .button:pressed
 {
