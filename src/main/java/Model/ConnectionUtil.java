@@ -43,7 +43,7 @@ public class ConnectionUtil {
 //    static Connection conn = null;
     
 //    private static final ClassLoader classLoader = getClass().getClassLoader();
-    private static final ClassLoader classLoader = ConnectionUtil.class.getClassLoader();
+//    private static final ClassLoader classLoader = ConnectionUtil.class.getClassLoader();
 //    private static final File file = new File(classLoader.getResource("BMS_DATABASE_TEST.accdb").getFile());
 //    private static final String databaseURL = "jdbc:ucanaccess://" + file.getAbsolutePath();
 

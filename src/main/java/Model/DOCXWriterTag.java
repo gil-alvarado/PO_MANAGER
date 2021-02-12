@@ -34,19 +34,26 @@ import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTTbl;
  */
 public class DOCXWriterTag {
     
-    public static boolean initializeDocumentValues(String docx_template_url, String output_file_AbsolutePath,
+    public static boolean initializeDocumentValues(String docx_template, String output_file_AbsolutePath,
             HashMap<String, List<BMSPurchaseOrderModel>> supplier_map) {
 
         // Template conversion default success
         boolean changeFlag = true;
         try {
-            // Get docx parsing object
-            XWPFDocument document_template = new XWPFDocument(POIXMLDocument.openPackage(docx_template_url));
+            
+            XWPFDocument document_template = null;
+            if(docx_template != null){
+                System.out.println("USING FILE FROM LOCAL");
+                document_template = new XWPFDocument(POIXMLDocument.openPackage(docx_template));
+            }
+            else{
+                return false;
+            }
+            
             File output_file = new File(output_file_AbsolutePath);
 
-
             if(DOCXWriterTag.createWordDocument
-            (document_template, output_file, supplier_map)){
+            (document_template, output_file, supplier_map) ){
                 System.out.println("SUCCESSFULY CREATED DOCUMENT");
             }
             else{
@@ -98,7 +105,7 @@ public class DOCXWriterTag {
             output_file.delete();
             return false;
         }        
-        if(!fillTable(document_template, supplier_map.get("Vie"), supplier_map)){
+        if(!fillTable(document_template, supplier_map)){
             return false;
         }
 
@@ -181,7 +188,8 @@ public class DOCXWriterTag {
 
             int itemEntryNum ;
             System.out.println("NUMBER POS TO PRINT: " + entry.getValue().size());
-            if(entry.getValue().size() > 2){
+            //DETERMINE NUMBER OF ROWS(> 1) TO ADD TO TABLE TEMPLATE
+            if(entry.getValue().size() > 1){//
             for(int i = 0; i < entry.getValue().size() - 2; i++){
                 itemEntryNum = tableCopy.getRows().size()-1;
 //                tableCopy.addRow(row_template,itemEntryNum);
@@ -241,7 +249,7 @@ public class DOCXWriterTag {
 
     
     //##########################################################################
-    private static boolean fillTable(XWPFDocument template_document,List<BMSPurchaseOrderModel> po_list, 
+    private static boolean fillTable(XWPFDocument template_document, 
             HashMap<String, List<BMSPurchaseOrderModel>> supplier_map){
 
         XWPFTable table=null;
@@ -282,7 +290,6 @@ public class DOCXWriterTag {
         }
 
         System.out.println("FillTable: ROW POS: " + rowPosition);
-        System.out.println("FillTable: LIST SIZE: " + po_list.size());
 
         for(Map.Entry<String, List<BMSPurchaseOrderModel>> entry : supplier_map.entrySet()){
             for(int i=0,r=rowPosition;r<rowPosition+entry.getValue().size();r++,i++){
@@ -295,6 +302,7 @@ public class DOCXWriterTag {
                     map.put("${LC}",entry.getValue().get(i).getLanding_cost());
                     map.put("${IP}",String.valueOf(entry.getValue().get(i).getInvoice_price()));
                     row=table_map.get(entry.getKey()).getTable().getRow(r);
+//                    if(row!=null)
                     for(XWPFTableCell cell:row.getTableCells()){
                             for(XWPFParagraph paragraph:cell.getParagraphs()){
                                      replace(paragraph, map);//Call the function to replace the XWPFParagraph content

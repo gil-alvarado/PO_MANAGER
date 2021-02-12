@@ -1,41 +1,20 @@
 package com.test;
 
-import Controller.MainLayoutController;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
 
-
 import java.io.IOException;
-import javafx.stage.StageStyle;
 
 /**
- * JavaFX App
- * 
- * 
- * 
- * IMPORTANT: 
- *     mainLayout_WITHANCHOR: anchorpane after/in_stackpane
- *     overviewForm_NOANCHOR: NO anchorpane at root
- * 
- *            mainLayout_WITHANCHOR -> overviewFrom_NOANCHOR
- * 
- *            ----------------------------------------------
- * 
- *     mainLayout_NOANCHOR: NO anchorpane in stackpane
- *     overviewForm_WITHANCHOR: anchorpane AT ROOT
- * 
- *            mainLayout_NOANCHOR -> overviewForm_WITHANCHOR
- *            
- *          
+ * JavaFX App          
  */
 public class App extends Application {
 
     private static Scene scene;
     private double x,y;
-    
     
     @Override
     public void start(Stage stage) throws IOException {
@@ -57,21 +36,6 @@ public class App extends Application {
 //Parent root_ = FXMLLoader.load(getClass().getResource("/View/Login/LoginView.fxml"));
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-//root.setOnMousePressed(event -> {
-//            x = event.getSceneX();
-//            y = event.getSceneY();
-//        });
-//        root.setOnMouseDragged(event -> {
-//
-//            stage.setX(event.getScreenX() - x);
-//            stage.setY(event.getScreenY() - y);
-//
-//        });
-//        
-//        scene = new Scene(root);
-        //-------------------------
-
         
         scene = new Scene(loadFXML("/View/Login/LoginView"));
 //scene = new Scene(loadFXML("/View/Main/MainLayout_SINGLE"));
@@ -111,8 +75,7 @@ public class App extends Application {
     }
 
     public static void main(String[] args) {
-        launch();  
-        
+        launch();
     }
 
 }

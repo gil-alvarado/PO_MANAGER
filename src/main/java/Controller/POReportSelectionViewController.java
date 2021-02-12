@@ -8,7 +8,9 @@ package Controller;
 import Model.BMSPurchaseOrderModel;
 import Model.ConnectionUtil;
 import Model.DOCXHandler;
+import java.awt.Desktop;
 import java.io.File;
+import java.io.IOException;
 import java.net.URL;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -16,8 +18,13 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.ResourceBundle;
+import java.util.function.Consumer;
 import java.util.function.Predicate;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.prefs.Preferences;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
@@ -29,11 +36,17 @@ import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.scene.Group;
 import javafx.scene.Node;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Alert.AlertType;
 
 import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
+import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.DatePicker;
+import javafx.scene.control.DialogPane;
 import javafx.scene.control.Label;
 
 import javafx.scene.control.ListView;
@@ -77,8 +90,6 @@ public class POReportSelectionViewController implements Initializable {
         //######################################################################    
     private static final DataFormat DB_LIST = new DataFormat("DbList");
     
-//    this.obListMASTERSourceData = FXCollections.observableArrayList(ConnectionUtil.getAllData().values());
-//this.obListMASTERTargetData = FXCollections.observableArrayList();
     private ObservableList<BMSPurchaseOrderModel> obListMASTERSourceData=FXCollections.observableArrayList();
     private ObservableList<BMSPurchaseOrderModel> obListMASTERTargetData=FXCollections.observableArrayList();
     //##########################################################################
@@ -126,13 +137,10 @@ public class POReportSelectionViewController implements Initializable {
     public void initialize(URL url, ResourceBundle rb) {
         // TODO
         confirmItemsGridPane.toBack();
-//        selectItemsGridPane.setVisible(false);
 finalLocationLabel.setVisible(false);
         selectItemsTableGridPane.toFront();
         selectItemsTableGridPane.setVisible(true);
         backBUTTON.setDisable(true);
-//        ConfirmedComboBox.getItems().addAll("YES","NO","VIEW ALL");
-//        ConfirmedComboBox.getSelectionModel().select("VIEW ALL");
 
         selectFolderBUTTON.disableProperty().bind(fileNameTextField.textProperty().isEmpty());
         fileLocationTextField.disableProperty().bind(fileNameTextField.textProperty().isEmpty());
@@ -236,127 +244,41 @@ finalLocationLabel.setVisible(false);
         CurShipColumnFINAL.setCellValueFactory(new PropertyValueFactory<>("curDateFormat"));
         IpColumnFINAL.setCellValueFactory(new PropertyValueFactory<>("invoice_price"));
         LcColumnFINAL.setCellValueFactory(new PropertyValueFactory<>("landing_cost"));
-        
-//        for(Map.Entry<String, BMSPurchaseOrderModel> entry : ConnectionUtil.getAllData().entrySet())
-//            obListMASTERSourceData.add(entry.getValue());
-
-        //updaete table
+//        //updaete table
         sourceTable.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
         targetTable.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
-        
-        obListMASTERSourceData.addAll(ManageDBViewController.getInstance().getList());
-        obListMASTERTargetData.addAll(ManageDBViewController.getInstance().getSelectedList());
-        obListMASTERSourceData.removeAll(obListMASTERTargetData);
-        sourceTable.setItems(obListMASTERSourceData);
-        targetTable.setItems(obListMASTERTargetData);
-        nextBUTTON.disableProperty().bind(Bindings.isEmpty(targetTable.getItems()));
-//        setupPredicates();
-//        addMultipleSearchFilters();
+ 
+        nextBUTTON.disableProperty().bind(Bindings.size(obListMASTERTargetData).isEqualTo(0));
         //##############################################################
         //END initialize 
-        //##############################################################         
-
+        //##############################################################    
+        prefs = Preferences.userRoot().node(POReportSelectionViewController.class.getClass().getName());
+        System.out.println("POReportSelectionViewController PREFS: "+prefs.absolutePath());
+        
     }    
     
     //##########################################################################
 
-    //update table
-    public void setSelecteditems(LinkedHashMap<String, BMSPurchaseOrderModel> selectedData,
-            ObservableList<BMSPurchaseOrderModel> obList,
-            List<BMSPurchaseOrderModel> po){
-                
-//        this.obListMASTERSourceData = FXCollections.observableArrayList(ConnectionUtil.getAllData().values());
-//        this.obListMASTERTargetData = FXCollections.observableArrayList();
-//        for(Map.Entry<String, BMSPurchaseOrderModel> cursor : selectedData.entrySet()){
-//        for(BMSPurchaseOrderModel cursor : po)
-//            this.obListMASTERSourceData.remove(cursor);
-//            this.obListMASTERTargetData.add(cursor.getValue());
-//        }
-//        obListMASTERSourceData.removeAll(po);
-//        obListMASTERTargetData.addAll(po);
+    public void setSelecteditems(LinkedHashMap<String, BMSPurchaseOrderModel> selected_po_map,
+            ObservableList<BMSPurchaseOrderModel> obList_AllData,
+            List<BMSPurchaseOrderModel> selected_po_list){
         
-//        if( !selectedData.isEmpty() ){
-//            for( Map.Entry<String, BMSPurchaseOrderModel> cursor : selectedData.entrySet() ){
-//                targetTable.getItems().add( cursor.getValue() );
-//            }
-//        }
-//        
-//        if( !this.obListMASTERSourceData.isEmpty() ){
-//            for(BMSPurchaseOrderModel i : this.obListMASTERSourceData){
-//                sourceTable.getItems().add(i);
-//            }
-//        }
+        obListMASTERSourceData.removeAll(obListMASTERSourceData);
+        obListMASTERTargetData.removeAll(obListMASTERTargetData);
         
-//        sourceTable.setItems(obListMASTERSourceData);
-//        targetTable.setItems(obListMASTERTargetData);
+        for(BMSPurchaseOrderModel p : selected_po_list){
+            obListMASTERTargetData.add(p);
+        }
+        for(BMSPurchaseOrderModel p : obList_AllData){
+            obListMASTERSourceData.add(p);
+        }
+        obListMASTERSourceData.removeAll(obListMASTERTargetData);
+ 
+        sourceTable.setItems(obListMASTERSourceData);
+        targetTable.setItems(obListMASTERTargetData);
 
 
     }
-    
-    /*
-    private void  setupPredicates(){
-        
-        filterData = new FilteredList<>(obListMASTERSourceData, p -> true);
-        
-        supplierFilter = new SimpleObjectProperty<>();
-        supplierFilter.bind(Bindings.createObjectBinding(() -> 
-            supplier -> supplier.getSupplier().toLowerCase().contains(SupplierTextField.getText().toLowerCase()), 
-            SupplierTextField.textProperty()));
-        //----------------------------------------------------------------------
-        poFilter = new SimpleObjectProperty<>();
-        poFilter.bind(Bindings.createObjectBinding(() -> 
-            po -> po.getPurchase_order().toLowerCase().contains(PoTextField.getText().toLowerCase()), 
-            PoTextField.textProperty()));
-        //----------------------------------------------------------------------
-        brgFilter = new SimpleObjectProperty<>();
-        brgFilter.bind(Bindings.createObjectBinding(() -> 
-            brg -> brg.getBrg_number().toLowerCase().contains(BrgTextField.getText().toLowerCase()), 
-            BrgTextField.textProperty()));
-        //----------------------------------------------------------------------
-        dateFilter = new SimpleObjectProperty<>();
-        dateFilter.bind(Bindings.createObjectBinding(() -> {
-        
-            LocalDate minDate = CurShipDateSTART.getValue();
-            LocalDate maxDate = CurShipDateEND.getValue();
-
-            // get final values != null
-            final LocalDate finalMin = minDate == null ? LocalDate.MIN : minDate;
-            final LocalDate finalMax = maxDate == null ? LocalDate.MAX : maxDate;
-
-            return search_field ->!finalMin.isAfter(LocalDate.parse( search_field.getCurrent_ship_date().toString())) 
-                    && !finalMax.isBefore(LocalDate.parse( search_field.getCurrent_ship_date().toString() ) );
-        },
-            CurShipDateSTART.valueProperty(),
-            CurShipDateEND.valueProperty()));
-        //--------------------------------------------------------------------    
-        confirmedFilter = new SimpleObjectProperty<>();
-        confirmedFilter.bind(Bindings.createObjectBinding(() ->
-                
-                confirmed -> confirmed.getConfirmed().equals(ConfirmedComboBox.getValue())                
-                , ConfirmedComboBox.valueProperty()));
-        //----------------------------------------------------------------------
-        
-        SortedList<BMSPurchaseOrderModel> sortedData = new SortedList<>(filterData);
-        sortedData.comparatorProperty().bind(sourceTable.comparatorProperty());
-        sourceTable.setItems(sortedData);
-//        FilteredList<BMSPurchaseOrderModel> filterDataTest = new FilteredList<>(obListMASTERTargetData, p -> true);
-//        sortedData = new SortedList<>(filterDataTest);
-//        sortedData.comparatorProperty().bind(targetTable.comparatorProperty());
-//        targetTable.setItems(sortedData);
-        
-    }    
-        private void addMultipleSearchFilters(){
-        
-        filterData.predicateProperty().bind(Bindings.createObjectBinding(
-            () -> supplierFilter.get().and(poFilter.get().and(brgFilter.get().
-                    and(dateFilter.get().and(confirmedFilter.get())))),
-                supplierFilter, poFilter, brgFilter, dateFilter, confirmedFilter));
-        
-    }
-        */
-    //##########################################################################
-    //
-    //##########################################################################    
     
 	private void dragDetected(MouseEvent event, TableView<BMSPurchaseOrderModel> listView){
 		// Make sure at least one item is selected
@@ -467,7 +389,7 @@ finalLocationLabel.setVisible(false);
         selectItemsTableGridPane.toFront();
         //        backBUTTON.setDisable(true);
         backBUTTON.setDisable(true);
-        nextBUTTON.disableProperty().bind(Bindings.isEmpty(targetTable.getItems()));
+//        nextBUTTON.disableProperty().bind(Bindings.isEmpty(targetTable.getItems()));
     }
 
     @FXML
@@ -482,7 +404,10 @@ finalLocationLabel.setVisible(false);
         
     }
     
-    @FXML
+    
+    private Preferences prefs;
+    
+    @FXML//FINISH BUTTON
     private void createReport(ActionEvent event) {
 
         String fileAbsolutePath = fileLocationTextField.getText() + "\\" + fileNameTextField.getText() + ".docx";
@@ -490,21 +415,60 @@ finalLocationLabel.setVisible(false);
         HashMap<String, List<BMSPurchaseOrderModel>> supplier_map = new HashMap<>();
         for(BMSPurchaseOrderModel po : targetTable.getItems()){
                 if(!supplier_map.containsKey(po.getSupplier())){
+                    System.out.print("ADDING " + po.getSupplier() + " (KEY) TO SUPPLIER_MAP");
                     supplier_map.put(po.getSupplier(), new ArrayList<>());
                 }
         }
-        
-        for(Map.Entry<String, List<BMSPurchaseOrderModel>> supplier_map_entry : supplier_map.entrySet()){
-            for(BMSPurchaseOrderModel po : targetTable.getItems()){
-                if(po.getSupplier().equals(supplier_map_entry.getKey())){
-                        supplier_map.get(po.getSupplier()).add(po);
+        //KEY GOES BY SUPPLIER
+        for(Map.Entry<String, List<BMSPurchaseOrderModel>> entry : supplier_map.entrySet()){
+            System.out.println("GETTING KEY: " + entry.getKey());
+            for(BMSPurchaseOrderModel po_target : targetTable.getItems()){
+                System.out.println("PO TARGET DATA: PO = " + po_target.getPurchase_order());
+                if(po_target.getSupplier().equals(entry.getKey())){
+                    System.out.println("MAP KEY MATCHES PO TARGET: (entry)" + entry.getKey()+" = " +po_target.getPurchase_order()+ "(target)");
+                        supplier_map.get(po_target.getSupplier()).add(po_target);
                 } 
             }
         }
         
-        DOCXHandler.generateRport( fileAbsolutePath,supplier_map
-        );
+        Alert finalAlert;
         
+        
+        
+        if( DOCXHandler.generateReport( fileAbsolutePath, supplier_map ) ) {
+            
+            finalAlert = createAlertWithOptOut(AlertType.INFORMATION,"REPORT","SUCCESS","Report was successfuly created.",
+                    "open file location", new Consumer<Boolean>() {
+                @Override
+                public void accept(Boolean param) {
+                    prefs.putBoolean("openFolder", param == true ? true : false);
+                }
+            },ButtonType.OK);
+            
+        }else{
+            finalAlert = createAlertWithOptOut(AlertType.INFORMATION,"REPORT","FAILURE","was not able to create report.",
+                    "no action",null,ButtonType.OK);            
+        }
+        finalAlert.showAndWait();
+        boolean open = prefs.getBoolean("openFolder", false);
+        System.out.println("OPEN DIALOG: " + open);
+        if(prefs.getBoolean("openFolder",false) == true){
+            try {
+                System.out.println("OPENING EXPLORER");
+                //            if(!Desktop.isDesktopSupported())//check if Desktop is supported by Platform or not
+//            {
+//                System.out.println("not supported");
+//                return;
+//            }
+//            Desktop desktop = Desktop.getDesktop();
+//            System.out.println("FILE PATH: " + fileAbsolutePath );
+//            desktop.browseFileDirectory(new File(fileAbsolutePath));
+                Runtime.getRuntime().exec("explorer.exe /select," + fileAbsolutePath);
+            } catch (IOException ex) {
+                Logger.getLogger(POReportSelectionViewController.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+            
         closeDialogButton(event);
     }
 
@@ -522,4 +486,40 @@ finalLocationLabel.setVisible(false);
         
     }
     //##########################################################################
+    
+    public static Alert createAlertWithOptOut(AlertType type, String title, String headerText, 
+                   String mainMessage, String checkBoxMessage, Consumer<Boolean> checkBoxAction, 
+                   ButtonType buttonTypes) {
+       Alert alert = new Alert(type);
+       // Need to force the alert to layout in order to grab the graphic,
+        // as we are replacing the dialog pane with a custom pane
+        alert.getDialogPane().applyCss();
+        Node graphic = alert.getDialogPane().getGraphic();
+        // Create a new dialog pane that has a checkbox instead of the hide/show details button
+        // Use the supplied callback for the action of the checkbox
+     
+        alert.setDialogPane(new DialogPane() {
+//          @Override
+          protected Node createDetailsButton() {
+            CheckBox openReportLocation = new CheckBox();
+            openReportLocation.setText(checkBoxMessage);
+            openReportLocation.setOnAction(e -> checkBoxAction.accept( openReportLocation.isSelected()) );
+            
+            return openReportLocation;
+          }
+        });
+        
+        alert.getDialogPane().getButtonTypes().addAll(buttonTypes);
+        alert.getDialogPane().setContentText(mainMessage);
+        // Fool the dialog into thinking there is some expandable content
+        // a Group won't take up any space if it has no children
+        alert.getDialogPane().setExpandableContent(new Group());
+        alert.getDialogPane().setExpanded(true);
+        // Reset the dialog graphic using the default style
+        alert.getDialogPane().setGraphic(graphic);
+        alert.setTitle(title);
+        alert.setHeaderText(headerText);
+        
+        return alert;
+    }    
 }

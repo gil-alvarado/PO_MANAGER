@@ -55,9 +55,14 @@ public class FileHelper {
 //        poAttachmentDirectory = tempDir.getAbsolutePath();
         return tempDir.mkdir();
     }
-    public static String getTemplateDirectory(){
+    public static String getTemplateExternalSource(){
         return ConnectionUtil.dbDirectoryLocation()+"\\report_templates\\template_TAG.docx";
     }
+    
+//    private static final String report_template = getClass().getClassLoader().getResource("test/resources/Templates/template_TAG.docx").getPath();
+//    public static String getLocalFileTemplate(){
+//        return report_template;
+//    }
     //##########################################################################
     //relates to RW comment and notes
     public static boolean createCSVfiles(String purchase_order){//prep_file

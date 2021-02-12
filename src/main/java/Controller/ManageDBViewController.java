@@ -52,6 +52,7 @@ import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.GridPane;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.util.Callback;
@@ -91,17 +92,26 @@ public class ManageDBViewController implements Initializable {
     @FXML
     private Button printReportBUTTON;
     
-    private final ObservableList<BMSPurchaseOrderModel> obList = FXCollections.observableArrayList();
+    private final ObservableList<BMSPurchaseOrderModel> obList_AllData = FXCollections.observableArrayList();
     //##########################################################################
 
     private MainLayoutController instance;    
     
     //KEY = PO
     //VALUE = fetch data from Model OR 
-    private LinkedHashMap<String, BMSPurchaseOrderModel> selectedPos;
+    private LinkedHashMap<String, BMSPurchaseOrderModel> selected_po_map;
     FilteredList<BMSPurchaseOrderModel> filterData;
     ObjectProperty<Predicate<BMSPurchaseOrderModel>> 
             supplierFilter, poFilter, brgFilter,dateFilter,confirmedFilter;
+    @FXML
+    private GridPane mainGridPaneLayout;
+    @FXML
+    private GridPane searchRowGridPane;
+    @FXML
+    private Button clearFieldsBUTTON;
+    @FXML
+    private Button helpButton;
+   
     
     @Override
     public void initialize(URL url, ResourceBundle rb) {
@@ -133,11 +143,11 @@ public class ManageDBViewController implements Initializable {
     //##########################################################################
     public void updateTableView(){
         
-        obList.removeAll(obList);
+        obList_AllData.removeAll(obList_AllData);
         ManageDBTable.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
         
         for(BMSPurchaseOrderModel data : ConnectionUtil.getAllData().values())  
-            obList.add(data);
+            obList_AllData.add(data);
         addButtonsToTable();
         setupPredicates();
         setFilterType();
@@ -207,7 +217,7 @@ public class ManageDBViewController implements Initializable {
     
     private void setupPredicates(){
                     
-        filterData = new FilteredList<>(obList);
+        filterData = new FilteredList<>(obList_AllData);
         
         supplierFilter = new SimpleObjectProperty<>();
         supplierFilter.bind(Bindings.createObjectBinding(() -> 
@@ -277,24 +287,24 @@ public class ManageDBViewController implements Initializable {
         BRGTextField.clear();
         curShipSTART.getEditor().clear();
         curShipEND.getEditor().clear();
-        CONFIRMEDcomboBox.setValue("VIEW ALL");
-//        setFilterType();
+        CONFIRMEDcomboBox.getSelectionModel().select("VIEW ALL");
     }
     //##########################################################################
     //          BEGIN/LOAD REPORT
     //##########################################################################
-    private List<BMSPurchaseOrderModel> po;
+    private List<BMSPurchaseOrderModel> selected_po_list;
     @FXML    
     private void printReportBUTTON(ActionEvent event) {
-        selectedPos = new LinkedHashMap<>();
+        selected_po_map = new LinkedHashMap<>();
         
-        po = new ArrayList<>();
-        for(TablePosition<BMSPurchaseOrderModel,?> pos : ManageDBTable.getSelectionModel().getSelectedCells()){
+        selected_po_list = new ArrayList<>();
+        for(TablePosition<BMSPurchaseOrderModel,?> pos : ManageDBTable.getSelectionModel().getSelectedCells() ){
             int row = pos.getRow();
             BMSPurchaseOrderModel data = ManageDBTable.getItems().get(row);
             System.out.println("ROW SELECTED: " +row+ " | PO selected: " + data.getPurchase_order() );
-            selectedPos.put(ManageDBTable.getItems().get(row).getPurchase_order(), ManageDBTable.getItems().get(row));  
-            po.add(data);
+//            selected_po_map.put(ManageDBTable.getItems().get(row).getPurchase_order(), ManageDBTable.getItems().get(row));  
+            selected_po_map.put(data.getPurchase_order(), data);
+            selected_po_list.add(data);
         }
         
         try {
@@ -310,11 +320,11 @@ public class ManageDBViewController implements Initializable {
             stage.setScene(scene);
             POReportSelectionViewController po_controller =loader.getController();
             
-     
-           
-//            po_controller.setSelecteditems(selectedPos,obList,po);
+            po_controller.setSelecteditems(selected_po_map,obList_AllData,selected_po_list);
             
-            selectedPos.clear();
+            selected_po_map.clear();
+            selected_po_list.clear();
+            
             stage.showAndWait();
             
         } catch (IOException ex) {
@@ -340,10 +350,11 @@ public class ManageDBViewController implements Initializable {
         return ManageInstance;
     }
     
-    public ObservableList getList(){
-        return obList;
+    public ObservableList getObList(){
+        return obList_AllData;
     }
-    public List<BMSPurchaseOrderModel> getSelectedList(){
-        return po;
+    public List<BMSPurchaseOrderModel> getSelectedPoList(){
+        return selected_po_list;
     }
+    
 }
