@@ -8,6 +8,8 @@ package Model;
 
 
 
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -19,10 +21,11 @@ import java.util.Map;
  *
  * @author Gilbert Alvarado
  */
-public class DOCXHandler {    
+public class DOCXHandler {
     
     public static boolean generateReport( String output_file_AbsolutePath, 
-            HashMap<String, List<BMSPurchaseOrderModel>> supplier_map){
+            HashMap<String, List<BMSPurchaseOrderModel>> supplier_map,
+            String sheet_number, LocalDate start, LocalDate end){
         
         System.out.println("----------\nDOCXHandler\n---------------\nORGANIZED DATA\n----------------");
         for(Map.Entry<String, List<BMSPurchaseOrderModel>> entry : supplier_map.entrySet()){
@@ -43,7 +46,8 @@ public class DOCXHandler {
                 System.out.println("USING FILE FROM EXTERNAL SOURCE");
             }
         
-            if( DOCXWriterTag.initializeDocumentValues( file_template, output_file_AbsolutePath, supplier_map ) ){
+            if( DOCXWriterTag.initializeDocumentValues( file_template, output_file_AbsolutePath, supplier_map,
+                    sheet_number,start, end ) ){
                 System.out.println("CREATE DIALOG FOR SUCCESS");
                 return true;
             }else

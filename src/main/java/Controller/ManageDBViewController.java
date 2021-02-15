@@ -50,9 +50,11 @@ import javafx.scene.control.TablePosition;
 import javafx.scene.control.TableRow;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
+import javafx.scene.control.Tooltip;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.GridPane;
+import javafx.scene.shape.Circle;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.util.Callback;
@@ -97,6 +99,7 @@ public class ManageDBViewController implements Initializable {
 
     private MainLayoutController instance;    
     
+    
     //KEY = PO
     //VALUE = fetch data from Model OR 
     private LinkedHashMap<String, BMSPurchaseOrderModel> selected_po_map;
@@ -111,7 +114,8 @@ public class ManageDBViewController implements Initializable {
     private Button clearFieldsBUTTON;
     @FXML
     private Button helpButton;
-   
+    final Tooltip tooltip = new Tooltip();
+
     
     @Override
     public void initialize(URL url, ResourceBundle rb) {
@@ -131,8 +135,19 @@ public class ManageDBViewController implements Initializable {
         ATTACHMENTScolumn.setCellValueFactory(new PropertyValueFactory<>("attachmentLength"));
         printReportBUTTON.setDisable(true);
         
+        tooltip.setText(
+            "select rows from the table\n" +
+            "to create a report.\n"+ 
+            "to select multiple rows, press/hold Ctrl.\n"+
+            "to select all rows, press/hold Ctrl + 'A'.");
+   
+        helpButton.setTooltip(
+            tooltip
+        );
+        
         updateTableView();
-        printReportBUTTON.disableProperty().bind(Bindings.isEmpty(ManageDBTable.getSelectionModel().getSelectedItems()));            
+        printReportBUTTON.disableProperty().bind(Bindings.isEmpty(ManageDBTable.getSelectionModel().getSelectedItems())); 
+        
     }
     
     //##########################################################################
@@ -151,7 +166,9 @@ public class ManageDBViewController implements Initializable {
         addButtonsToTable();
         setupPredicates();
         setFilterType();
-        
+        for (TableColumn<BMSPurchaseOrderModel, ?> column : ManageDBTable.getColumns()) {
+            addTooltipToColumnCells(column);
+        }
     }
     //##########################################################################
     private void addButtonsToTable(){
@@ -159,36 +176,38 @@ public class ManageDBViewController implements Initializable {
         //BUTTONcolumn
         Callback<TableColumn<BMSPurchaseOrderModel, String>, TableCell<BMSPurchaseOrderModel, String>> cellFactory;
         
-        cellFactory = new Callback<TableColumn<BMSPurchaseOrderModel, String>,TableCell<BMSPurchaseOrderModel, String>>(){
-            @Override
-            public TableCell<BMSPurchaseOrderModel, String> call(TableColumn<BMSPurchaseOrderModel, String> param) {
-               final TableCell<BMSPurchaseOrderModel, String> cell = new TableCell<BMSPurchaseOrderModel, String>(){   
-                    private final Button edit_button = new Button("Edit");
-                    {
-                        edit_button.setMaxHeight(50);
-                        edit_button.setMaxWidth(100);
-                        edit_button.setStyle("-fx-font-size: 14px;-fx-font-weight: bold;\n" 
-                                + "-fx-font-family: Georgia;");
-                    }      
-                    
-                    ButtonType YES = new ButtonType("YES", ButtonBar.ButtonData.YES);
-                    ButtonType NO = new ButtonType("NO", ButtonBar.ButtonData.CANCEL_CLOSE);                     
-                    Alert alert = new Alert(AlertType.CONFIRMATION);
-                    {
-                        alert.setTitle("Manage DIALOG");
-                        alert.getButtonTypes().clear();
-                        alert.getDialogPane().getButtonTypes().addAll( YES, NO );
-                    }          
-                    @Override
-                    public void updateItem(String item, boolean empty){
-                        super.updateItem(item, empty);
-                        if(empty){
-                            setGraphic(null);
-                        }else{
-                            setGraphic(edit_button);
-
-                            edit_button.setOnAction((ActionEvent event) -> {
-
+        cellFactory = (TableColumn<BMSPurchaseOrderModel, String> param) -> {
+            final TableCell<BMSPurchaseOrderModel, String> cell = new TableCell<BMSPurchaseOrderModel, String>() 
+            {
+                private final Button edit_button = new Button("Edit");
+                {
+                    edit_button.setMaxHeight(50);
+                    edit_button.setMaxWidth(100);
+                    edit_button.setStyle("-fx-font-size: 14px;-fx-font-weight: bold;\n"
+                            + "-fx-font-family: Georgia;");
+                    edit_button.setStyle("-fx-font-size: 13px;-fx-font-weight: bold;\n" 
+                                + "-fx-font-family: Georgia; -fx-background-color : #474747;"
+                                + "-fx-text-fill : #a4ab1b;");
+                }
+                
+                ButtonType YES = new ButtonType("YES", ButtonBar.ButtonData.YES);
+                ButtonType NO = new ButtonType("NO", ButtonBar.ButtonData.CANCEL_CLOSE);
+                Alert alert = new Alert(AlertType.CONFIRMATION);
+                {
+                    alert.setTitle("Manage DIALOG");
+                    alert.getButtonTypes().clear();
+                    alert.getDialogPane().getButtonTypes().addAll( YES, NO );
+                }
+                @Override
+                public void updateItem(String item, boolean empty){
+                    super.updateItem(item, empty);
+                    if(empty){
+                        setGraphic(null);
+                    }else{
+                        setGraphic(edit_button);
+                        
+                        edit_button.setOnAction((ActionEvent event) -> {
+                            
                             BMSPurchaseOrderModel data = getTableView().getItems().get(getIndex());
 
                             alert.setContentText("Edit " + data.getPurchase_order() + "?\n");
@@ -200,17 +219,33 @@ public class ManageDBViewController implements Initializable {
                                 instance.openEditPOView(null);//MainLayoutTesting_WITHANCHORController
 
                             }
-                            
                         });
-                        }
                     }
-                };
-                return cell;
-            }
+                }
+            };
+            
+            return cell;
         };
         BUTTONcolumn.setCellFactory(cellFactory);        
     }
     
+    private <T> void addTooltipToColumnCells(TableColumn<BMSPurchaseOrderModel,T> column) {
+
+        Callback<TableColumn<BMSPurchaseOrderModel, T>, TableCell<BMSPurchaseOrderModel,T>> existingCellFactory 
+            = column.getCellFactory();
+
+        column.setCellFactory(c -> {
+            TableCell<BMSPurchaseOrderModel, T> cell = existingCellFactory.call(c);
+
+            Tooltip tooltip = new Tooltip();
+            // can use arbitrary binding here to make text depend on cell
+            // in any way you need:
+            tooltip.textProperty().bind(cell.itemProperty().asString());
+
+            cell.setTooltip(tooltip);
+            return cell ;
+        });
+    }
     //##########################################################################
     //          FILTER 
     //##########################################################################
@@ -285,9 +320,10 @@ public class ManageDBViewController implements Initializable {
         SUPPLIERTextField.clear();
         POTextField.clear();
         BRGTextField.clear();
-        curShipSTART.getEditor().clear();
-        curShipEND.getEditor().clear();
+        curShipSTART.setValue(null);
+        curShipEND.setValue(null);
         CONFIRMEDcomboBox.getSelectionModel().select("VIEW ALL");
+        setFilterType();
     }
     //##########################################################################
     //          BEGIN/LOAD REPORT
@@ -320,7 +356,11 @@ public class ManageDBViewController implements Initializable {
             stage.setScene(scene);
             POReportSelectionViewController po_controller =loader.getController();
             
-            po_controller.setSelecteditems(selected_po_map,obList_AllData,selected_po_list);
+            //LocalDate minDate = curShipSTART.getValue();
+            //LocalDate maxDate = curShipEND.getValue();
+            
+            po_controller.setSelecteditems(selected_po_map,obList_AllData,selected_po_list,
+                    curShipSTART.getValue(),curShipEND.getValue());
             
             selected_po_map.clear();
             selected_po_list.clear();

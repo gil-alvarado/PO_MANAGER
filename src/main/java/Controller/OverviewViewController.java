@@ -32,6 +32,7 @@ import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
+import javafx.geometry.Pos;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
@@ -46,6 +47,7 @@ import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
+import javafx.scene.control.Tooltip;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
@@ -104,7 +106,6 @@ public class OverviewViewController implements Initializable {
         IPcolumn.setCellValueFactory(new PropertyValueFactory<>("invoice_price"));
         LCcolumn.setCellValueFactory(new PropertyValueFactory<>("landing_cost"));
         
-
         updateTableView();
             
     }
@@ -119,6 +120,9 @@ public class OverviewViewController implements Initializable {
         addButtonsToTable();
         setupPredicates();
         setFilterType();
+        for (TableColumn<BMSPurchaseOrderModel, ?> column : OverviewTableView.getColumns()) {
+            addTooltipToColumnCells(column);
+        }
     }
     
     //###########################################################################
@@ -148,7 +152,6 @@ public class OverviewViewController implements Initializable {
             LocalDate minDate = curShipSTART.getValue();
             LocalDate maxDate = curShipEND.getValue();
 
-            // get final values != null
             final LocalDate finalMin = minDate == null ? LocalDate.MIN : minDate;
             final LocalDate finalMax = maxDate == null ? LocalDate.MAX : maxDate;
 
@@ -189,8 +192,10 @@ public class OverviewViewController implements Initializable {
                     {
                         btn.setMaxHeight(50);
                         btn.setMaxWidth(100);
-                        btn.setStyle("-fx-font-size: 18px;-fx-font-weight: bold;\n" 
-                                + "-fx-font-family: Georgia;");
+                        btn.setAlignment(Pos.CENTER);
+                        btn.setStyle("-fx-font-size: 13px;-fx-font-weight: bold;\n" 
+                                + "-fx-font-family: Georgia; -fx-background-color : #474747;"
+                                + "-fx-text-fill : #a4ab1b;");
                     }
                     Dialog<String> dialog = new Dialog<>();
                     {
@@ -269,7 +274,23 @@ public class OverviewViewController implements Initializable {
         };
         NOTEScolumn.setCellFactory(cellFactory);
     }
-    
+    private <T> void addTooltipToColumnCells(TableColumn<BMSPurchaseOrderModel,T> column) {
+
+        Callback<TableColumn<BMSPurchaseOrderModel, T>, TableCell<BMSPurchaseOrderModel,T>> existingCellFactory 
+            = column.getCellFactory();
+
+        column.setCellFactory(c -> {
+            TableCell<BMSPurchaseOrderModel, T> cell = existingCellFactory.call(c);
+
+            Tooltip tooltip = new Tooltip();
+            // can use arbitrary binding here to make text depend on cell
+            // in any way you need:
+            tooltip.textProperty().bind(cell.itemProperty().asString());
+
+            cell.setTooltip(tooltip);
+            return cell ;
+        });
+    }    
     //##############################################################################
     
     private void addMultipleSearchFilters(){
@@ -297,9 +318,10 @@ public class OverviewViewController implements Initializable {
         SUPPLIERTextField.clear();
         POTextField.clear();
         BRGTextField.clear();
-        curShipSTART.getEditor().clear();
-        curShipEND.getEditor().clear();
+        curShipSTART.setValue(null);
+        curShipEND.setValue(null);
         CONFIRMEDcomboBox.getSelectionModel().select("VIEW ALL");
+        setFilterType();
     }
     //##########################################################################   
 

@@ -171,8 +171,8 @@
             <TableColumn fx:id="POcolumn" prefWidth="75.0" text="PO" />
           <TableColumn fx:id="CURSHIP_column" editable="false" prefWidth="133.0" text="CUR SHIP" />
             <TableColumn fx:id="BRGcolumn" editable="false" prefWidth="75.0" text="BRG#" />
-            <TableColumn fx:id="IPcolumn" prefWidth="75.0" style="-fx-text-fill: green;" text="I/P" />
-            <TableColumn fx:id="LCcolumn" prefWidth="75.0" style="-fx-text-fill: green;" text="L/C" />
+            <TableColumn fx:id="IPcolumn" prefWidth="75.0" style="-fx-text-fill: #85bb65;" text="I/P" />
+            <TableColumn fx:id="LCcolumn" prefWidth="75.0" style="-fx-text-fill: #85bb65;" text="L/C" />
             <TableColumn fx:id="CONFIRMEDcolumn" editable="false" prefWidth="120.0" text="CONFIRMED" />
             <TableColumn editable="false" prefWidth="75.0" text="FOLLOW UP">
                <columns>

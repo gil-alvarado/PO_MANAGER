@@ -185,7 +185,7 @@
             <RowConstraints minHeight="10.0" vgrow="SOMETIMES" />
          </rowConstraints>
          <children>
-            <Button fx:id="printReportBUTTON" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#printReportBUTTON" stylesheets="@../../styles/styleManageButton.css" text="generate report" GridPane.columnIndex="1">
+            <Button fx:id="printReportBUTTON" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#printReportBUTTON" stylesheets="@../../styles/styleManageButton.css" text="create report" GridPane.columnIndex="1">
                <GridPane.margin>
                   <Insets bottom="5.0" top="5.0" />
                </GridPane.margin>
@@ -207,7 +207,7 @@
                         <RowConstraints fillHeight="false" minHeight="10.0" percentHeight="100.0" vgrow="SOMETIMES" />
                      </rowConstraints>
                      <children>
-                        <Button fx:id="helpButton" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" mnemonicParsing="false" style="-fx-font-size: 20;" stylesheets="@../../styles/styleManageButton.css" text="?" GridPane.halignment="CENTER" />
+                        <Button fx:id="helpButton" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" mnemonicParsing="false" style="-fx-font-size: 20;" stylesheets="@../../styles/help.css" text="?" GridPane.halignment="CENTER" />
                      </children>
                   </GridPane>
                </children>

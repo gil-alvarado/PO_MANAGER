@@ -10,14 +10,29 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.text.DateFormat;
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.regex.Pattern;
 import org.apache.poi.ooxml.POIXMLDocument;
+import org.apache.poi.xwpf.model.XWPFHeaderFooterPolicy;
+import org.apache.poi.xwpf.usermodel.ParagraphAlignment;
+import org.apache.poi.xwpf.usermodel.UnderlinePatterns;
 import org.apache.poi.xwpf.usermodel.XWPFDocument;
+import org.apache.poi.xwpf.usermodel.XWPFFooter;
+import org.apache.poi.xwpf.usermodel.XWPFHeader;
 import org.apache.poi.xwpf.usermodel.XWPFParagraph;
 import org.apache.poi.xwpf.usermodel.XWPFRun;
 import org.apache.poi.xwpf.usermodel.XWPFTable;
@@ -33,9 +48,10 @@ import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTTbl;
  * @author Gilbert Alvarado
  */
 public class DOCXWriterTag {
-    
+    private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM/dd/YYYY");
+//    private  LocalDate start, end;
     public static boolean initializeDocumentValues(String docx_template, String output_file_AbsolutePath,
-            HashMap<String, List<BMSPurchaseOrderModel>> supplier_map) {
+            HashMap<String, List<BMSPurchaseOrderModel>> supplier_map, String sheet_number,LocalDate start, LocalDate end) {
 
         // Template conversion default success
         boolean changeFlag = true;
@@ -53,7 +69,7 @@ public class DOCXWriterTag {
             File output_file = new File(output_file_AbsolutePath);
 
             if(DOCXWriterTag.createWordDocument
-            (document_template, output_file, supplier_map) ){
+            (document_template, output_file, supplier_map, sheet_number, start, end) ){
                 System.out.println("SUCCESSFULY CREATED DOCUMENT");
             }
             else{
@@ -73,27 +89,52 @@ public class DOCXWriterTag {
 
 //##############################################################################
   private static boolean createWordDocument(XWPFDocument document_template,File output_file,
-         HashMap<String, List<BMSPurchaseOrderModel>> supplier_map) throws IOException{
+         HashMap<String, List<BMSPurchaseOrderModel>> supplier_map, String sheet_number,
+         LocalDate start, LocalDate end) throws IOException{
 
+    DateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy hh.mm aa");
+    Date date = new Date();
+    System.out.println(dateFormat.format(date));   
      //USED ADD HEADER INFORMATION
      //"${PO}","${DATE}","${BRG}","${PARAMETER}","${QUANTITY}","${LC}","${IP}"
-//     Map<String, Object> map = new HashMap<>();
-//     map.put("${PO}", supplier_map.get("Vie").get(0));
-//     map.put("${DATE}", supplier_map.get("Vie").get(0).getCur());
-//     map.put("${BRG}",supplier_map.get("Vie").get(0).getBrg());
-//     map.put("${PARAMETER}",supplier_map.get("Vie").get(0).getPacket());
-//     map.put("${QUANTITY}",supplier_map.get("Vie").get(0).getNumberAttachments());
-//     map.put("${LC}",supplier_map.get("Vie").get(0).getSupplier());
-//     map.put("${IP}",supplier_map.get("Vie").get(0).getPacket());
-     
+     Map<String, Object> header_content = new HashMap<>();
+     String []d = dateFormat.format(date).split(" ", -1);
+     header_content.put("${TODAY_DATE}", d[0]);
+     header_content.put("${TIME}", d[1] + " "  + d[2]);
+     if(!sheet_number.trim().isEmpty())
+        header_content.put("${SHEET_NUMBER}", sheet_number);
+     else
+         header_content.put("${SHEET_NUMBER}", "N/A");
      
      if(document_template == null)//model
          return false;
 //     replace(document_template, map);//header/title
-     
-     
-     
-     
+    XWPFHeaderFooterPolicy headerFooterPolicy;
+    int section = 1;
+    for (XWPFParagraph paragraph : document_template.getParagraphs()) {
+        if (paragraph.getCTP().isSetPPr()) { //paragraph has paragraph properties set
+            if (paragraph.getCTP().getPPr().isSetSectPr()) { //paragraph property has section properties set
+             //headers and footers in paragraphs section properties:
+             headerFooterPolicy = new XWPFHeaderFooterPolicy(document_template, paragraph.getCTP().getPPr().getSectPr());
+             System.out.println("headers and footers in section properties of section " + section++ + ":");
+             updatePageHeader(headerFooterPolicy,header_content);
+            }   
+        }
+    }         
+    
+    Map <String, Object> dates = new HashMap<>();
+    if(start!=null)
+        dates.put("${START_DATE}", formatter.format(start));
+    else
+        dates.put("${START_DATE}", "N/A");
+
+    if(end!=null)
+        dates.put("${END_DATE}", formatter.format(end));
+    else
+        dates.put("${END_DATE}", "N/A");
+    
+    replace(document_template,dates);
+    
        //ADDS ROW TEMPLATE FOR EACH VALUE
      //THEN FILLS EACH ROW TEMPLATE ACCORDING TO NUMBER OF VALUES TO ENTER
     if(extendTable(document_template,supplier_map)){
@@ -120,6 +161,51 @@ public class DOCXWriterTag {
 
  }
   
+static void replaceHeaderContent(XWPFHeader header, Map<String, Object> header_content){
+
+    for(XWPFTable t:header.getTables()){
+
+        for(int i=0;i<t.getNumberOfRows();i++){
+
+            XWPFTableRow r=t.getRow(i);
+            for(Map.Entry<String, Object> entry : header_content.entrySet()){
+                for(XWPFTableCell cell:r.getTableCells()){
+                    for(XWPFParagraph paragraph:cell.getParagraphs()){
+                        if(paragraph.getParagraphText().contains(entry.getKey())){
+                            replace(paragraph, header_content);
+                        }
+                    }
+                }
+            }
+        }
+    }    
+
+}
+ static void updatePageHeader(XWPFHeaderFooterPolicy headerFooterPolicy, Map<String, Object> header_content) {
+  XWPFHeader header;
+  XWPFFooter footer;
+  header = headerFooterPolicy.getDefaultHeader();
+    if (header != null){
+        System.out.println("DefaultHeader: " + header.getText());
+        replaceHeaderContent(header,header_content);
+    }
+  
+//  header = headerFooterPolicy.getFirstPageHeader();
+//  if (header != null) System.out.println("FirstPageHeader: " + header.getText());
+//  header = headerFooterPolicy.getEvenPageHeader();
+//  if (header != null) System.out.println("EvenPageHeader: " + header.getText());
+//  header = headerFooterPolicy.getOddPageHeader();
+//  if (header != null) System.out.println("OddPageHeader: " + header.getText());
+//
+//  footer = headerFooterPolicy.getDefaultFooter();
+//  if (footer != null) System.out.println("DefaultFooter: " + footer.getText());
+//  footer = headerFooterPolicy.getFirstPageFooter();
+//  if (footer != null) System.out.println("FirstPageFooter: " + footer.getText());
+//  footer = headerFooterPolicy.getEvenPageFooter();
+//  if (footer != null) System.out.println("EvenPageFooter: " + footer.getText());
+//  footer = headerFooterPolicy.getOddPageFooter();
+//  if (footer != null) System.out.println("OddPageFooter: " + footer.getText());
+ }  
   
 //##############################################################################
   
@@ -127,7 +213,7 @@ public class DOCXWriterTag {
      
      for(Iterator<XWPFTable> iterator = tables.iterator();iterator.hasNext();){
          XWPFTable table = iterator.next();
-         if(table.getText().contains("$")){
+         if(table.getText().contains("${tag}")){
              return table;
          }   
      }
@@ -152,7 +238,10 @@ public class DOCXWriterTag {
         CTRow ctRow = null; 
 
         tableTemplate = getTableTemplate(template_docu.getTables());//template_docu.getTableArray(0);
+
+        
         cTTblTemplate = tableTemplate.getCTTbl();
+        
         cursor = setCursorToNextStartToken(cTTblTemplate);
         row_template = tableTemplate.getRow(1);
         ctRow = (CTRow) row_template.getCtRow().copy();
@@ -177,24 +266,31 @@ public class DOCXWriterTag {
             cursor = setCursorToNextStartToken(paragraph.getCTP());
           //   paragraph.setStyle(heading.getStyleId());
             paragraph.setStyle("Heading1");
+            
             run = paragraph.createRun();
-            run.setText(entry.getKey() + ": Number of PO's: "+entry.getValue().size());
+            run.setText(entry.getKey() );
+            run.setBold(true);
+                    
+             run = paragraph.createRun();
+             run.setText(": Number of PO's: ");
+             run = paragraph.createRun();
+             run.setBold(true);
+             run.setText(String.valueOf(entry.getValue().size()));
 
 
             table = template_docu.insertNewTbl(cursor); //insert new empty table at position t
             cursor = setCursorToNextStartToken(table.getCTTbl());
 
             tableCopy = new XWPFTable((CTTbl)cTTblTemplate.copy(), template_docu); //copy the template table
-
+            
             int itemEntryNum ;
             System.out.println("NUMBER POS TO PRINT: " + entry.getValue().size());
             //DETERMINE NUMBER OF ROWS(> 1) TO ADD TO TABLE TEMPLATE
-            if(entry.getValue().size() > 1){//
-            for(int i = 0; i < entry.getValue().size() - 2; i++){
-                itemEntryNum = tableCopy.getRows().size()-1;
-//                tableCopy.addRow(row_template,itemEntryNum);
-                tableCopy.addRow(new XWPFTableRow((CTRow) row_template.getCtRow().copy(), tableCopy), itemEntryNum);
-            }
+            if(entry.getValue().size() > 1){
+                for(int i = 0; i < entry.getValue().size() - 2; i++){
+                    itemEntryNum = tableCopy.getRows().size()-1;
+                    tableCopy.addRow(new XWPFTableRow((CTRow) row_template.getCtRow().copy(), tableCopy), itemEntryNum);
+                }
                 XWPFTableRow newRow =new XWPFTableRow( (CTRow) ctRow.copy(), tableCopy);
                 replaceTagValue(newRow, entry.getKey()); 
                 tableCopy.addRow(newRow,1);
@@ -202,15 +298,20 @@ public class DOCXWriterTag {
                 replaceTagValue(tableCopy.getRow(1), entry.getKey());
             }       
 
-            template_docu.setTable(t+1, tableCopy); //set tableCopy at position t instead of table
-
+            
+            template_docu.setTable(t+2, tableCopy);//+1 (since we're adding new tablew) //set tableCopy at position t instead of table
+            
+//            totalTable = template_docu.insertNewTbl(cursor); //insert new empty table at position t
+//            cursor = setCursorToNextStartToken(totalTable.getCTTbl());            
+//            totalTblCopy = new XWPFTable((CTTbl)cTTblTotalTemplate.copy(), template_docu); //copy the template table
+//            
+//            template_docu.setTable(t+1,totalTblCopy);
             paragraph = template_docu.insertNewParagraph(cursor); //insert new empty paragraph
             cursor = setCursorToNextStartToken(paragraph.getCTP());
             t++;
         }
         
-        deleteOneTable(template_docu,0);
-       
+        deleteOneTable(template_docu,1);//0
         return true;
     }
     private static void replaceTagValue(XWPFTableRow newRow, String newTag){
@@ -229,7 +330,12 @@ public class DOCXWriterTag {
                     replace(p,map);
                     break;
                 }
-                            
+                 else if(p.getParagraphText().contains("${LC_TOTAL}")){
+                    Map<String, Object> map = new HashMap<>();
+                    map.put("${PO}","${"+newTag+"}${PO}");
+                    replace(p,map);
+                    break;
+                }           
             }
         }
     }
@@ -245,39 +351,38 @@ public class DOCXWriterTag {
         return cursor;
     }
     
-    
-
-    
     //##########################################################################
+ private static DecimalFormat LCformat = new DecimalFormat("$###,###,##0.00");
+    private static DecimalFormat IPformat = new DecimalFormat("$###,###,##0.000");    
     private static boolean fillTable(XWPFDocument template_document, 
             HashMap<String, List<BMSPurchaseOrderModel>> supplier_map){
 
         XWPFTable table=null;
         XWPFTableRow row=null;
         int rowPosition=0;
+        XmlCursor cursor = null;
+        XWPFParagraph para;
 
         HashMap<String, TableINFO> table_map = new HashMap<>();
         for(XWPFTable t:template_document.getTables()){
+            for(String supplier : supplier_map.keySet()){
+                for(int i=0;i<t.getNumberOfRows();i++){
 
-            for(String supplier : supplier_map.keySet())
-            for(int i=0;i<t.getNumberOfRows();i++){
-
-                XWPFTableRow r=t.getRow(i);
-                for(XWPFTableCell cell:r.getTableCells()){
-                    for(XWPFParagraph paragraph:cell.getParagraphs()){
-                        if(paragraph.getParagraphText().contains("${" +supplier+"}")){
-                            System.out.println("FilTable: ROW " + i+  " CONTAINS ${"+supplier+"}");
-                            table=t;
-                            row=r;
-                            rowPosition=i;
-                            /*
-                              * The ${tag} tag is no longer needed, so delete it
-                             */
-                            Map<String,Object> m=new HashMap<>();
-                            m.put("${"+supplier+"}", "");
-                            replace(paragraph, m);
-                            table_map.put(supplier,new TableINFO(supplier,t,r, i));
-                            break;
+                    XWPFTableRow r=t.getRow(i);
+                    for(XWPFTableCell cell:r.getTableCells()){
+                        for(XWPFParagraph paragraph:cell.getParagraphs()){
+                            if(paragraph.getParagraphText().contains("${" +supplier+"}")){
+                                System.out.println("FilTable: ROW " + i+  " CONTAINS ${"+supplier+"}");
+                                table=t;
+                                row=r;
+                                rowPosition=i;
+                                
+                                Map<String,Object> m=new HashMap<>();
+                                m.put("${"+supplier+"}", "");
+                                replace(paragraph, m);
+                                table_map.put(supplier,new TableINFO(supplier,t,r, i));
+                                break;
+                            }
                         }
                     }
                 }
@@ -291,7 +396,10 @@ public class DOCXWriterTag {
 
         System.out.println("FillTable: ROW POS: " + rowPosition);
 
+        NumberFormat format = NumberFormat.getCurrencyInstance();
+        
         for(Map.Entry<String, List<BMSPurchaseOrderModel>> entry : supplier_map.entrySet()){
+            double ip = 0.0,LC = 0.0;
             for(int i=0,r=rowPosition;r<rowPosition+entry.getValue().size();r++,i++){
                      Map<String, Object> map=new HashMap<>();//Lookup table
                     map.put("${PO}", entry.getValue().get(i).getPurchase_order());
@@ -301,18 +409,66 @@ public class DOCXWriterTag {
                     map.put("${QUANTITY}",entry.getValue().get(i).getQuantity());
                     map.put("${LC}",entry.getValue().get(i).getLanding_cost());
                     map.put("${IP}",String.valueOf(entry.getValue().get(i).getInvoice_price()));
+                    map.put("${CONFIRMED}", entry.getValue().get(i).getConfirmed());
                     row=table_map.get(entry.getKey()).getTable().getRow(r);
-//                    if(row!=null)
-                    for(XWPFTableCell cell:row.getTableCells()){
+                    
+                    for(XWPFTableCell cell:row.getTableCells()){//per row
                             for(XWPFParagraph paragraph:cell.getParagraphs()){
                                      replace(paragraph, map);//Call the function to replace the XWPFParagraph content
                             }
                     }
+                try {
+                    Number number = format.parse(entry.getValue().get(i).getInvoice_price());
+                    ip+= Double.parseDouble(number.toString());
+                    number=format.parse(entry.getValue().get(i).getLanding_cost());
+                    LC+= Double.parseDouble(number.toString());
+                } catch (ParseException ex) {
+                    Logger.getLogger(DOCXWriterTag.class.getName()).log(Level.SEVERE, null, ex);
+                }
             }
+cursor = setCursorToNextStartToken(table_map.get(entry.getKey()).getTable().getCTTbl());
+XWPFParagraph newParagraph = template_document.insertNewParagraph(cursor);
+newParagraph.setAlignment(ParagraphAlignment.RIGHT);
+
+XWPFRun run = newParagraph.createRun();
+  run.setFontSize(14);
+  run.setBold(true);
+  run.setUnderline(UnderlinePatterns.SINGLE);
+  run.setText("LC TOTAL:");
+  
+  run = newParagraph.createRun();
+    run.addTab();
+  run = newParagraph.createRun();
+  run.setFontSize(14);
+  run.setUnderline(UnderlinePatterns.DASH);
+  run.setBold(true);
+  run.setColor("85bb65");
+  run.setText(LCformat.format(LC));  
+  
+  run = newParagraph.createRun(); 
+  run.addBreak();
+  run.setBold(true);
+  run.setFontSize(14);
+  run.setUnderline(UnderlinePatterns.SINGLE);
+  run.setText("IP TOTAL:" );
+  
+  run = newParagraph.createRun();
+  run.addTab();
+  run = newParagraph.createRun();
+  run.setFontSize(14);
+  run.setUnderline(UnderlinePatterns.DASH);
+  run.setBold(true);
+  run.setColor("85bb65");
+  
+  run.setText(IPformat.format(ip));
+  
+  
+  
         }
         return true;
 
     }
+    
     //##########################################################################
         
     public static void replace(XWPFDocument document,Map<String, Object> map){
@@ -477,6 +633,41 @@ public class DOCXWriterTag {
                 return false;
             }
             return true;
+    }
+    
+    static void replaceHeaderText(XWPFDocument document, String searchValue, String replacement)
+    {
+        List<XWPFHeader> headers = document.getHeaderList();
+        for(XWPFHeader h : headers)
+        {
+            for (XWPFParagraph p : h.getParagraphs()) {
+                List<XWPFRun> runs = p.getRuns();
+                if (runs != null) {
+                    for (XWPFRun r : runs) {
+                        String text = r.getText(0);
+                        if (text != null && text.contains(searchValue)) {
+                            text = text.replace(searchValue, replacement);
+                            r.setText(text, 0);
+                        }
+                    }
+                }
+            }
+            for (XWPFTable tbl : h.getTables()) {
+                for (XWPFTableRow row : tbl.getRows()) {
+                    for (XWPFTableCell cell : row.getTableCells()) {
+                        for (XWPFParagraph p : cell.getParagraphs()) {
+                            for (XWPFRun r : p.getRuns()) {
+                                String text = r.getText(0);
+                                if (text != null && text.contains(searchValue)) {
+                                    text = text.replace(searchValue, replacement);
+                                    r.setText(text,0);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 }
 

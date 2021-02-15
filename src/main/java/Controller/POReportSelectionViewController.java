@@ -13,6 +13,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -99,7 +100,7 @@ public class POReportSelectionViewController implements Initializable {
     @FXML
     private Button selectFolderBUTTON;
     @FXML
-    private TextField fileLocationTextField;
+    private TextField fileLocationTextField,sheetNumberTextField;
     @FXML
     private Label finalLocationLabel;
 
@@ -259,10 +260,15 @@ finalLocationLabel.setVisible(false);
     
     //##########################################################################
 
+    private LocalDate start, end;
+    
     public void setSelecteditems(LinkedHashMap<String, BMSPurchaseOrderModel> selected_po_map,
             ObservableList<BMSPurchaseOrderModel> obList_AllData,
-            List<BMSPurchaseOrderModel> selected_po_list){
-        
+            List<BMSPurchaseOrderModel> selected_po_list,
+            LocalDate start, LocalDate end){
+        this.start = start;
+        this.end = end;
+//        System.out.println(formatter.format(this.start));
         obListMASTERSourceData.removeAll(obListMASTERSourceData);
         obListMASTERTargetData.removeAll(obListMASTERTargetData);
         
@@ -432,17 +438,12 @@ finalLocationLabel.setVisible(false);
         }
         
         Alert finalAlert;
-        
-        
-        
-        if( DOCXHandler.generateReport( fileAbsolutePath, supplier_map ) ) {
+        if( DOCXHandler.generateReport( fileAbsolutePath, supplier_map,sheetNumberTextField.getText(),
+                this.start, this.end) ) {
             
             finalAlert = createAlertWithOptOut(AlertType.INFORMATION,"REPORT","SUCCESS","Report was successfuly created.",
-                    "open file location", new Consumer<Boolean>() {
-                @Override
-                public void accept(Boolean param) {
-                    prefs.putBoolean("openFolder", param == true ? true : false);
-                }
+                    "open file location", (Boolean param) -> {
+                        prefs.putBoolean("openFolder", param == true ? true : false);
             },ButtonType.OK);
             
         }else{

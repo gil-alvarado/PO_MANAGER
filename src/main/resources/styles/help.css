@@ -1,0 +1,17 @@
+/*
+ * Empty Stylesheet file.
+ */
+
+.button
+{
+
+-fx-background-color : brown;
+
+-fx-text-fill : #a4ab1b;
+
+-fx-font-weight: bold;
+-fx-font-size: 28px;
+
+-fx-background-radius: 0;
+
+}
