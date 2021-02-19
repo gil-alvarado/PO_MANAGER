@@ -121,14 +121,14 @@ public class ManageUsersViewController implements Initializable {
     
     private void updateTableView(){
         
-//            manageUsersTable.getItems().clear();
-            obList.removeAll(obList);
-            for(UserInfoModel user : ConnectionUtil.getUsersTable().values()){
-//                if(!user.getUser().equals(LoginViewController.getCurrentUser().getUser()))
-                    obList.add(user);
-            }
-            
-            manageUsersTable.setItems(obList);
+        obList.removeAll(obList);
+        for(UserInfoModel user : ConnectionUtil.getUsersTable().values()){
+//            if(!user.getUser().equals(LoginViewController.getCurrentUser().getUser()))
+            if(!user.getUser().equals(ConnectionUtil.getUsersTable().get("")))
+                obList.add(user);
+        }
+
+        manageUsersTable.setItems(obList);
 
     }
         

@@ -92,36 +92,40 @@ public class DOCXWriterTag {
          HashMap<String, List<BMSPurchaseOrderModel>> supplier_map, String sheet_number,
          LocalDate start, LocalDate end) throws IOException{
 
-    DateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy hh.mm aa");
+    DateFormat dateFormat = new SimpleDateFormat("MM/dd/yyyy hh.mm aa");
     Date date = new Date();
-    System.out.println(dateFormat.format(date));   
-     //USED ADD HEADER INFORMATION
-     //"${PO}","${DATE}","${BRG}","${PARAMETER}","${QUANTITY}","${LC}","${IP}"
-     Map<String, Object> header_content = new HashMap<>();
-     String []d = dateFormat.format(date).split(" ", -1);
-     header_content.put("${TODAY_DATE}", d[0]);
-     header_content.put("${TIME}", d[1] + " "  + d[2]);
-     if(!sheet_number.trim().isEmpty())
-        header_content.put("${SHEET_NUMBER}", sheet_number);
-     else
-         header_content.put("${SHEET_NUMBER}", "N/A");
+    System.out.println("TODAYS DATE: "+dateFormat.format(date));
+    
+    Map<String, Object> header_content = new HashMap<>();
+    String []d = dateFormat.format(date).split(" ", -1);
+    header_content.put("${TODAY_DATE}", d[0]);
+    header_content.put("${TIME}", d[1] + " "  + d[2]);
+    if(!sheet_number.trim().isEmpty())
+       header_content.put("${SHEET_NUMBER}", sheet_number);
+    else
+        header_content.put("${SHEET_NUMBER}", "N/A");
      
      if(document_template == null)//model
          return false;
-//     replace(document_template, map);//header/title
+     
     XWPFHeaderFooterPolicy headerFooterPolicy;
     int section = 1;
-    for (XWPFParagraph paragraph : document_template.getParagraphs()) {
-        if (paragraph.getCTP().isSetPPr()) { //paragraph has paragraph properties set
-            if (paragraph.getCTP().getPPr().isSetSectPr()) { //paragraph property has section properties set
-             //headers and footers in paragraphs section properties:
-             headerFooterPolicy = new XWPFHeaderFooterPolicy(document_template, paragraph.getCTP().getPPr().getSectPr());
-             System.out.println("headers and footers in section properties of section " + section++ + ":");
-             updatePageHeader(headerFooterPolicy,header_content);
-            }   
-        }
-    }         
-    
+//    System.out.println("\n-------------\nHEADER BEGIN INITIALIZE:\n-------------\n");
+//    for (XWPFParagraph paragraph : document_template.getParagraphs()) {
+//        if (paragraph.getCTP().isSetPPr()) { //paragraph has paragraph properties set
+//            if (paragraph.getCTP().getPPr().isSetSectPr()) { //paragraph property has section properties set
+//             //headers and footers in paragraphs section properties:
+//             headerFooterPolicy = new XWPFHeaderFooterPolicy(document_template, paragraph.getCTP().getPPr().getSectPr());
+//             System.out.println("headers and footers in section properties of section " + section++ + ":");
+//             updatePageHeader(headerFooterPolicy,header_content);
+//            }   
+//        }
+//    }         
+      //headers and footers in documents body = headers and footers of last section:
+  headerFooterPolicy = new XWPFHeaderFooterPolicy(document_template);
+//  System.out.println("headers and footers in documents body = headers and footers of last section " + section + ":");
+  updatePageHeader(headerFooterPolicy, header_content);
+  
     Map <String, Object> dates = new HashMap<>();
     if(start!=null)
         dates.put("${START_DATE}", formatter.format(start));
@@ -149,7 +153,6 @@ public class DOCXWriterTag {
         if(!fillTable(document_template, supplier_map)){
             return false;
         }
-
      }
      
     if(!writeToFile(document_template, output_file)){//write failed
@@ -183,7 +186,7 @@ static void replaceHeaderContent(XWPFHeader header, Map<String, Object> header_c
 }
  static void updatePageHeader(XWPFHeaderFooterPolicy headerFooterPolicy, Map<String, Object> header_content) {
   XWPFHeader header;
-  XWPFFooter footer;
+//  XWPFFooter footer;
   header = headerFooterPolicy.getDefaultHeader();
     if (header != null){
         System.out.println("DefaultHeader: " + header.getText());
@@ -238,7 +241,6 @@ static void replaceHeaderContent(XWPFHeader header, Map<String, Object> header_c
         CTRow ctRow = null; 
 
         tableTemplate = getTableTemplate(template_docu.getTables());//template_docu.getTableArray(0);
-
         
         cTTblTemplate = tableTemplate.getCTTbl();
         
@@ -256,7 +258,6 @@ static void replaceHeaderContent(XWPFHeader header, Map<String, Object> header_c
                      }
                      break; 
                 }
-
             }
         }
         
@@ -264,19 +265,17 @@ static void replaceHeaderContent(XWPFHeader header, Map<String, Object> header_c
         for(Map.Entry<String,List<BMSPurchaseOrderModel>> entry : supplier_map.entrySet()){
             paragraph = template_docu.insertNewParagraph(cursor); //insert new empty paragraph
             cursor = setCursorToNextStartToken(paragraph.getCTP());
-          //   paragraph.setStyle(heading.getStyleId());
             paragraph.setStyle("Heading1");
             
             run = paragraph.createRun();
             run.setText(entry.getKey() );
             run.setBold(true);
                     
-             run = paragraph.createRun();
-             run.setText(": Number of PO's: ");
-             run = paragraph.createRun();
-             run.setBold(true);
-             run.setText(String.valueOf(entry.getValue().size()));
-
+            run = paragraph.createRun();
+            run.setText(": Number of PO's: ");
+            run = paragraph.createRun();
+            run.setBold(true);
+            run.setText(String.valueOf(entry.getValue().size()));
 
             table = template_docu.insertNewTbl(cursor); //insert new empty table at position t
             cursor = setCursorToNextStartToken(table.getCTTbl());
@@ -296,16 +295,10 @@ static void replaceHeaderContent(XWPFHeader header, Map<String, Object> header_c
                 tableCopy.addRow(newRow,1);
             }else{
                 replaceTagValue(tableCopy.getRow(1), entry.getKey());
-            }       
-
+            }
             
             template_docu.setTable(t+2, tableCopy);//+1 (since we're adding new tablew) //set tableCopy at position t instead of table
             
-//            totalTable = template_docu.insertNewTbl(cursor); //insert new empty table at position t
-//            cursor = setCursorToNextStartToken(totalTable.getCTTbl());            
-//            totalTblCopy = new XWPFTable((CTTbl)cTTblTotalTemplate.copy(), template_docu); //copy the template table
-//            
-//            template_docu.setTable(t+1,totalTblCopy);
             paragraph = template_docu.insertNewParagraph(cursor); //insert new empty paragraph
             cursor = setCursorToNextStartToken(paragraph.getCTP());
             t++;
@@ -591,7 +584,7 @@ XWPFRun run = newParagraph.createRun();
     private static void deleteOneTable( XWPFDocument document, int tableIndex ) {
         try {
             int bodyElement = getBodyElementOfTable( document, tableIndex );
-                System.out.println( "deleting table with bodyElement #" + bodyElement );
+            System.out.println( "deleting table with bodyElement #" + bodyElement );
             document.removeBodyElement( bodyElement );
         } catch ( Exception e ) {
             System.out.println( "There is no table #" + tableIndex + " in the document." );

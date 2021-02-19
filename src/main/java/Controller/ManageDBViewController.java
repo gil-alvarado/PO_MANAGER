@@ -351,6 +351,8 @@ public class ManageDBViewController implements Initializable {
             Stage stage = new Stage();
             stage.setMinWidth(1000);
             stage.setMinHeight(600);
+//            stage.setMaxWidth(1150);
+//            stage.setMaxHeight(750);            
             stage.setResizable(true);
             stage.initModality(Modality.APPLICATION_MODAL);
             stage.setScene(scene);

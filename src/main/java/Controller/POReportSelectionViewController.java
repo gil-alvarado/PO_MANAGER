@@ -6,20 +6,16 @@
 package Controller;
 
 import Model.BMSPurchaseOrderModel;
-import Model.ConnectionUtil;
 import Model.DOCXHandler;
-import java.awt.Desktop;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.ResourceBundle;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
@@ -28,11 +24,9 @@ import java.util.logging.Logger;
 import java.util.prefs.Preferences;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
-import javafx.collections.transformation.SortedList;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
@@ -45,12 +39,10 @@ import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.CheckBox;
-import javafx.scene.control.ComboBox;
-import javafx.scene.control.DatePicker;
 import javafx.scene.control.DialogPane;
 import javafx.scene.control.Label;
-
 import javafx.scene.control.ListView;
+
 import javafx.scene.control.SelectionMode;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
@@ -64,9 +56,7 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.input.TransferMode;
 import javafx.scene.layout.GridPane;
 import javafx.stage.DirectoryChooser;
-import javafx.stage.FileChooser;
 import javafx.stage.Stage;
-import javafx.util.Callback;
 /**
  * FXML Controller class
  *
@@ -102,7 +92,7 @@ public class POReportSelectionViewController implements Initializable {
     @FXML
     private TextField fileLocationTextField,sheetNumberTextField;
     @FXML
-    private Label finalLocationLabel;
+    private Label finalLocationLabel,FileNameExistLABEL;
 
     ObjectProperty<Predicate<BMSPurchaseOrderModel>> 
             supplierFilter, poFilter, brgFilter,dateFilter,confirmedFilter;
@@ -133,21 +123,44 @@ public class POReportSelectionViewController implements Initializable {
     private TableColumn<BMSPurchaseOrderModel, String> SELECTEDsupplierColumn,
             SELECTEDpoColumn,SELECTEDcurColumn,SELECTEDipColumn,SELECTEDlcColumn,
             SELECTEDconfirmedColumn,SELECTEDbrgColumn;
+    @FXML
+    private ListView<String> existing_files_ListView;
    
     @Override
     public void initialize(URL url, ResourceBundle rb) {
         // TODO
         confirmItemsGridPane.toBack();
-finalLocationLabel.setVisible(false);
+        finalLocationLabel.setVisible(false);
         selectItemsTableGridPane.toFront();
         selectItemsTableGridPane.setVisible(true);
         backBUTTON.setDisable(true);
 
-        selectFolderBUTTON.disableProperty().bind(fileNameTextField.textProperty().isEmpty());
-        fileLocationTextField.disableProperty().bind(fileNameTextField.textProperty().isEmpty());
+//        selectFolderBUTTON.disableProperty().bind(fileNameTextField.textProperty().isEmpty());
+//        fileLocationTextField.disableProperty().bind(fileNameTextField.textProperty().isEmpty());
+        
+        existing_files_ListView.disableProperty().bind(fileLocationTextField.textProperty().isEmpty());
+        fileNameTextField.disableProperty().bind(fileLocationTextField.textProperty().isEmpty());
+        sheetNumberTextField.disableProperty().bind(fileLocationTextField.textProperty().isEmpty());
+        
         finishBUTTON.disableProperty().bind(fileNameTextField.textProperty().isEmpty()
                     .or(fileLocationTextField.textProperty().isEmpty()));
+        finalLocationLabel.visibleProperty().bind(fileNameTextField.textProperty().isNotEmpty());
         
+        nextBUTTON.disableProperty().bind(Bindings.size(obListMASTERTargetData).isEqualTo(0)
+                .or(Bindings.isNotEmpty(finalTableView.getItems())));
+        
+        fileNameTextField.textProperty().addListener((observable, oldValue, newValue) -> {
+            if(!fileLocationTextField.getText().isEmpty())
+                finalLocationLabel.setText(fileLocationTextField.getText()+"\\"+newValue+".docx");
+            else
+                finalLocationLabel.setText(newValue+".docx");
+        });
+        fileLocationTextField.textProperty().addListener((observable, oldValue, newValue) -> {
+            if(!fileNameTextField.getText().isBlank())
+                finalLocationLabel.setText(newValue + "\\"+fileNameTextField.getText()+".docx" );
+            else
+                finalLocationLabel.setText(newValue);
+        });
         fileDirectoryStage = new Stage();
         
 		// Add mouse event handlers for the source
@@ -248,13 +261,12 @@ finalLocationLabel.setVisible(false);
 //        //updaete table
         sourceTable.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
         targetTable.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
- 
-        nextBUTTON.disableProperty().bind(Bindings.size(obListMASTERTargetData).isEqualTo(0));
+        
         //##############################################################
         //END initialize 
         //##############################################################    
         prefs = Preferences.userRoot().node(POReportSelectionViewController.class.getClass().getName());
-        System.out.println("POReportSelectionViewController PREFS: "+prefs.absolutePath());
+//        System.out.println("POReportSelectionViewController PREFS: "+prefs.absolutePath());
         
     }    
     
@@ -391,7 +403,7 @@ finalLocationLabel.setVisible(false);
 
     @FXML
     private void backStepButton(ActionEvent event) {
-        //        selectItemsGridPane.toFront();
+        finalTableView.getItems().clear();
         selectItemsTableGridPane.toFront();
         //        backBUTTON.setDisable(true);
         backBUTTON.setDisable(true);
@@ -438,37 +450,42 @@ finalLocationLabel.setVisible(false);
         }
         
         Alert finalAlert;
+        List <ButtonType> buttons = new ArrayList<>();
         if( DOCXHandler.generateReport( fileAbsolutePath, supplier_map,sheetNumberTextField.getText(),
                 this.start, this.end) ) {
+            buttons.add(ButtonType.YES);
+            buttons.add(ButtonType.NO);
+            finalAlert = createAlertWithOptOut(AlertType.INFORMATION,"REPORT","SUCCESS","Report was successfuly created.\nWould you like to open the files location?",
+                    null, (Boolean param) -> {
+                        prefs.getBoolean("openFolder", param);// == true ? true : false);
+            },buttons);
             
-            finalAlert = createAlertWithOptOut(AlertType.INFORMATION,"REPORT","SUCCESS","Report was successfuly created.",
-                    "open file location", (Boolean param) -> {
-                        prefs.putBoolean("openFolder", param == true ? true : false);
-            },ButtonType.OK);
-            
-        }else{
-            finalAlert = createAlertWithOptOut(AlertType.INFORMATION,"REPORT","FAILURE","was not able to create report.",
-                    "no action",null,ButtonType.OK);            
         }
-        finalAlert.showAndWait();
-        boolean open = prefs.getBoolean("openFolder", false);
-        System.out.println("OPEN DIALOG: " + open);
-        if(prefs.getBoolean("openFolder",false) == true){
+        else{
+            buttons.add(ButtonType.OK);
+            finalAlert = createAlertWithOptOut(AlertType.INFORMATION,"REPORT","FAILURE","was not able to create report. contact admin.",
+                    null,null,buttons);            
+        }
+        
+        if (finalAlert.showAndWait().filter(t -> t == ButtonType.YES).isPresent()) {
             try {
                 System.out.println("OPENING EXPLORER");
-                //            if(!Desktop.isDesktopSupported())//check if Desktop is supported by Platform or not
-//            {
-//                System.out.println("not supported");
-//                return;
-//            }
-//            Desktop desktop = Desktop.getDesktop();
-//            System.out.println("FILE PATH: " + fileAbsolutePath );
-//            desktop.browseFileDirectory(new File(fileAbsolutePath));
                 Runtime.getRuntime().exec("explorer.exe /select," + fileAbsolutePath);
             } catch (IOException ex) {
                 Logger.getLogger(POReportSelectionViewController.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
+//        boolean open = prefs.getBoolean("openFolder", false);
+//        System.out.println("OPEN DIALOG: " + open);
+
+//        if(prefs.getBoolean("openFolder",false) == true){
+//            try {
+//                System.out.println("OPENING EXPLORER");
+//                Runtime.getRuntime().exec("explorer.exe /select," + fileAbsolutePath);
+//            } catch (IOException ex) {
+//                Logger.getLogger(POReportSelectionViewController.class.getName()).log(Level.SEVERE, null, ex);
+//            }
+//        }
             
         closeDialogButton(event);
     }
@@ -481,43 +498,47 @@ finalLocationLabel.setVisible(false);
         
         if(selectedDir!= null){
             fileLocationTextField.setText(selectedDir.getAbsolutePath());
-            finalLocationLabel.setText(selectedDir.getAbsolutePath() +"\\"+ fileNameTextField.getText()+".docx");
-            finalLocationLabel.setVisible(true);
-        }
-        
+//            finalLocationLabel.setText(selectedDir.getAbsolutePath() +"\\"+ fileNameTextField.getText()+".docx");
+//            finalLocationLabel.setVisible(true);
+            existing_files_ListView.getItems().clear();
+            for(File file : selectedDir.listFiles())
+                if(file.getName().contains(".docx"))
+                    existing_files_ListView.getItems().add(file.getName());
+        }   
     }
     //##########################################################################
     
     public static Alert createAlertWithOptOut(AlertType type, String title, String headerText, 
                    String mainMessage, String checkBoxMessage, Consumer<Boolean> checkBoxAction, 
-                   ButtonType buttonTypes) {
+                   List<ButtonType> buttonTypes) {
        Alert alert = new Alert(type);
        // Need to force the alert to layout in order to grab the graphic,
         // as we are replacing the dialog pane with a custom pane
-        alert.getDialogPane().applyCss();
-        Node graphic = alert.getDialogPane().getGraphic();
+//        alert.getDialogPane().applyCss();
+//        Node graphic = alert.getDialogPane().getGraphic();
         // Create a new dialog pane that has a checkbox instead of the hide/show details button
         // Use the supplied callback for the action of the checkbox
      
-        alert.setDialogPane(new DialogPane() {
-//          @Override
-          protected Node createDetailsButton() {
-            CheckBox openReportLocation = new CheckBox();
-            openReportLocation.setText(checkBoxMessage);
-            openReportLocation.setOnAction(e -> checkBoxAction.accept( openReportLocation.isSelected()) );
-            
-            return openReportLocation;
-          }
-        });
-        
+//        if(checkBoxAction!=null)
+//        alert.setDialogPane(new DialogPane() {
+////          @Override
+//          protected Node createDetailsButton() {
+//            CheckBox openReportLocation = new CheckBox();
+//            openReportLocation.setText(checkBoxMessage);
+//            openReportLocation.setOnAction(e -> checkBoxAction.accept( openReportLocation.isSelected()) );
+//            
+//            return openReportLocation;
+//          }
+//        });
+        alert.getDialogPane().getButtonTypes().clear();
         alert.getDialogPane().getButtonTypes().addAll(buttonTypes);
         alert.getDialogPane().setContentText(mainMessage);
         // Fool the dialog into thinking there is some expandable content
         // a Group won't take up any space if it has no children
-        alert.getDialogPane().setExpandableContent(new Group());
-        alert.getDialogPane().setExpanded(true);
+//        alert.getDialogPane().setExpandableContent(new Group());
+//        alert.getDialogPane().setExpanded(true);
         // Reset the dialog graphic using the default style
-        alert.getDialogPane().setGraphic(graphic);
+//        alert.getDialogPane().setGraphic(graphic);
         alert.setTitle(title);
         alert.setHeaderText(headerText);
         
